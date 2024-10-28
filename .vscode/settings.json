@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "IsekaiTavern.sln"
+    "dotnet.defaultSolution": "2024-02-GameProgramming.sln"
 }
