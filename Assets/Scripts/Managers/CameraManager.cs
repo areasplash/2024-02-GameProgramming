@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -27,6 +29,8 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 
 
+	public Camera Camera => PixelPerfect ? viewCamera : mainCamera;
+
 	public bool PixelPerfect {
 		get => pixelPerfect;
 		set {
@@ -52,7 +56,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		get => test;
 		set {
 			test = value;
-			float aspect = PixelPerfect ? 1.77778f : mainCamera.aspect;
+			float aspect = PixelPerfect ? (float)viewTexture.width / viewTexture.height : mainCamera.aspect;
 			float fov    = mainCamera.fieldOfView;
 			float near   = mainCamera.nearClipPlane;
 			float far    = mainCamera.farClipPlane;
@@ -80,38 +84,62 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	public Vector3 TargetPosition => target ? target.transform.position : targetPosition;
 
+	
+
+	[SerializeField] RenderTexture viewTexture;
+	[SerializeField] RenderTexture fadeTexture;
+	[SerializeField] RectTransform viewImage;
+	[SerializeField] RectTransform fadeImage;
+
+	Vector2 resolution = new Vector2(640, 360);
+	Vector2 reference  = new Vector2(640, 360);
+
+	public Vector2 Resolution {
+		get => resolution;
+		set {
+			resolution = value;
+			int multiplier = 1;
+			while (true) {
+				bool xMatch = reference.x * multiplier < resolution.x * 0.75f;
+				bool yMatch = reference.y * multiplier < resolution.y * 0.75f;
+				if (xMatch && yMatch) multiplier++;
+				else break;
+			}
+			Vector2 temp;
+			temp.x = Mathf.Ceil(resolution.x / multiplier);
+			temp.y = Mathf.Ceil(resolution.y / multiplier);
+			
+			Screen.SetResolution((int)resolution.x, (int)resolution.y, Screen.fullScreen);
+			viewTexture.Release();
+			fadeTexture.Release();
+			viewTexture.width  = (int)temp.x;
+			fadeTexture.width  = (int)temp.x;
+			viewTexture.height = (int)temp.y;
+			fadeTexture.height = (int)temp.y;
+			viewTexture.Create();
+			fadeTexture.Create();
+			viewImage.sizeDelta = temp;
+			fadeImage.sizeDelta = temp;
+			Debug.Log("Resolution: " + resolution + " " + temp + " " + multiplier);
+			Debug.Log(viewTexture.width / viewTexture.height);
+			Test = Test;
+		}
+	}
+
 
 
 	void Start() => Test = Test;
 
-
-
-	Vector3 mousePosition;
-	Vector3 eulerAngles;
-
 	void LateUpdate() {
-		if (Input.GetKeyDown(KeyCode.Mouse1)) {
-			mousePosition = Input.mousePosition;
-			eulerAngles = transform.eulerAngles;
-		}
-		if (Input.GetKey(KeyCode.Mouse1)) {
-			transform.rotation = Quaternion.Euler(
-				eulerAngles.x,
-				eulerAngles.y + (Input.mousePosition.x - mousePosition.x) * 1f,
-				eulerAngles.z);
-			transform.position = TargetPosition + transform.forward * -FocusDistance;
-		}
-		if (Input.mouseScrollDelta.y != 0) {
-			float value = OrthographicSize * Mathf.Pow(2, -Input.mouseScrollDelta.y);
-			OrthographicSize = Mathf.Clamp(value, 6.125f, 45f);
-		}
-
 		if (transform.hasChanged) {
+			transform.position = TargetPosition + transform.forward * -FocusDistance;
 			mainCamera.transform.position = GetPixelated(transform.position);
 			viewCamera.transform.position = GetPixelated(transform.position);
 			fadeCamera.transform.position = GetPixelated(transform.position);
 			transform.hasChanged = false;
 		}
+		Vector2 resolution = new Vector2(Screen.width, Screen.height);
+		if (Resolution != resolution) Resolution = resolution;
 	} 
 
 
@@ -174,6 +202,12 @@ public class CameraManager : MonoSingleton<CameraManager> {
 			PropertyField(serializedObject.FindProperty("mainCamera"));
 			PropertyField(serializedObject.FindProperty("viewCamera"));
 			PropertyField(serializedObject.FindProperty("fadeCamera"));
+
+			Space();
+			PropertyField(serializedObject.FindProperty("viewTexture"));
+			PropertyField(serializedObject.FindProperty("fadeTexture"));
+			PropertyField(serializedObject.FindProperty("viewImage"));
+			PropertyField(serializedObject.FindProperty("fadeImage"));
 
 			Space();
 			i.PixelPerfect     = Toggle("Pixel Perfect",     i.PixelPerfect);
