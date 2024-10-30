@@ -12,11 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c48826a48f46154789ee28959030465, type: 3}
   m_Name: TerrainAtlasMap
   m_EditorClassIdentifier: 
-  texturesDirectory: Assets/Textures/Terrains
-  prefabsDirectory: Assets/Prefabs/Terrains
-  atlas: {fileID: 2800000, guid: 1413577df77b3334db6eb7866df9b48d, type: 3}
-  atlasMap:
-    keys: []
-    values: []
-  maximumAtlasSize: 8192
-  padding: 0
+  <TexturesDirectory>k__BackingField: Assets/Textures/Terrains
+  <PrefabsDirectory>k__BackingField: Assets/Prefabs/Terrains
+  <Atlas>k__BackingField: {fileID: 2800000, guid: 1413577df77b3334db6eb7866df9b48d, type: 3}
+  <AtlasMap>k__BackingField:
+    keys:
+    - BrickWall
+    - WoodColumn
+    - WoodTile
+    values:
+    - size: {x: 64, y: 64}
+      tiling: {x: 0.5, y: 0.5}
+      offset: {x: 0, y: 0}
+    - size: {x: 64, y: 64}
+      tiling: {x: 0.5, y: 0.5}
+      offset: {x: 0.5, y: 0}
+    - size: {x: 64, y: 64}
+      tiling: {x: 0.5, y: 0.5}
+      offset: {x: 0, y: 0.5}
+  <MaximumAtlasSize>k__BackingField: 8192
+  <Padding>k__BackingField: 0

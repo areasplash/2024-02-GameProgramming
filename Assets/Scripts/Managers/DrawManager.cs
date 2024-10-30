@@ -12,10 +12,14 @@ using Unity.Collections;
 
 public class NativeList<T> : IDisposable where T : struct {
 
+	// Fields
+
 	NativeArray<T> narray;
 	int            length;
 
 
+
+	// Properties
 
 	public T this[int index] {
 		get => narray[index];
@@ -41,11 +45,15 @@ public class NativeList<T> : IDisposable where T : struct {
 
 
 
+	// Constructor, Destructor
+
 	public NativeList(int capacity = 64) => Capacity = capacity;
 
 	public void Dispose() => narray.Dispose();
 
 
+
+	// Method
 
 	public NativeArray<T> GetArray() => narray;
 
@@ -87,10 +95,14 @@ public class NativeList<T> : IDisposable where T : struct {
 
 public class GPUBatcher<T> : IDisposable where T : unmanaged {
 
+	// Constants
+
 	const GraphicsBuffer.Target Args       = GraphicsBuffer.Target.IndirectArguments;
 	const GraphicsBuffer.Target Structured = GraphicsBuffer.Target.Structured;
 
 
+
+	// Fields
 
 	Mesh meshCached;
 
@@ -120,7 +132,7 @@ public class GPUBatcher<T> : IDisposable where T : unmanaged {
 
 
 
-	// Method
+	// Constructor, Destructor
 
 	public GPUBatcher(Material material, Mesh mesh, int submesh) {
 		meshCached = mesh;
@@ -159,6 +171,8 @@ public class GPUBatcher<T> : IDisposable where T : unmanaged {
 	}
 
 
+
+	// Method
 
 	public void Add(T value) => Insert(Length, value);
 	
@@ -368,9 +382,36 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		}
 	}
 
+	public void AddCreature(
+		Vector3 position,
+		Vector4 rotation,
+		Vector3 scale,
+
+		CreatureType creatureType,
+		AnimationType animationType,
+		int direction,
+		int duration) {
+
+		creatureBatcher.Add(new CreatureData() {
+			position = position,
+			rotation = rotation,
+			scale    = scale,
+
+			tiling   = new Vector2(1, 1),
+			offset   = new Vector2(0, 0),
+			color    = new Vector3(1, 1, 1),
+			emission = 0,
+			alpha    = 1,
+		});
+	}
+	
 	void LateUpdate() {
 		creatureBatcher.Draw();
 		particleBatcher.Draw();
 		terrainBatcher .Draw();
+
+		creatureBatcher.Clear();
+		particleBatcher.Clear();
+		terrainBatcher .Clear();
 	}
 }

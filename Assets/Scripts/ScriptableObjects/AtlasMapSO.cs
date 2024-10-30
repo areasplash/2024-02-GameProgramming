@@ -1,9 +1,9 @@
 using UnityEngine;
-using System;
 using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
+	using static UnityEditor.EditorGUILayout;
 	using UnityEngine.ProBuilder;
 	using System.IO;
 #endif
@@ -14,7 +14,7 @@ using System.Collections.Generic;
 // Hash Map, Texture Data, Atlas Map
 // ====================================================================================================
 
-[Serializable]
+[System.Serializable]
 public class HashMap<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver {
 
 	[SerializeField] List<TKey  > keys   = new List<TKey  >();
@@ -37,7 +37,7 @@ public class HashMap<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCal
 
 
 
-[Serializable]
+[System.Serializable]
 public struct TextureData {
 	public Vector2 size;
 	public Vector2 tiling;
@@ -46,7 +46,7 @@ public struct TextureData {
 
 
 
-[Serializable]
+[System.Serializable]
 public class AtlasMap : HashMap<string, TextureData> {}
 
 
@@ -58,131 +58,101 @@ public class AtlasMap : HashMap<string, TextureData> {}
 [CreateAssetMenu(fileName = "AtlasMap", menuName = "Scriptable Objects/AtlasMap")]
 public class AtlasMapSO : ScriptableObject {
 
-	[SerializeField] string    texturesDirectory = "Assets/Textures";
-	[SerializeField] string    prefabsDirectory  = "Assets/Prefabs";
-	[SerializeField] Texture2D atlas;
-	[SerializeField] AtlasMap  atlasMap = new AtlasMap();
+	// Fields (Properties)
 
-	[SerializeField] int       maximumAtlasSize = 8192;
-	[SerializeField] int       padding          = 0;
+	[field: SerializeField] public string    TexturesDirectory { get; private set; } = "Assets/";
+	[field: SerializeField] public string    PrefabsDirectory  { get; private set; } = "Assets/";
+	[field: SerializeField] public Texture2D Atlas             { get; private set; } = null;
+	[field: SerializeField] public AtlasMap  AtlasMap          { get; private set; } = new AtlasMap();
 
-	public string    TexturesDirectory => texturesDirectory;
-	public string    PrefabsDirectory  => prefabsDirectory;
-	public Texture2D Atlas             => atlas;
-	public AtlasMap  AtlasMap          => atlasMap;
-
-	public int       MaximumAtlasSize  => maximumAtlasSize;
-	public int       Padding           => padding;
-}
+	[field: SerializeField] public int       MaximumAtlasSize  { get; private set; } = 8192;
+	[field: SerializeField] public int       Padding           { get; private set; } = 0;
 
 
 
-// ====================================================================================================
-// Atlas Map SO Editor
-// ====================================================================================================
+	// Editor
 
-#if UNITY_EDITOR
-	[CustomEditor(typeof(AtlasMapSO))]
-	public class AtlasMapSOEditor : Editor {
-		AtlasMapSO AtlasMapSO;
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(AtlasMapSO)), CanEditMultipleObjects]
+		public class AtlasMapSOEditor : Editor {
+			AtlasMapSO i => target as AtlasMapSO;
 
-		SerializedProperty TexturesDirectory;
-		SerializedProperty PrefabsDirectory;
-		SerializedProperty Atlas;
-		SerializedProperty AtlasMap;
-
-		SerializedProperty MaximumAtlasSize;
-		SerializedProperty Padding;
-
-
-
-		void OnEnable() {
-			AtlasMapSO = target as AtlasMapSO;
-
-			TexturesDirectory = serializedObject.FindProperty("texturesDirectory");
-			PrefabsDirectory  = serializedObject.FindProperty("prefabsDirectory" );
-			Atlas             = serializedObject.FindProperty("atlas"            );
-			AtlasMap          = serializedObject.FindProperty("atlasMap"         );
-
-			MaximumAtlasSize  = serializedObject.FindProperty("maximumAtlasSize" );
-			Padding           = serializedObject.FindProperty("padding"          );
-		}
-
-		public override void OnInspectorGUI() {
-			serializedObject.Update();
-
-			EditorGUILayout.Space();
-			EditorGUILayout.LabelField("Atlas Map", EditorStyles.boldLabel);
-			EditorGUILayout.PropertyField(TexturesDirectory);
-			EditorGUILayout.PropertyField(PrefabsDirectory );
-			EditorGUILayout.PropertyField(Atlas            );
-			EditorGUILayout.PropertyField(AtlasMap         );
-
-			EditorGUILayout.Space();
-			EditorGUILayout.LabelField("Atlas Settings", EditorStyles.boldLabel);
-			EditorGUILayout.PropertyField(MaximumAtlasSize );
-			EditorGUILayout.PropertyField(Padding          );
-			if (Atlas.objectReferenceValue && GUILayout.Button("Generate Atlas")) GenerateAtlas();
-
-			serializedObject.ApplyModifiedProperties();
-		}
-
-
-
-		T[] LoadAsset<T>(string path) where T : UnityEngine.Object {
-			string[] guids = AssetDatabase.FindAssets("t:" + typeof(T).Name, new[] { path });
-			T[] assets = new T[guids.Length];
-			for (int i = 0; i < guids.Length; i++) {
-				string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
-				assets[i] = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+			T ObjectField<T>(string label, T obj) where T : Object {
+				return (T)EditorGUILayout.ObjectField(label, obj, typeof(T), true);
 			}
-			return assets;
-		}
 
-		void GenerateAtlas() {
-			Texture2D[] textures = LoadAsset<Texture2D>(TexturesDirectory.stringValue);
-			GameObject[] prefabs = LoadAsset<GameObject>(PrefabsDirectory.stringValue);
-			int MaximumAtlasSize = this.MaximumAtlasSize.intValue;
-			int Padding          = this.Padding.intValue;
+			public override void OnInspectorGUI() {
+				Space();
+				LabelField("Atlas Map", EditorStyles.boldLabel);
+				i.TexturesDirectory = TextField  ("Textures Directory", i.TexturesDirectory);
+				i.PrefabsDirectory  = TextField  ("Prefabs Directory",  i.PrefabsDirectory );
+				i.Atlas             = ObjectField("Atlas",              i.Atlas            );
+				                      IntField   ("Atlas Map Count",    i.AtlasMap.Count   );
 
-			Texture2D atlas = new Texture2D(MaximumAtlasSize, MaximumAtlasSize);
-			Rect[] rects = atlas.PackTextures(textures, Padding, MaximumAtlasSize);
-			byte[] bytes = atlas.EncodeToPNG();
-			File.WriteAllBytes(AssetDatabase.GetAssetPath(Atlas.objectReferenceValue), bytes);
-			AssetDatabase.Refresh();
+				Space();
+				LabelField("Atlas Settings", EditorStyles.boldLabel);
+				i.MaximumAtlasSize  = IntField("Maximum Atlas Size",    i.MaximumAtlasSize );
+				i.Padding           = IntField("Padding",               i.Padding          );
+				if (i.Atlas && GUILayout.Button("Generate Atlas")) GenerateAtlas();
 
-			AtlasMap prevMap = AtlasMapSO.AtlasMap;
-			AtlasMap nextMap = new AtlasMap();
-			for (int i = 0; i < textures.Length; i++) nextMap[textures[i].name] = new TextureData {
-				size   = new Vector2(textures[i].width, textures[i].height),
-				tiling = new Vector2(rects   [i].width, rects   [i].height),
-				offset = new Vector2(rects   [i].x,     rects   [i].y     ),
-			};
-			
-			for (int i = 0; i < prefabs.Length; i++) {
-				bool match = true;
-				match &= prefabs[i].TryGetComponent(out ProBuilderMesh probuilderMesh);
-				match &= prevMap.TryGetValue(prefabs[i].name, out TextureData prev);
-				match &= nextMap.TryGetValue(prefabs[i].name, out TextureData next);
-				if (match) {
-					List<Vector4> uv = new List<Vector4>();
-					probuilderMesh.GetUVs(0, uv);
-					foreach (Face face in probuilderMesh.faces) face.manualUV = true;
-					for (int j = 0; j < uv.Count; j++) uv[j] = new Vector4(
-						(uv[j].x - prev.offset.x) / prev.tiling.x * next.tiling.x + next.offset.x,
-						(uv[j].y - prev.offset.y) / prev.tiling.y * next.tiling.y + next.offset.y,
-						uv[j].z,
-						uv[j].w
-					);
-					probuilderMesh.SetUVs (0, uv);
-					probuilderMesh.ToMesh ();
-					probuilderMesh.Refresh();
-					string path = AssetDatabase.GetAssetPath(prefabs[i]);
-					PrefabUtility.SaveAsPrefabAsset(prefabs[i], path);
+				if (GUI.changed) EditorUtility.SetDirty(target);
+			}
+
+
+
+			T[] LoadAsset<T>(string path) where T : Object {
+				string[] guids = AssetDatabase.FindAssets("t:" + typeof(T).Name, new[] { path });
+				T[] assets = new T[guids.Length];
+				for (int i = 0; i < guids.Length; i++) {
+					string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+					assets[i] = AssetDatabase.LoadAssetAtPath<T>(assetPath);
 				}
+				return assets;
 			}
-			AtlasMapSO.AtlasMap.Clear();
-			foreach (var pair in nextMap) AtlasMapSO.AtlasMap.Add(pair.Key, pair.Value);
+
+			void GenerateAtlas() {
+				Texture2D[] textures = LoadAsset<Texture2D>(i.TexturesDirectory);
+				GameObject[] prefabs = LoadAsset<GameObject>(i.PrefabsDirectory);
+
+				Texture2D atlas = new Texture2D(i.MaximumAtlasSize, i.MaximumAtlasSize);
+				Rect[] rects = atlas.PackTextures(textures, i.Padding, i.MaximumAtlasSize);
+				byte[] bytes = atlas.EncodeToPNG();
+				File.WriteAllBytes(AssetDatabase.GetAssetPath(i.Atlas), bytes);
+				AssetDatabase.Refresh();
+
+				AtlasMap prevMap = i.AtlasMap;
+				AtlasMap nextMap = new AtlasMap();
+				for (int i = 0; i < textures.Length; i++) nextMap[textures[i].name] = new TextureData {
+					size   = new Vector2(textures[i].width, textures[i].height),
+					tiling = new Vector2(rects   [i].width, rects   [i].height),
+					offset = new Vector2(rects   [i].x,     rects   [i].y     ),
+				};
+				
+				for (int i = 0; i < prefabs.Length; i++) {
+					bool match = true;
+					match &= prefabs[i].TryGetComponent(out ProBuilderMesh probuilderMesh);
+					match &= prevMap.TryGetValue(prefabs[i].name, out TextureData prev);
+					match &= nextMap.TryGetValue(prefabs[i].name, out TextureData next);
+					if (match) {
+						List<Vector4> uv = new List<Vector4>();
+						probuilderMesh.GetUVs(0, uv);
+						foreach (Face face in probuilderMesh.faces) face.manualUV = true;
+						for (int j = 0; j < uv.Count; j++) uv[j] = new Vector4(
+							(uv[j].x - prev.offset.x) / prev.tiling.x * next.tiling.x + next.offset.x,
+							(uv[j].y - prev.offset.y) / prev.tiling.y * next.tiling.y + next.offset.y,
+							uv[j].z,
+							uv[j].w
+						);
+						probuilderMesh.SetUVs (0, uv);
+						probuilderMesh.ToMesh ();
+						probuilderMesh.Refresh();
+						string path = AssetDatabase.GetAssetPath(prefabs[i]);
+						PrefabUtility.SaveAsPrefabAsset(prefabs[i], path);
+					}
+				}
+				i.AtlasMap.Clear();
+				foreach (var pair in nextMap) i.AtlasMap.Add(pair.Key, pair.Value);
+			}
 		}
-	}
-#endif
+	#endif
+}

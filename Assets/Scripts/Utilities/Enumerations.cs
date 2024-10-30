@@ -23,6 +23,7 @@ public enum AnimationType {
 [Serializable]
 public enum CreatureType {
 	None,
+	Player,
 }
 
 
