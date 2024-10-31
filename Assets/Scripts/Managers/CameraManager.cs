@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -166,7 +167,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	#if UNITY_EDITOR
 		[CustomEditor(typeof(CameraManager)), CanEditMultipleObjects]
 		public class GameManagerEditor : Editor {
-			CameraManager i => target as CameraManager;
+			CameraManager I => target as CameraManager;
 
 			T ObjectField<T>(string label, T obj) where T : Object {
 				return (T)EditorGUILayout.ObjectField(label, obj, typeof(T), true);
@@ -175,23 +176,23 @@ public class CameraManager : MonoSingleton<CameraManager> {
 			public override void OnInspectorGUI() {
 				Space();
 				LabelField("Camera", EditorStyles.boldLabel);
-				i.MainCamera       = ObjectField ("Main Camera",       i.MainCamera      );
-				i.FadeCamera       = ObjectField ("Fade Camera",       i.FadeCamera      );
+				I.MainCamera       = ObjectField ("Main Camera",       I.MainCamera      );
+				I.FadeCamera       = ObjectField ("Fade Camera",       I.FadeCamera      );
 
 				Space();
 				LabelField("Settings", EditorStyles.boldLabel);
-				i.FieldOfView      = FloatField  ("Field Of View",     i.FieldOfView     );
-				i.OrthographicSize = FloatField  ("Orthographic Size", i.OrthographicSize);
-				i.PixelPerfect     = Toggle      ("Pixel Perfect",     i.PixelPerfect    );
-				i.Resolution       = Vector2Field("Resolution",        i.Resolution      );
-				i.Reference        = Vector2Field("Reference",         i.Reference       );
-				i.PixelPerUnit     = FloatField  ("Pixel Per Unit",    i.PixelPerUnit    );
+				I.FieldOfView      = FloatField  ("Field Of View",     I.FieldOfView     );
+				I.OrthographicSize = FloatField  ("Orthographic Size", I.OrthographicSize);
+				I.PixelPerfect     = Toggle      ("Pixel Perfect",     I.PixelPerfect    );
+				I.Resolution       = Vector2Field("Resolution",        I.Resolution      );
+				I.Reference        = Vector2Field("Reference",         I.Reference       );
+				I.PixelPerUnit     = FloatField  ("Pixel Per Unit",    I.PixelPerUnit    );
 
 				Space();
-				i.Target           = ObjectField ("Target",             i.Target         );
-				i.TargetPosition   = Vector3Field("Target Position",   i.TargetPosition  );
-				i.CameraArmLength  = Slider      ("Focus Distance",    i.CameraArmLength, 0, 256);
-				i.Projection       = Slider      ("Projection",        i.Projection,      0,   1);
+				I.Target           = ObjectField ("Target",             I.Target         );
+				I.TargetPosition   = Vector3Field("Target Position",   I.TargetPosition  );
+				I.CameraArmLength  = Slider      ("Focus Distance",    I.CameraArmLength, 0, 256);
+				I.Projection       = Slider      ("Projection",        I.Projection,      0,   1);
 
 				if (GUI.changed) EditorUtility.SetDirty(target);
 			}

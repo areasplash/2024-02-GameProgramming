@@ -1,8 +1,12 @@
 using UnityEngine;
-using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.Collections;
+
+#if UNITY_EDITOR
+	using UnityEditor;
+	using static UnityEditor.EditorGUILayout;
+#endif
 
 
 
@@ -10,7 +14,7 @@ using Unity.Collections;
 // Native List
 // ====================================================================================================
 
-public class NativeList<T> : IDisposable where T : struct {
+public class NativeList<T> : System.IDisposable where T : struct {
 
 	// Fields
 
@@ -93,7 +97,7 @@ public class NativeList<T> : IDisposable where T : struct {
 // GPU Batcher
 // ====================================================================================================
 
-public class GPUBatcher<T> : IDisposable where T : unmanaged {
+public class GPUBatcher<T> : System.IDisposable where T : unmanaged {
 
 	// Constants
 
@@ -229,89 +233,120 @@ public class GPUBatcher<T> : IDisposable where T : unmanaged {
 
 
 // ====================================================================================================
+// Draw Data
+// ====================================================================================================
+
+struct CreatureData {
+	public Vector3 position;
+	public Vector4 rotation;
+	public Vector3 scale;
+
+	public Vector2 tiling;
+	public Vector2 offset;
+	public Vector3 color;
+	public float   emission;
+	public float   alpha;
+}
+
+struct ParticleData {
+	public Vector3 position;
+	public Vector3 scale;
+
+	public Vector2 tiling;
+	public Vector2 offset;
+	public Vector3 color;
+	public float   emission;
+	public float   alpha;
+}
+
+
+
+// ====================================================================================================
 // Draw Manager
 // ====================================================================================================
 
 public class DrawManager : MonoSingleton<DrawManager> {
 
-	[Header("Material")]
-	[SerializeField] Material creatureMaterial;
-	[SerializeField] Material particleMaterial;
-	[SerializeField] Material terrainMaterial;
+	// Fields
 
-	[Header("Mesh")]
 	[SerializeField] Mesh sphereMesh;
 	[SerializeField] Mesh quadMesh;
 
-	[Header("Atlas Map")]
+	[SerializeField] Material creatureMaterial;
+	[SerializeField] Material particleMaterial;
+
 	[SerializeField] AtlasMapSO creatureAtlasMap;
 	[SerializeField] AtlasMapSO particleAtlasMap;
-	[SerializeField] AtlasMapSO terrainAtlasMap;
 
-
-
+	HashMap<int, int         > creatureSizeMap = new HashMap<int, int         >();
+	HashMap<int, int         > particleSizeMap = new HashMap<int, int         >();
+	HashMap<int, CreatureData> creatureDataMap = new HashMap<int, CreatureData>();
+	HashMap<int, ParticleData> particleDataMap = new HashMap<int, ParticleData>();
+	
 	GPUBatcher<CreatureData> creatureBatcher;
 	GPUBatcher<ParticleData> particleBatcher;
-	GPUBatcher<TerrainData > terrainBatcher;
 
 
 
-	struct CreatureData {
-		public Vector3 position;
-		public Vector4 rotation;
-		public Vector3 scale;
+	// Editor
 
-		public Vector2 tiling;
-		public Vector2 offset;
-		public Vector3 color;
-		public float   emission;
-		public float   alpha;
+	#if UNITY_EDITOR
+	[CustomEditor(typeof(DrawManager)), CanEditMultipleObjects]
+	public class DrawManagerEditor : Editor {
+		DrawManager I => target as DrawManager;
+
+		T ObjectField<T>(string label, T obj) where T : Object {
+			return (T)EditorGUILayout.ObjectField(label, obj, typeof(T), true);
+		}
+
+		public override void OnInspectorGUI() {
+			Space();
+			LabelField("Meshes", EditorStyles.boldLabel);
+			I.sphereMesh = ObjectField("Sphere Mesh", I.sphereMesh);
+			I.quadMesh   = ObjectField("Quad Mesh"  , I.quadMesh  );
+
+			Space();
+			LabelField("Materials", EditorStyles.boldLabel);
+			I.creatureMaterial = ObjectField("Creature Material",  I.creatureMaterial);
+			I.particleMaterial = ObjectField("Particle Material",  I.particleMaterial);
+
+			Space();
+			LabelField("Atlas Maps", EditorStyles.boldLabel);
+			I.creatureAtlasMap = ObjectField("Creature Atlas Map", I.creatureAtlasMap);
+			I.particleAtlasMap = ObjectField("Particle Atlas Map", I.particleAtlasMap);
+
+			if (GUI.changed) EditorUtility.SetDirty(target);
+		}
 	}
-	HashMap<int, int         > creatureSizeMap = new HashMap<int, int         >();
-	HashMap<int, CreatureData> creatureDataMap = new HashMap<int, CreatureData>();
-
-	struct ParticleData {
-		public Vector3 position;
-		public Vector3 scale;
-
-		public Vector2 tiling;
-		public Vector2 offset;
-		public Vector3 color;
-		public float   emission;
-		public float   alpha;
-	}
-	HashMap<int, int         > particleSizeMap = new HashMap<int, int         >();
-	HashMap<int, ParticleData> particleDataMap = new HashMap<int, ParticleData>();
-
-	struct TerrainData {
-		public Matrix4x4 matrix;
-		public Vector4   color;
-	}
-	HashMap<int, int         > terrainSizeMap  = new HashMap<int, int         >();
-	HashMap<int, TerrainData > terrainDataMap  = new HashMap<int, TerrainData >();
+	#endif
 
 
+
+	// Cycle
 
 	void OnEnable() {
 		creatureBatcher = new GPUBatcher<CreatureData>(creatureMaterial, quadMesh, 0);
 		particleBatcher = new GPUBatcher<ParticleData>(particleMaterial, quadMesh, 0);
-		terrainBatcher  = new GPUBatcher<TerrainData >(terrainMaterial,  quadMesh, 0);
 	}
 
 	void OnDisable() {
-		creatureBatcher.Dispose();
-		particleBatcher.Dispose();
-		terrainBatcher .Dispose();
+		creatureBatcher?.Dispose();
+		particleBatcher?.Dispose();
 	}
 
 	void Start() {
+		float PixelPerUnit = CameraManager.Instance.PixelPerUnit;
+
+		// CreatureType _ AnimationType _ Direction _ Index _ Duration
+		creatureSizeMap.Clear();
+		creatureDataMap.Clear();
 		if (creatureAtlasMap) foreach (var pair in creatureAtlasMap.AtlasMap) {
 			string[] split = pair.Key.Split('_');
 			if (split.Length != 5) continue;
 
 			int[] value = new int[5];
-			value[0] = (int)Enum.Parse(typeof(CreatureType ), split[0]);
-			value[1] = (int)Enum.Parse(typeof(AnimationType), split[1]);
+			value[0] = (int)System.Enum.Parse(typeof(CreatureType ), split[0]);
+			value[1] = (int)System.Enum.Parse(typeof(AnimationType), split[1]);
 			value[2] = int.Parse(split[2]);
 			value[3] = int.Parse(split[3]);
 			value[4] = int.Parse(split[4]);
@@ -325,16 +360,16 @@ public class DrawManager : MonoSingleton<DrawManager> {
 			
 			for (int k = 4 - 1; -1 < k; k--) {
 				if (!creatureSizeMap.ContainsKey(key[k])) creatureSizeMap.Add(key[k], 0);
-				creatureSizeMap[key[k]] += 1;
+				creatureSizeMap[key[k]]++;
 				if (k == 0 || creatureSizeMap.ContainsKey(key[k - 1])) break;
 			}
 			if (!creatureSizeMap.ContainsKey(key[4])) creatureSizeMap[key[4]] = value[4];
-			if (1 < creatureSizeMap[key[3]]) creatureSizeMap[key[4]] += creatureSizeMap[key[4] - 1 << 0];
+			if (1 < creatureSizeMap[key[3]]) creatureSizeMap[key[4]] += creatureSizeMap[key[4] - 1];
 
 			creatureDataMap.Add(key[4], new CreatureData() {
 				position = new Vector3(0, 0, 0),
 				rotation = new Vector4(0, 0, 0, 1),
-				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / 16,
+				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / PixelPerUnit,
 
 				tiling   = new Vector2(pair.Value.tiling.x, pair.Value.tiling.y),
 				offset   = new Vector2(pair.Value.offset.x, pair.Value.offset.y),
@@ -344,30 +379,33 @@ public class DrawManager : MonoSingleton<DrawManager> {
 			});
 		}
 
+		// ParticleType _ Index _ Duration
+		particleSizeMap.Clear();
+		particleDataMap.Clear();
 		if (particleAtlasMap) foreach (var pair in particleAtlasMap.AtlasMap) {
 			string[] split = pair.Key.Split('_');
-			if (split.Length != 2) continue;
+			if (split.Length != 3) continue;
 
-			int[] value = new int[2];
-			value[0] = (int)Enum.Parse(typeof(ParticleType), split[0]);
+			int[] value = new int[3];
+			value[0] = (int)System.Enum.Parse(typeof(ParticleType), split[0]);
 			value[1] = int.Parse(split[1]);
 
-			int[] key = new int[2];
+			int[] key = new int[3];
 			key[0] = 0;
-			key[1] = key[0] + (((value[0] + 1) & 0xff) << 8);
-			key[2] = key[1] + (((value[1] + 1) & 0xff) << 0);
+			key[1] = key[0] + (((value[0] + 1) & 0xff) << 24);
+			key[2] = key[1] + (((value[1] + 1) & 0xff) << 16);
 
 			for (int k = 2 - 1; -1 < k; k--) {
 				if (!particleSizeMap.ContainsKey(key[k])) particleSizeMap.Add(key[k], 0);
-				particleSizeMap[key[k]] += 1;
+				particleSizeMap[key[k]]++;
 				if (k == 0 || particleSizeMap.ContainsKey(key[k - 1])) break;
 			}
 			if (!particleSizeMap.ContainsKey(key[2])) particleSizeMap[key[2]] = value[2];
-			if (1 < particleSizeMap[key[1]]) particleSizeMap[key[2]] += particleSizeMap[key[2] - 1 << 0];
+			if (1 < particleSizeMap[key[1]]) particleSizeMap[key[2]] += particleSizeMap[key[2] - 1];
 
 			particleDataMap.Add(key[2], new ParticleData() {
 				position = new Vector3(0, 0, 0),
-				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / 16,
+				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / PixelPerUnit,
 
 				tiling   = new Vector2(pair.Value.tiling.x, pair.Value.tiling.y),
 				offset   = new Vector2(pair.Value.offset.x, pair.Value.offset.y),
@@ -376,42 +414,124 @@ public class DrawManager : MonoSingleton<DrawManager> {
 				alpha    = 1,
 			});
 		}
-
-		if (terrainAtlasMap) foreach (var pair in terrainAtlasMap.AtlasMap) {
-			
-		}
-	}
-
-	public void AddCreature(
-		Vector3 position,
-		Vector4 rotation,
-		Vector3 scale,
-
-		CreatureType creatureType,
-		AnimationType animationType,
-		int direction,
-		int duration) {
-
-		creatureBatcher.Add(new CreatureData() {
-			position = position,
-			rotation = rotation,
-			scale    = scale,
-
-			tiling   = new Vector2(1, 1),
-			offset   = new Vector2(0, 0),
-			color    = new Vector3(1, 1, 1),
-			emission = 0,
-			alpha    = 1,
-		});
 	}
 	
 	void LateUpdate() {
+		Creature[] creatures = FindObjectsByType<Creature>(FindObjectsSortMode.None);
+		foreach (var creature in creatures) {
+			int[] key = new int[5];
+			key[0] = 0;
+			//key[1] = key[0] + (((creature.type      + 1) & 0xff) << 24);
+			//key[2] = key[1] + (((creature.animation + 1) & 0xff) << 16);
+			//key[3] = key[2] + (((creature.direction + 1) & 0xff) <<  8);
+			//key[4] = key[3] + (((creature.index     + 1) & 0xff) <<  0);
+			//CreatureData data = creatureDataMap[key[4]];
+
+			//data.position = creature.transform.position;
+			//data.rotation = creature.transform.rotation;
+			//data.scale    = creature.transform.localScale;
+			//data.color    = creature.color;
+			//data.emission = creature.emission;
+			//data.alpha    = creature.alpha;
+			//creatureBatcher.Add(data);
+		}
+
 		creatureBatcher.Draw();
 		particleBatcher.Draw();
-		terrainBatcher .Draw();
 
 		creatureBatcher.Clear();
 		particleBatcher.Clear();
-		terrainBatcher .Clear();
 	}
+
+	/*
+	[BurstCompile]
+	partial struct GetDrawDataJob : IJobParallelFor {
+		[WriteOnly] public NativeArray<DrawData>           buffer;
+		[ ReadOnly] public NativeHashMap<int, int>         sizeMap;
+		[ ReadOnly] public NativeHashMap<int, DrawData>    dataMap;
+		[ ReadOnly] public NativeArray<Entity>             entities;
+		[ ReadOnly] public ComponentLookup<LocalTransform> transforms;
+		[ ReadOnly] public ComponentLookup<Creature>       creatures;
+
+		int GetCreatureSize(
+		CreatureType  creatureType  = (CreatureType )(-1),
+		AnimationType animationType = (AnimationType)(-1),
+		int           direction     = -1,
+		int           index         = -1)
+		=> sizeMap.TryGetValue(
+			((((int)creatureType  + 1) & 0xff) << 24) |
+			((((int)animationType + 1) & 0xff) << 16) |
+			(((direction          + 1) & 0xff) <<  8) |
+			(((index              + 1) & 0xff) <<  0),
+			out int count) ? count : 0;
+
+		DrawData GetCreatureData(
+			CreatureType  creatureType,
+			AnimationType animationType,
+			int           direction,
+			int           index)
+			=> dataMap.TryGetValue(
+				((((int)creatureType  + 1) & 0xff) << 24) |
+				((((int)animationType + 1) & 0xff) << 16) |
+				(((direction          + 1) & 0xff) <<  8) |
+				(((index              + 1) & 0xff) <<  0),
+				out DrawData drawData) ? drawData : DrawData.Default;
+
+		float GetRelativeYaw(quaternion rotation) {
+			float y = 0.0f + 2.0f * (rotation.value.y * rotation.value.w + rotation.value.x * rotation.value.z);
+			float x = 1.0f - 2.0f * (rotation.value.y * rotation.value.y + rotation.value.x * rotation.value.x);
+			return math.atan2(y, x) * 180f / math.PI; // - CameraManager.CameraDirection
+		}
+
+		public void Execute(int index) {
+			var transform = transforms[entities[index]];
+			var creature  = creatures [entities[index]];
+
+			int yaw = 0;
+			//int  yaw = (int)Mathf.Repeat(GetRelativeYaw(transform.Rotation) + 540f, 256);
+			int  i;
+			int  direction = 0;
+			bool xflip = false;
+			switch (GetCreatureSize(creature.creatureType, creature.animationType)) {
+				case  1: i = (yaw +  0) /  2 %  2; direction = 0 < i ?  2 - i : i; xflip = 0 < i; break;
+				case  2: i = (yaw +  0) /  2 %  2; direction = i;                  xflip = false; break;
+				case  3: i = (yaw + 32) /  4 %  4; direction = 2 < i ?  4 - i : i; xflip = 2 < i; break;
+				case  4: i = (yaw + 32) /  4 %  4; direction = i;                  xflip = false; break;
+				case  5:
+				case  6: 
+				case  7: i = (yaw + 16) /  8 %  8; direction = 4 < i ?  8 - i : i; xflip = 4 < i; break;
+				case  8: i = (yaw + 16) /  8 %  8; direction = i;                  xflip = false; break;
+				case  9:
+				case 10:
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+				case 15: i = (yaw +  8) / 16 % 16; direction = 8 < i ? 16 - i : i; xflip = 8 < i; break;
+				case 16: i = (yaw +  8) / 16 % 16; direction = i;                  xflip = false; break;
+			}
+			int count = GetCreatureSize(creature.creatureType, creature.animationType, direction);
+			int total = GetCreatureSize(creature.creatureType, creature.animationType, direction, count - 1);
+			int m = 0;
+			int l = 0;
+			int r = count - 1;
+			int iValue = (int)(creature.offset * 1000) % (total == 0 ? 1 : total);
+			int lValue;
+			int rValue;
+			while (l <= r) {
+				m = (l + r) / 2;
+				lValue = GetCreatureSize(creature.creatureType, creature.animationType, direction, m - 1);
+				rValue = GetCreatureSize(creature.creatureType, creature.animationType, direction, m + 0);
+				if      (iValue < lValue) r = m - 1;
+				else if (rValue < iValue) l = m + 1;
+				else break;
+			}
+			DrawData drawData = GetCreatureData(creature.creatureType, creature.animationType, direction, m);
+			drawData.position = transform.Position;
+			drawData.rotation = transform.Rotation.value;
+			if (xflip) drawData.scale.x *= -1;
+			buffer[index] = drawData;
+		}
+	}
+	*/
 }

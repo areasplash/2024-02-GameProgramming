@@ -75,7 +75,7 @@ public class AtlasMapSO : ScriptableObject {
 	#if UNITY_EDITOR
 		[CustomEditor(typeof(AtlasMapSO)), CanEditMultipleObjects]
 		public class AtlasMapSOEditor : Editor {
-			AtlasMapSO i => target as AtlasMapSO;
+			AtlasMapSO I => target as AtlasMapSO;
 
 			T ObjectField<T>(string label, T obj) where T : Object {
 				return (T)EditorGUILayout.ObjectField(label, obj, typeof(T), true);
@@ -84,16 +84,16 @@ public class AtlasMapSO : ScriptableObject {
 			public override void OnInspectorGUI() {
 				Space();
 				LabelField("Atlas Map", EditorStyles.boldLabel);
-				i.TexturesDirectory = TextField  ("Textures Directory", i.TexturesDirectory);
-				i.PrefabsDirectory  = TextField  ("Prefabs Directory",  i.PrefabsDirectory );
-				i.Atlas             = ObjectField("Atlas",              i.Atlas            );
-				                      IntField   ("Atlas Map Count",    i.AtlasMap.Count   );
+				I.TexturesDirectory = TextField  ("Textures Directory", I.TexturesDirectory);
+				I.PrefabsDirectory  = TextField  ("Prefabs Directory",  I.PrefabsDirectory );
+				I.Atlas             = ObjectField("Atlas",              I.Atlas            );
+				                      IntField   ("Atlas Map Count",    I.AtlasMap.Count   );
 
 				Space();
 				LabelField("Atlas Settings", EditorStyles.boldLabel);
-				i.MaximumAtlasSize  = IntField("Maximum Atlas Size",    i.MaximumAtlasSize );
-				i.Padding           = IntField("Padding",               i.Padding          );
-				if (i.Atlas && GUILayout.Button("Generate Atlas")) GenerateAtlas();
+				I.MaximumAtlasSize  = IntField("Maximum Atlas Size",    I.MaximumAtlasSize );
+				I.Padding           = IntField("Padding",               I.Padding          );
+				if (I.Atlas && GUILayout.Button("Generate Atlas")) GenerateAtlas();
 
 				if (GUI.changed) EditorUtility.SetDirty(target);
 			}
@@ -111,16 +111,16 @@ public class AtlasMapSO : ScriptableObject {
 			}
 
 			void GenerateAtlas() {
-				Texture2D[] textures = LoadAsset<Texture2D>(i.TexturesDirectory);
-				GameObject[] prefabs = LoadAsset<GameObject>(i.PrefabsDirectory);
+				Texture2D[] textures = LoadAsset<Texture2D>(I.TexturesDirectory);
+				GameObject[] prefabs = LoadAsset<GameObject>(I.PrefabsDirectory);
 
-				Texture2D atlas = new Texture2D(i.MaximumAtlasSize, i.MaximumAtlasSize);
-				Rect[] rects = atlas.PackTextures(textures, i.Padding, i.MaximumAtlasSize);
+				Texture2D atlas = new Texture2D(I.MaximumAtlasSize, I.MaximumAtlasSize);
+				Rect[] rects = atlas.PackTextures(textures, I.Padding, I.MaximumAtlasSize);
 				byte[] bytes = atlas.EncodeToPNG();
-				File.WriteAllBytes(AssetDatabase.GetAssetPath(i.Atlas), bytes);
+				File.WriteAllBytes(AssetDatabase.GetAssetPath(I.Atlas), bytes);
 				AssetDatabase.Refresh();
 
-				AtlasMap prevMap = i.AtlasMap;
+				AtlasMap prevMap = I.AtlasMap;
 				AtlasMap nextMap = new AtlasMap();
 				for (int i = 0; i < textures.Length; i++) nextMap[textures[i].name] = new TextureData {
 					size   = new Vector2(textures[i].width, textures[i].height),
@@ -150,8 +150,8 @@ public class AtlasMapSO : ScriptableObject {
 						PrefabUtility.SaveAsPrefabAsset(prefabs[i], path);
 					}
 				}
-				i.AtlasMap.Clear();
-				foreach (var pair in nextMap) i.AtlasMap.Add(pair.Key, pair.Value);
+				I.AtlasMap.Clear();
+				foreach (var pair in nextMap) I.AtlasMap.Add(pair.Key, pair.Value);
 			}
 		}
 	#endif
