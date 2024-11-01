@@ -335,7 +335,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	}
 
 	void Start() {
-		float PixelPerUnit = CameraManager.Instance.PixelPerUnit;
+		float PixelPerUnit = UIManager.Instance.PixelPerUnit;
 
 		// CreatureType _ AnimationType _ Direction _ Index _ Duration
 		creatureSizeMap.Clear();

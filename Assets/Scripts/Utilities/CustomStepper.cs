@@ -4,18 +4,22 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 
+
 #if UNITY_EDITOR
-	using UnityEditor;
+using UnityEditor;
 	using UnityEditor.UI;
 	using static UnityEditor.EditorGUILayout;
 #endif
 
 
 
+// ====================================================================================================
+// Custom Stepper
+// ====================================================================================================
+
 public class CustomStepper : Selectable, IPointerClickHandler {
 
-	[System.Serializable] public class StepperEvent : UnityEvent<CustomStepper> {}
-	[System.Serializable] public class StepperValue : UnityEvent<int> {}
+	[System.Serializable] public class StepperEvent : UnityEvent<int> {}
 
 
 
@@ -30,8 +34,7 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 	[SerializeField] int  value  = 0;
 	[SerializeField] bool loop   = false;
 
-	public StepperEvent onRefresh      = new StepperEvent();
-	public StepperValue onValueChanged = new StepperValue();
+	public StepperEvent onValueChanged = new StepperEvent();
 
 
 
@@ -42,22 +45,23 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 	TextMeshProUGUI TextTMP        { get => textTMP;        set => textTMP        = value; }
 	TextMeshProUGUI LabelTMP       { get => labelTMP;       set => labelTMP       = value; }
 
+	public string Text {
+		get => TextTMP ? TextTMP.text : "";
+		set {
+			if (TextTMP) TextTMP.text = value;
+		}
+	}
+
 	public int Length {
 		get => length;
-		set {
-			length = Mathf.Max(1, value);
-			Refresh();
-		}
+		set => length = Mathf.Max(value, 1);
 	}
 
 	public int Value {
 		get => value;
 		set {
-			if (Loop) {
-				if (value < 0) value = Length - 1;
-				if (Length - 1 < value) value = 0;
-			}
-			this.value = Mathf.Clamp(value, 0, Length - 1);
+			if (Loop) this.value = (int)Mathf.Repeat(value, Length);
+			else      this.value =      Mathf.Clamp (value, 0, Length - 1);
 			onValueChanged?.Invoke(Value);
 			Refresh();
 		}
@@ -94,11 +98,15 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 				I.LabelTMP       = ObjectField("Label",       I.LabelTMP      );
 
 				Space();
-				I.Length         = IntField   ("Length",      I.Length        );
+				I.Length		 = IntSlider  ("Length",      I.Length,       1, I.Length + 1);
 				I.Value          = IntSlider  ("Value",       I.Value,        0, I.Length - 1);
 				I.Loop           = Toggle     ("Loop",        I.Loop          );
+
+				Space();
+				PropertyField(serializedObject.FindProperty("onValueChanged"));
 				
 				if (GUI.changed) EditorUtility.SetDirty(target);
+				serializedObject.ApplyModifiedProperties();
 			}
 		}
 	#endif
@@ -109,18 +117,15 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 
 	RectTransform Rect => transform as RectTransform;
 
-	float BodyWidth => Rect.rect.width;
-
 	public void Refresh() {
 		if (leftArrowRect ) leftArrowRect .gameObject.SetActive(Loop || 0          < Value);
 		if (rightArrowRect) rightArrowRect.gameObject.SetActive(Loop || Value < Length - 1);
-		onRefresh?.Invoke(this);
 	}
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable) {
 			Vector2 point = Rect.InverseTransformPoint(eventData.position);
-			Value += (0 <= point.x) && (point.x < BodyWidth / 3) ? -1 : 1;
+			Value += (0 <= point.x) && (point.x < Rect.rect.width / 3) ? -1 : 1;
 		}
 	}
 

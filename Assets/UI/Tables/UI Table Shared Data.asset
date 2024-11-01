@@ -39,12 +39,24 @@ MonoBehaviour:
     m_Key: Back
     m_Metadata:
       m_Items: []
+  - m_Id: 154919816302592
+    m_Key: On
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154966578597888
+    m_Key: Off
+    m_Metadata:
+      m_Items: []
   - m_Id: 231456280576
     m_Key: General
     m_Metadata:
       m_Items: []
   - m_Id: 260677996544
     m_Key: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153830291312640
+    m_Key: Full Screen
     m_Metadata:
       m_Items: []
   - m_Id: 292655370240

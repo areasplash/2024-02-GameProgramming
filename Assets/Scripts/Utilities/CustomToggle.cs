@@ -12,9 +12,12 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Toggle
+// ====================================================================================================
+
 public class CustomToggle : Selectable, IPointerClickHandler {
 
-	[System.Serializable] public class ToggleValue : UnityEvent<CustomToggle> {}
 	[System.Serializable] public class ToggleEvent : UnityEvent<bool> {}
 
 
@@ -29,7 +32,6 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 
 	[SerializeField] bool value = false;
 
-	public ToggleValue onRefresh      = new ToggleValue();
 	public ToggleEvent onValueChanged = new ToggleEvent();
 
 
@@ -56,7 +58,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 	// Editor
 
 	#if UNITY_EDITOR
-	[CustomEditor(typeof(CustomToggle)), CanEditMultipleObjects]
+		[CustomEditor(typeof(CustomToggle)), CanEditMultipleObjects]
 		public class CustomToggleEditor : SelectableEditor {
 			CustomToggle I => target as CustomToggle;
 
@@ -68,16 +70,20 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 				base.OnInspectorGUI();
 				
 				Space();
-				I.FalseRect   = ObjectField("False Rect", I.FalseRect  );
-				I.TrueTect    = ObjectField("True Rect",  I.TrueTect   );
-				I.FalseTMP    = ObjectField("False TMP",  I.FalseTMP   );
-				I.TrueTMP     = ObjectField("True TMP",   I.TrueTMP    );
-				I.LabelTMP    = ObjectField("Label",      I.LabelTMP   );
+				I.FalseRect   = ObjectField("False Rect", I.FalseRect);
+				I.TrueTect    = ObjectField("True Rect",  I.TrueTect );
+				I.FalseTMP    = ObjectField("False TMP",  I.FalseTMP );
+				I.TrueTMP     = ObjectField("True TMP",   I.TrueTMP  );
+				I.LabelTMP    = ObjectField("Label",      I.LabelTMP );
 
 				Space();
-				I.Value       = Toggle     ("Value",       I.Value     );
+				I.Value       = Toggle     ("Value",       I.Value   );
+
+				Space();
+				PropertyField(serializedObject.FindProperty("onValueChanged"));
 				
 				if (GUI.changed) EditorUtility.SetDirty(target);
+				serializedObject.ApplyModifiedProperties();
 			}
 		}
 	#endif
@@ -93,7 +99,6 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 		if (falseTMP ) falseTMP .gameObject.SetActive(!value);
 		if (trueTect ) trueTect .gameObject.SetActive( value);
 		if (trueTMP  ) trueTMP  .gameObject.SetActive( value);
-		onRefresh?.Invoke(this);
 	}
 
 	public void OnPointerClick(PointerEventData eventData) {

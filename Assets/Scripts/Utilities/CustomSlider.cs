@@ -12,9 +12,12 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Slider
+// ====================================================================================================
+
 public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 
-	[System.Serializable] public class SliderValue : UnityEvent<CustomSlider> {}
 	[System.Serializable] public class SliderEvent : UnityEvent<float> {}
 
 
@@ -34,7 +37,6 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	[SerializeField] string format = "{0:P0}";
 
-	public SliderValue onRefresh      = new SliderValue();
 	public SliderEvent onValueChanged = new SliderEvent();
 
 
@@ -89,6 +91,8 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 		}
 	}
 
+	string Formatted => string.Format(Format, Value, MinValue, MaxValue);
+
 
 
 	// Editor
@@ -107,27 +111,29 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 				
 				Space();
 				LabelField("Slider", EditorStyles.boldLabel);
-				I.BodyRect    = ObjectField("Body Rect",   I.BodyRect   );
-				I.HandleRect  = ObjectField("Handle Rect", I.HandleRect );
-				I.TextTMP     = ObjectField("Text TMP",    I.TextTMP    );
-				I.LabelTMP    = ObjectField("Label TMP",   I.LabelTMP   );
+				I.BodyRect    = ObjectField("Body Rect",   I.BodyRect  );
+				I.HandleRect  = ObjectField("Handle Rect", I.HandleRect);
+				I.TextTMP     = ObjectField("Text TMP",    I.TextTMP   );
+				I.LabelTMP    = ObjectField("Label TMP",   I.LabelTMP  );
 
 				Space();
 				LabelField("Values", EditorStyles.boldLabel);
-				I.MinValue    = FloatField("Value Min",    I.MinValue   );
-				I.MaxValue    = FloatField("Value Max",    I.MaxValue   );
-				I.Value       = Slider    ("Value",        I.Value,     I.MinValue, I.MaxValue);
-				I.Step        = Slider    ("Step",         I.Step,      I.MinValue, I.MaxValue);
-				I.FineStep    = Slider    ("Fine Step",    I.FineStep,  I.MinValue, I.MaxValue);
+				I.MinValue    = FloatField("Value Min",    I.MinValue  );
+				I.MaxValue    = FloatField("Value Max",    I.MaxValue  );
+				I.Value       = Slider    ("Value",        I.Value,    I.MinValue, I.MaxValue);
+				I.Step        = Slider    ("Step",         I.Step,     I.MinValue, I.MaxValue);
+				I.FineStep    = Slider    ("Fine Step",    I.FineStep, I.MinValue, I.MaxValue);
 
 				Space();
 				LabelField("Format", EditorStyles.boldLabel);
+				TextField (I.Formatted, "{0} = Value, {1} = Min Value, {2} = Max Value");
 				I.Format      = TextField ("Format",      I.Format      );
-				string result = string.Format(I.Format, I.Value, I.MinValue, I.MaxValue);
-				string format = "{0} = Value, {1} = Min Value, {2} = Max Value";
-				                TextField(result, format);
+
+				Space();
+				PropertyField(serializedObject.FindProperty("onValueChanged"));
 				
 				if (GUI.changed) EditorUtility.SetDirty(target);
+				serializedObject.ApplyModifiedProperties();
 			}
 		}
 	#endif
@@ -138,37 +144,38 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	RectTransform Rect => transform as RectTransform;
 
-	float BodyWidth   => Rect.rect.width;
-	float HandleWidth => handleRect.rect.width;
-	int   X => Mathf.RoundToInt((Value - MinValue) / (MaxValue - MinValue) * (BodyWidth - HandleWidth));
-
-	bool  Ctrl => Input.GetKey(KeyCode.LeftControl);
+	float Ratio => (Value - MinValue) / (MaxValue - MinValue);
+	int   Width => Mathf.RoundToInt(Ratio * (Rect.rect.width - HandleRect.rect.width));
+	bool  Ctrl  => Input.GetKey(KeyCode.LeftControl);
 
 	public void Refresh() {
 		if (BodyRect) {
-			Vector2 sizeDelta = new Vector2(HandleWidth / 2 + X, BodyRect.sizeDelta.y);
+			Vector2 sizeDelta = BodyRect.sizeDelta;
+			sizeDelta.x = HandleRect.rect.width / 2 + Width;
 			BodyRect.sizeDelta = sizeDelta;
 		}
 		if (HandleRect) {
-			Vector2 anchoredPosition = new Vector2(X, HandleRect.anchoredPosition.y);
+			Vector2 anchoredPosition = HandleRect.anchoredPosition;
+			anchoredPosition.x = Width;
 			HandleRect.anchoredPosition = anchoredPosition;
 		}
-		if (textTMP) textTMP.text = string.Format(Format, Value, MinValue, MaxValue);
-		onRefresh?.Invoke(this);
+		if (TextTMP) TextTMP.text = Formatted;
 	}
 
 	public void OnPointerClick(PointerEventData eventData) {
-		if (interactable) {
+		if (interactable && !eventData.dragging) {
 			Vector2 point = Rect.InverseTransformPoint(eventData.position);
-			if (point.x < X) Value -= Ctrl ? FineStep : Step;
-			if (X < point.x) Value += Ctrl ? FineStep : Step;
+			if (point.x < Width) Value -= Ctrl ? FineStep : Step;
+			if (Width < point.x) Value += Ctrl ? FineStep : Step;
 		}
 	}
-
+	
 	public void OnDrag(PointerEventData eventData) {
 		if (interactable) {
 			Vector2 point = Rect.InverseTransformPoint(eventData.position);
-			Value = Mathf.Lerp(MinValue, MaxValue, Mathf.InverseLerp(0, BodyWidth, point.x));
+			float a = HandleRect.rect.width / 2;
+			float b = Rect.rect.width - HandleRect.rect.width / 2;
+			Value = Mathf.Lerp(MinValue, MaxValue, Mathf.InverseLerp(a, b, point.x));
 		}
 	}
 

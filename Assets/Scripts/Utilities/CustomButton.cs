@@ -12,9 +12,12 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Button
+// ====================================================================================================
+
 public class CustomButton : Selectable, IPointerClickHandler {
 
-	[System.Serializable] public class ButtonValue : UnityEvent<CustomButton> {}
 	[System.Serializable] public class ButtonEvent : UnityEvent {}
 
 
@@ -24,8 +27,7 @@ public class CustomButton : Selectable, IPointerClickHandler {
 	[SerializeField] TextMeshProUGUI textTMP;
 	[SerializeField] TextMeshProUGUI labelTMP;
 
-	public ButtonValue onRefresh = new ButtonValue();
-	public ButtonEvent onClick   = new ButtonEvent();
+	public ButtonEvent onClick = new ButtonEvent();
 
 
 
@@ -55,7 +57,11 @@ public class CustomButton : Selectable, IPointerClickHandler {
 				I.TextTMP  = ObjectField("Text",  I.TextTMP );
 				I.LabelTMP = ObjectField("Label", I.LabelTMP);
 
+				Space();
+				PropertyField(serializedObject.FindProperty("onClick"));
+
 				if (GUI.changed) EditorUtility.SetDirty(target);
+				serializedObject.ApplyModifiedProperties();
 			}
 		}
 	#endif
@@ -67,7 +73,6 @@ public class CustomButton : Selectable, IPointerClickHandler {
 	RectTransform Rect => transform as RectTransform;
 
 	public void Refresh() {
-		onRefresh?.Invoke(this);
 	}
 
 	public void OnPointerClick(PointerEventData eventData) {

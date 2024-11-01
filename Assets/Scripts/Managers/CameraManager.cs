@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Events;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -21,10 +20,6 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	[SerializeField] float      fieldOfView       = 60.0f;
 	[SerializeField] float      orthographicSize  = 22.5f;
-	[SerializeField] bool       pixelPerfect      = true;
-	[SerializeField] Vector2    resolution        = new Vector2(640, 360);
-	[SerializeField] Vector2    reference         = new Vector2(640, 360);
-	[SerializeField] float      pixelPerUnit      = 16.0f;
 
 	[SerializeField] GameObject target            = null;
 	[SerializeField] Vector3    targetPosition    = new Vector3(0, 0, 0);
@@ -54,67 +49,6 @@ public class CameraManager : MonoSingleton<CameraManager> {
 			if (MainCamera) MainCamera.orthographicSize = OrthographicSize;
 			if (FadeCamera) FadeCamera.orthographicSize = OrthographicSize;
 			Projection = Projection;
-		}
-	}
-
-	public bool PixelPerfect {
-		get => pixelPerfect;
-		set {
-			pixelPerfect = value;
-			Resolution = Resolution;
-			Projection = Projection;
-		}
-	}
-
-	public Vector2 Reference {
-		get => reference;
-		set {
-			reference = value;
-			Resolution = Resolution;
-		}
-	}
-
-	public Vector2 Resolution {
-		get => resolution;
-		set {
-			if (resolution != value) {
-				resolution  = value;
-				Screen.SetResolution((int)resolution.x, (int)resolution.y, Screen.fullScreen);
-			}
-			Vector2 size = resolution;
-			if (PixelPerfect) {
-				int multiplier = 1;
-				while (true) {
-					bool xMatch = reference.x * multiplier < resolution.x;
-					bool yMatch = reference.y * multiplier < resolution.y;
-					if (xMatch && yMatch) multiplier++;
-					else break;
-				}
-				size.x = Mathf.Ceil(resolution.x / multiplier);
-				size.y = Mathf.Ceil(resolution.y / multiplier);
-			}
-			bool flag = MainCamera?.targetTexture;
-			if (flag) flag &= MainCamera.targetTexture.width  != (int)size.x;
-			if (flag) flag &= MainCamera.targetTexture.height != (int)size.y;
-			if (flag) {
-				MainCamera.targetTexture.Release();
-				FadeCamera.targetTexture.Release();
-				MainCamera.targetTexture.width  = (int)size.x;
-				FadeCamera.targetTexture.width  = (int)size.x;
-				MainCamera.targetTexture.height = (int)size.y;
-				FadeCamera.targetTexture.height = (int)size.y;
-				MainCamera.targetTexture.Create();
-				FadeCamera.targetTexture.Create();
-				OrthographicSize = size.y / 2 / PixelPerUnit;
-			}
-		}
-	}
-
-	public float PixelPerUnit {
-		get => pixelPerUnit;
-		set {
-			pixelPerUnit = value;
-			OrthographicSize = OrthographicSize;
 		}
 	}
 
@@ -183,10 +117,6 @@ public class CameraManager : MonoSingleton<CameraManager> {
 				LabelField("Settings", EditorStyles.boldLabel);
 				I.FieldOfView      = FloatField  ("Field Of View",     I.FieldOfView     );
 				I.OrthographicSize = FloatField  ("Orthographic Size", I.OrthographicSize);
-				I.PixelPerfect     = Toggle      ("Pixel Perfect",     I.PixelPerfect    );
-				I.Resolution       = Vector2Field("Resolution",        I.Resolution      );
-				I.Reference        = Vector2Field("Reference",         I.Reference       );
-				I.PixelPerUnit     = FloatField  ("Pixel Per Unit",    I.PixelPerUnit    );
 
 				Space();
 				I.Target           = ObjectField ("Target",             I.Target         );
@@ -203,16 +133,8 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	// Methods
 
-	public static Vector3 GetPixelated(Vector3 position) {
-		position = Instance.transform.InverseTransformDirection(position);
-		position.x = Mathf.Round(position.x * Instance.PixelPerUnit) / Instance.PixelPerUnit;
-		position.y = Mathf.Round(position.y * Instance.PixelPerUnit) / Instance.PixelPerUnit;
-		position.z = Mathf.Round(position.z * Instance.PixelPerUnit) / Instance.PixelPerUnit;
-		return Instance.transform.TransformDirection(position);
-	}
-
 	public static Ray ScreenPointToRay(Vector3 position) {
-		float multiplier = Instance.MainCamera.targetTexture.width / Instance.Resolution.x;
+		float multiplier = Instance.MainCamera.targetTexture.width / UIManager.Instance.Resolution.x;
 		Vector3 viewport = Instance.MainCamera.ScreenToViewportPoint(position * multiplier);
 		return Instance.MainCamera.ViewportPointToRay(viewport);
 	}
@@ -221,17 +143,5 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	// Cycle
 
-	void Start() => Resolution = Resolution;
-
-	void LateUpdate() {
-		// 추후 최적화 필요
-		if (transform.hasChanged) {
-			CameraArmLength = CameraArmLength;
-			transform.hasChanged = false;
-		}
-		if (Screen.width != Resolution.x || Screen.height != Resolution.y) {
-			Resolution = new Vector2(Screen.width, Screen.height);
-		}
-		Projection = Projection;
-	}
+	void LateUpdate() => Projection = Projection;
 }

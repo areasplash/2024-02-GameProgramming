@@ -94,6 +94,18 @@ MonoBehaviour:
     m_Localized: Delete All Data
     m_Metadata:
       m_Items: []
+  - m_Id: 153830291312640
+    m_Localized: Full Screen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154919816302592
+    m_Localized: On
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154966578597888
+    m_Localized: Off
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
