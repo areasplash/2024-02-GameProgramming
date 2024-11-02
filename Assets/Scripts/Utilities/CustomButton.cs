@@ -18,6 +18,7 @@ using TMPro;
 
 public class CustomButton : Selectable, IPointerClickHandler {
 
+	[System.Serializable] public class ButtonFresh : UnityEvent {}
 	[System.Serializable] public class ButtonEvent : UnityEvent {}
 
 
@@ -27,7 +28,8 @@ public class CustomButton : Selectable, IPointerClickHandler {
 	[SerializeField] TextMeshProUGUI textTMP;
 	[SerializeField] TextMeshProUGUI labelTMP;
 
-	public ButtonEvent onClick = new ButtonEvent();
+	public ButtonFresh onFreshInvoked = new ButtonFresh();
+	public ButtonEvent onClick        = new ButtonEvent();
 
 
 
@@ -58,7 +60,8 @@ public class CustomButton : Selectable, IPointerClickHandler {
 				I.LabelTMP = ObjectField("Label", I.LabelTMP);
 
 				Space();
-				PropertyField(serializedObject.FindProperty("onClick"));
+				PropertyField(serializedObject.FindProperty("onFreshInvoked"));
+				PropertyField(serializedObject.FindProperty("onClick"       ));
 
 				if (GUI.changed) EditorUtility.SetDirty(target);
 				serializedObject.ApplyModifiedProperties();
@@ -71,9 +74,6 @@ public class CustomButton : Selectable, IPointerClickHandler {
 	// Methods
 
 	RectTransform Rect => transform as RectTransform;
-
-	public void Refresh() {
-	}
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable) onClick?.Invoke();
@@ -101,5 +101,15 @@ public class CustomButton : Selectable, IPointerClickHandler {
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
 		}
+	}
+
+
+
+	protected override void Start() {
+		base.Start();
+		onFreshInvoked?.Invoke();
+	}
+
+	public void Refresh() {
 	}
 }

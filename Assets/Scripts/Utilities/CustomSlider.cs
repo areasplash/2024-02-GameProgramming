@@ -18,6 +18,7 @@ using TMPro;
 
 public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 
+	[System.Serializable] public class SliderFresh : UnityEvent<CustomSlider> {}
 	[System.Serializable] public class SliderEvent : UnityEvent<float> {}
 
 
@@ -37,6 +38,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	[SerializeField] string format = "{0:P0}";
 
+	public SliderFresh onFreshInvoked = new SliderFresh();
 	public SliderEvent onValueChanged = new SliderEvent();
 
 
@@ -51,6 +53,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	float MinValue {
 		get => minValue;
 		set {
+			if (minValue == value) return;
 			minValue = Mathf.Min(value, MaxValue);
 			Value = Value;
 		}
@@ -59,6 +62,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	float MaxValue {
 		get => maxValue;
 		set {
+			if (maxValue == value) return;
 			maxValue = Mathf.Max(value, MinValue);
 			Value = Value;
 		}
@@ -67,9 +71,10 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	float Value {
 		get => value;
 		set {
+			if (this.value == value) return;
 			this.value = Mathf.Clamp(value, MinValue, MaxValue);
 			onValueChanged?.Invoke(Value);
-			Refresh();
+			onFreshInvoked?.Invoke(this );
 		}
 	}
 
@@ -86,8 +91,9 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	string Format {
 		get => format;
 		set {
+			if (format == value) return;
 			format = value;
-			Refresh();
+			onFreshInvoked?.Invoke(this);
 		}
 	}
 
@@ -130,6 +136,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 				I.Format      = TextField ("Format",      I.Format      );
 
 				Space();
+				PropertyField(serializedObject.FindProperty("onFreshInvoked"));
 				PropertyField(serializedObject.FindProperty("onValueChanged"));
 				
 				if (GUI.changed) EditorUtility.SetDirty(target);
@@ -147,20 +154,6 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	float Ratio => (Value - MinValue) / (MaxValue - MinValue);
 	int   Width => Mathf.RoundToInt(Ratio * (Rect.rect.width - HandleRect.rect.width));
 	bool  Ctrl  => Input.GetKey(KeyCode.LeftControl);
-
-	public void Refresh() {
-		if (BodyRect) {
-			Vector2 sizeDelta = BodyRect.sizeDelta;
-			sizeDelta.x = HandleRect.rect.width / 2 + Width;
-			BodyRect.sizeDelta = sizeDelta;
-		}
-		if (HandleRect) {
-			Vector2 anchoredPosition = HandleRect.anchoredPosition;
-			anchoredPosition.x = Width;
-			HandleRect.anchoredPosition = anchoredPosition;
-		}
-		if (TextTMP) TextTMP.text = Formatted;
-	}
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable && !eventData.dragging) {
@@ -204,5 +197,26 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
 		}
+	}
+
+
+
+	protected override void Start() {
+		base.Start();
+		onFreshInvoked?.Invoke(this);
+	}
+
+	public void Fresh() {
+		if (BodyRect) {
+			Vector2 sizeDelta = BodyRect.sizeDelta;
+			sizeDelta.x = HandleRect.rect.width / 2 + Width;
+			BodyRect.sizeDelta = sizeDelta;
+		}
+		if (HandleRect) {
+			Vector2 anchoredPosition = HandleRect.anchoredPosition;
+			anchoredPosition.x = Width;
+			HandleRect.anchoredPosition = anchoredPosition;
+		}
+		if (TextTMP) TextTMP.text = Formatted;
 	}
 }

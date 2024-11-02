@@ -18,6 +18,7 @@ using TMPro;
 
 public class CustomToggle : Selectable, IPointerClickHandler {
 
+	[System.Serializable] public class ToggleFresh : UnityEvent<CustomToggle> {}
 	[System.Serializable] public class ToggleEvent : UnityEvent<bool> {}
 
 
@@ -32,6 +33,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 
 	[SerializeField] bool value = false;
 
+	public ToggleFresh onFreshInvoked = new ToggleFresh();
 	public ToggleEvent onValueChanged = new ToggleEvent();
 
 
@@ -47,9 +49,10 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 	public bool Value {
 		get => value;
 		set {
+			if (this.value == value) return;
 			this.value = value;
 			onValueChanged?.Invoke(Value);
-			Refresh();
+			onFreshInvoked?.Invoke(this );
 		}
 	}
 
@@ -80,6 +83,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 				I.Value       = Toggle     ("Value",       I.Value   );
 
 				Space();
+				PropertyField(serializedObject.FindProperty("onFreshInvoked"));
 				PropertyField(serializedObject.FindProperty("onValueChanged"));
 				
 				if (GUI.changed) EditorUtility.SetDirty(target);
@@ -93,13 +97,6 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 	// Methods
 
 	RectTransform Rect => transform as RectTransform;
-
-	public void Refresh() {
-		if (falseRect) falseRect.gameObject.SetActive(!value);
-		if (falseTMP ) falseTMP .gameObject.SetActive(!value);
-		if (trueTect ) trueTect .gameObject.SetActive( value);
-		if (trueTMP  ) trueTMP  .gameObject.SetActive( value);
-	}
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable) Value = !Value;
@@ -127,5 +124,19 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
 		}
+	}
+
+
+
+	protected override void Start() {
+		base.Start();
+		onFreshInvoked?.Invoke(this);
+	}
+	
+	public void Fresh() {
+		falseRect?.gameObject.SetActive(!value);
+		falseTMP ?.gameObject.SetActive(!value);
+		trueTect ?.gameObject.SetActive( value);
+		trueTMP  ?.gameObject.SetActive( value);
 	}
 }

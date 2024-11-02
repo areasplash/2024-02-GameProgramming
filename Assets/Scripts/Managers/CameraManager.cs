@@ -134,7 +134,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	// Methods
 
 	public static Ray ScreenPointToRay(Vector3 position) {
-		float multiplier = Instance.MainCamera.targetTexture.width / UIManager.Instance.Resolution.x;
+		float multiplier = Instance.MainCamera.targetTexture.width / Screen.width;
 		Vector3 viewport = Instance.MainCamera.ScreenToViewportPoint(position * multiplier);
 		return Instance.MainCamera.ViewportPointToRay(viewport);
 	}

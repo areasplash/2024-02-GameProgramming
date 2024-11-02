@@ -385,10 +385,24 @@ MonoBehaviour:
   rightArrowRect: {fileID: 1588773925514399224}
   textTMP: {fileID: 388272278703991986}
   labelTMP: {fileID: 1870884784755616310}
-  list:
-  - 
-  loop: 0
+  length: 1
   value: 0
+  loop: 0
+  onFreshInvoked:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2286907222880245904}
+        m_TargetAssemblyTypeName: CustomStepper, Assembly-CSharp
+        m_MethodName: Fresh
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []

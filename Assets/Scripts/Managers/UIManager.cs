@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Localization.Settings;
+using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -22,76 +23,25 @@ public class UIManager : MonoSingleton<UIManager> {
 	[SerializeField] Canvas menu;
 	[SerializeField] Canvas settings;
 
-	[SerializeField] CustomStepper language;
-	[SerializeField] CustomStepper screenResolution;
-	[SerializeField] Vector2Int    resolution   = new Vector2Int(1280,  720);
-	[SerializeField] Vector2Int    reference    = new Vector2Int( 640,  360);
-	[SerializeField] Vector2Int[]  presets      = new Vector2Int[] {
+	[SerializeField] bool          pixelPerfect        = true;
+	[SerializeField] float         pixelPerUnit        = 16.0f;
+	[SerializeField] Vector2Int    referenceResolution = new Vector2Int(640, 360);
+	[SerializeField] Vector2Int[]  presetResolution    = new Vector2Int[] {
 		new Vector2Int( 640,  360),
 		new Vector2Int(1280,  720),
 		new Vector2Int(1920, 1080),
 		new Vector2Int(2560, 1440),
 		new Vector2Int(3840, 2160),
 	};
-	[SerializeField] float         pixelPerUnit = 16.0f;
-	[SerializeField] bool          pixelPerfect = true;
 
 
 
 	// Properties
 
-	public Vector2Int Resolution {
-		get => resolution;
-		set {
-			resolution = value;
-			if (Resolution != new Vector2Int(Screen.width, Screen.height)) {
-				Screen.SetResolution(Resolution.x, Resolution.y, Screen.fullScreen);
-			}
-			int multiplier = Mathf.Max(1, Resolution.x / Reference.x, Resolution.y / Reference.y);
-			if (TryGetComponent(out CanvasScaler scaler)) scaler.scaleFactor = multiplier;
-
-			bool resized = true;
-			resized &= !Screen.fullScreen;
-			resized &= !System.Array.Exists(presets, p => p == Resolution);
-			if (screenResolution) {
-				screenResolution.interactable = !Screen.fullScreen;
-				screenResolution.Text         = $"{Resolution.x} x {Resolution.y}";
-				screenResolution.Length       = presets.Length;
-				screenResolution.Loop         = resized;
-			}
-
-			Vector2 size = Resolution;
-			if (PixelPerfect) {
-				size.x = Mathf.Ceil(Resolution.x / multiplier);
-				size.y = Mathf.Ceil(Resolution.y / multiplier);
-			}
-			if (CameraManager.Instance.MainCamera?.targetTexture) {
-				CameraManager.Instance.MainCamera.targetTexture.Release();
-				CameraManager.Instance.FadeCamera.targetTexture.Release();
-				CameraManager.Instance.MainCamera.targetTexture.width  = (int)size.x;
-				CameraManager.Instance.FadeCamera.targetTexture.width  = (int)size.x;
-				CameraManager.Instance.MainCamera.targetTexture.height = (int)size.y;
-				CameraManager.Instance.FadeCamera.targetTexture.height = (int)size.y;
-				CameraManager.Instance.MainCamera.targetTexture.Create();
-				CameraManager.Instance.FadeCamera.targetTexture.Create();
-				CameraManager.Instance.OrthographicSize = size.y / 2 / PixelPerUnit;
-			}
-		}
-	}
-
-	public Vector2Int Reference {
-		get => reference;
-		set {
-			reference  = value;
-			Resolution = Resolution;
-		}
-	}
-
 	public bool PixelPerfect {
 		get => pixelPerfect;
 		set {
 			pixelPerfect = value;
-			Resolution = Resolution;
 			if (TryGetComponent(out Canvas canvas)) canvas.pixelPerfect = value;
 		}
 	}
@@ -103,6 +53,15 @@ public class UIManager : MonoSingleton<UIManager> {
 			if (TryGetComponent(out Canvas canvas)) canvas.referencePixelsPerUnit = value;
 		}
 	}
+
+	public Vector2Int ReferenceResolution {
+		get => referenceResolution;
+		set {
+			referenceResolution  = value;
+		}
+	}
+
+	public Vector2Int[] PresetResolution => presetResolution;
 
 
 
@@ -120,23 +79,17 @@ public class UIManager : MonoSingleton<UIManager> {
 			public override void OnInspectorGUI() {
 				Space();
 				LabelField("Canvas", EditorStyles.boldLabel);
-				I.mainmenu         = ObjectField    ("Main Menu",         I.mainmenu        );
-				I.game             = ObjectField    ("Game",              I.game            );
-				I.menu             = ObjectField    ("Menu",              I.menu            );
-				I.settings         = ObjectField    ("Settings",          I.settings        );
+				I.mainmenu            = ObjectField    ("Main Menu",            I.mainmenu           );
+				I.game                = ObjectField    ("Game",                 I.game               );
+				I.menu                = ObjectField    ("Menu",                 I.menu               );
+				I.settings            = ObjectField    ("Settings",             I.settings           );
 
 				Space();
-				LabelField("Settings", EditorStyles.boldLabel);
-				I.language         = ObjectField    ("Language",          I.language        );
-				I.screenResolution = ObjectField    ("Screen Resolution", I.screenResolution);
-				Space();
-				I.Resolution       = Vector2IntField("Resolution",        I.Resolution      );
-				I.Reference        = Vector2IntField("Reference",         I.Reference       );
+				LabelField("Display Settings", EditorStyles.boldLabel);
+				I.PixelPerfect        = Toggle         ("Pixel Perfect",        I.PixelPerfect       );
+				I.PixelPerUnit        = FloatField     ("Pixel Per Unit",       I.PixelPerUnit       );
+				I.ReferenceResolution = Vector2IntField("Reference Resolution", I.ReferenceResolution);
 				PropertyField(serializedObject.FindProperty("presets"));
-				I.PixelPerUnit     = FloatField     ("Pixel Per Unit",    I.PixelPerUnit    );
-				I.PixelPerfect     = Toggle         ("Pixel Perfect",     I.PixelPerfect    );
-
-				
 
 				if (GUI.changed) EditorUtility.SetDirty(target);
 				serializedObject.ApplyModifiedProperties();
@@ -185,37 +138,90 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
-	static bool IsChangingLanguage { get; set; } = false;
+	static bool IsLanguageChanging { get; set; } = false;
 
-	public static async void SetLanguage(int value) {
-		if (IsChangingLanguage) return;
-		IsChangingLanguage = true;
-		await LocalizationSettings.InitializationOperation.Task;
-		LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[value];
-		if (Instance.language) {
-			Instance.language.Text   = LocalizationSettings.SelectedLocale.name;
-			Instance.language.Length = LocalizationSettings.AvailableLocales.Locales.Count;
+	public static void FreshLanguage(CustomStepper stepper) {
+		stepper.Text   = LocalizationSettings.AvailableLocales.Locales[stepper.Value].name;
+		stepper.Length = LocalizationSettings.AvailableLocales.Locales.Count;
+	}
+
+	public static void SetLanguage(int value) {
+		if (IsLanguageChanging == false) {
+			IsLanguageChanging = true;
+			Instance.StartCoroutine(SetLanguageRoutine(value));
 		}
-		IsChangingLanguage = false;
+	}
+
+	static IEnumerator SetLanguageRoutine(int value) {
+		yield return LocalizationSettings.InitializationOperation;
+		LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[value];
+		IsLanguageChanging = false;
 	}
 
 
 
-	static Vector2Int TempResolution { get; set; } = new Vector2Int(1280, 720);
+
+
+	static bool          FullScreen         { get; set; } = false;
+	static Vector2Int    PreviousResolution { get; set; } = new Vector2Int(1280, 720);
+	static Vector2Int    WindowedResolution { get; set; } = new Vector2Int(1280, 720);
+	static CustomStepper ScreenResolution   { get; set; } = null;
+
+	public static void FreshScreenResolution(CustomStepper stepper) {
+		if (!Instance) return;
+		ScreenResolution = stepper;
+
+		int indexLast = System.Array.FindLastIndex(Instance.PresetResolution, preset =>
+			preset.x < Screen.currentResolution.width &&
+			preset.y < Screen.currentResolution.height);
+		int indexNear = System.Array.FindLastIndex(Instance.PresetResolution, preset =>
+			preset.x <= PreviousResolution.x &&
+			preset.y <= PreviousResolution.y);
+		int multiplier = Mathf.Max(1, Mathf.Min(
+			PreviousResolution.x / Instance.ReferenceResolution.x,
+			PreviousResolution.y / Instance.ReferenceResolution.y));
+
+		if (ScreenResolution) {
+			ScreenResolution.interactable = !FullScreen;
+			ScreenResolution.Text         = $"{PreviousResolution.x} x {PreviousResolution.y}";
+			ScreenResolution.Length       = indexLast + 1;
+			ScreenResolution.SetValueForce(Mathf.Min(indexNear, indexLast));
+			ScreenResolution.Fresh();
+		}
+		Vector2 size = PreviousResolution;
+		if (Instance.PixelPerfect) {
+			size.x = Mathf.Ceil(PreviousResolution.x / multiplier);
+			size.y = Mathf.Ceil(PreviousResolution.y / multiplier);
+		}
+		if (Instance.TryGetComponent(out CanvasScaler scaler)) scaler.scaleFactor = multiplier;
+
+		if (CameraManager.Instance.MainCamera?.targetTexture) {
+			CameraManager.Instance.MainCamera.targetTexture.Release();
+			CameraManager.Instance.FadeCamera.targetTexture.Release();
+			CameraManager.Instance.MainCamera.targetTexture.width  = (int)size.x;
+			CameraManager.Instance.FadeCamera.targetTexture.width  = (int)size.x;
+			CameraManager.Instance.MainCamera.targetTexture.height = (int)size.y;
+			CameraManager.Instance.FadeCamera.targetTexture.height = (int)size.y;
+			CameraManager.Instance.MainCamera.targetTexture.Create();
+			CameraManager.Instance.FadeCamera.targetTexture.Create();
+			CameraManager.Instance.OrthographicSize = size.y / 2 / Instance.PixelPerUnit;
+		}
+	}
 
 	public static void SetFullScreen(bool value) {
-		Vector2Int resolution = TempResolution;
+		FullScreen = value;
+		Vector2Int resolution = WindowedResolution;
 		if (value) {
-			if (!Screen.fullScreen) TempResolution = new Vector2Int(Screen.width, Screen.height);
+			if (!Screen.fullScreen) WindowedResolution = new Vector2Int(Screen.width, Screen.height);
 			resolution.x = Screen.currentResolution.width;
 			resolution.y = Screen.currentResolution.height;
 		}
-		Instance.Resolution = resolution;
-		Screen.fullScreen = value;
+		Screen.SetResolution(resolution.x, resolution.y, value);
 	}
 
 	public static void SetScreenResolution(int value) {
-		Instance.Resolution = Instance.presets[value];
+		Vector2Int resolution = Instance.PresetResolution[value];
+		Screen.SetResolution(resolution.x, resolution.y, Screen.fullScreen);
 	}
 
 
@@ -237,15 +243,14 @@ public class UIManager : MonoSingleton<UIManager> {
 		game    .gameObject.SetActive(false);
 		menu    .gameObject.SetActive(false);
 		settings.gameObject.SetActive(false);
-
-		SetLanguage(0);
 	}
 
 	void Update() {
 		if (Input.GetKeyDown(KeyCode.Escape)) Back();
 
-		if (Resolution.x != Screen.width || Resolution.y != Screen.height) {
-			Resolution = new Vector2Int(Screen.width, Screen.height);
+		if (PreviousResolution.x != Screen.width || PreviousResolution.y != Screen.height) {
+			PreviousResolution = new Vector2Int(Screen.width, Screen.height);
+			FreshScreenResolution(ScreenResolution);
 		}
 	}
 }

@@ -4,7 +4,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 
-
 #if UNITY_EDITOR
 using UnityEditor;
 	using UnityEditor.UI;
@@ -19,6 +18,7 @@ using UnityEditor;
 
 public class CustomStepper : Selectable, IPointerClickHandler {
 
+	[System.Serializable] public class StepperRresh : UnityEvent<CustomStepper> {}
 	[System.Serializable] public class StepperEvent : UnityEvent<int> {}
 
 
@@ -34,6 +34,7 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 	[SerializeField] int  value  = 0;
 	[SerializeField] bool loop   = false;
 
+	public StepperRresh onFreshInvoked = new StepperRresh();
 	public StepperEvent onValueChanged = new StepperEvent();
 
 
@@ -54,24 +55,30 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 
 	public int Length {
 		get => length;
-		set => length = Mathf.Max(value, 1);
+		set {
+			if (length == value) return;
+			length = Mathf.Max(value, 1);
+			Value = Value;
+		}
 	}
 
 	public int Value {
 		get => value;
 		set {
+			if (this.value == value) return;
 			if (Loop) this.value = (int)Mathf.Repeat(value, Length);
 			else      this.value =      Mathf.Clamp (value, 0, Length - 1);
 			onValueChanged?.Invoke(Value);
-			Refresh();
+			onFreshInvoked?.Invoke(this );
 		}
 	}
 
 	public bool Loop {
 		get => loop;
 		set {
+			if (loop == value) return;
 			loop = value;
-			Refresh();
+			onFreshInvoked?.Invoke(this);
 		}
 	}
 
@@ -103,6 +110,7 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 				I.Loop           = Toggle     ("Loop",        I.Loop          );
 
 				Space();
+				PropertyField(serializedObject.FindProperty("onFreshInvoked"));
 				PropertyField(serializedObject.FindProperty("onValueChanged"));
 				
 				if (GUI.changed) EditorUtility.SetDirty(target);
@@ -116,11 +124,6 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 	// Methods
 
 	RectTransform Rect => transform as RectTransform;
-
-	public void Refresh() {
-		if (leftArrowRect ) leftArrowRect .gameObject.SetActive(Loop || 0          < Value);
-		if (rightArrowRect) rightArrowRect.gameObject.SetActive(Loop || Value < Length - 1);
-	}
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable) {
@@ -155,4 +158,18 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 			}
 		}
 	}
+
+
+
+	protected override void Start() {
+		base.Start();
+		onFreshInvoked?.Invoke(this);
+	}
+
+	public void Fresh() {
+		if (leftArrowRect ) leftArrowRect .gameObject.SetActive(Loop || 0          < Value);
+		if (rightArrowRect) rightArrowRect.gameObject.SetActive(Loop || Value < Length - 1);
+	}
+
+	public void SetValueForce(int value) => this.value = value;
 }
