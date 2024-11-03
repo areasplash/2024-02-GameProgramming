@@ -335,12 +335,12 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	}
 
 	void Start() {
-		float PixelPerUnit = UIManager.Instance.PixelPerUnit;
+		float PixelPerUnit = UIManager.Instance.pixelPerUnit;
 
 		// CreatureType _ AnimationType _ Direction _ Index _ Duration
 		creatureSizeMap.Clear();
 		creatureDataMap.Clear();
-		if (creatureAtlasMap) foreach (var pair in creatureAtlasMap.AtlasMap) {
+		if (creatureAtlasMap) foreach (var pair in creatureAtlasMap.atlasMap) {
 			string[] split = pair.Key.Split('_');
 			if (split.Length != 5) continue;
 
@@ -382,7 +382,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		// ParticleType _ Index _ Duration
 		particleSizeMap.Clear();
 		particleDataMap.Clear();
-		if (particleAtlasMap) foreach (var pair in particleAtlasMap.AtlasMap) {
+		if (particleAtlasMap) foreach (var pair in particleAtlasMap.atlasMap) {
 			string[] split = pair.Key.Split('_');
 			if (split.Length != 3) continue;
 

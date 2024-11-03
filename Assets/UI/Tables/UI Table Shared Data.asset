@@ -35,6 +35,10 @@ MonoBehaviour:
     m_Key: Main Menu
     m_Metadata:
       m_Items: []
+  - m_Id: 798827256647680
+    m_Key: "Menu\t"
+    m_Metadata:
+      m_Items: []
   - m_Id: 195087470592
     m_Key: Back
     m_Metadata:
@@ -101,6 +105,22 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 732394590208
     m_Key: Delete All Data
+    m_Metadata:
+      m_Items: []
+  - m_Id: 927899748044800
+    m_Key: Yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 927956203376640
+    m_Key: No
+    m_Metadata:
+      m_Items: []
+  - m_Id: 928005914267648
+    m_Key: Cancel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 987133344911360
+    m_Key: Quit Dialog
     m_Metadata:
       m_Items: []
   m_Metadata:

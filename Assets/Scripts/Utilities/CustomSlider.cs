@@ -1,7 +1,10 @@
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+
+using System;
+
 using TMPro;
 
 #if UNITY_EDITOR
@@ -12,163 +15,162 @@ using TMPro;
 
 
 
+#if UNITY_EDITOR
+	[CustomEditor(typeof(CustomSlider)), CanEditMultipleObjects]
+	public class CustomSliderEditor : SelectableEditor {
+
+		SerializedProperty m_BodyRect;
+		SerializedProperty m_HandleRect;
+		SerializedProperty m_TextTMP;
+		SerializedProperty m_OnStateUpdated;
+		SerializedProperty m_OnValueChanged;
+
+		CustomSlider I => target as CustomSlider;
+
+		protected override void OnEnable() {
+			base.OnEnable();
+			m_BodyRect       = serializedObject.FindProperty("m_BodyRect");
+			m_HandleRect     = serializedObject.FindProperty("m_HandleRect");
+			m_TextTMP        = serializedObject.FindProperty("m_TextTMP");
+			m_OnStateUpdated = serializedObject.FindProperty("m_OnStateUpdated");
+			m_OnValueChanged = serializedObject.FindProperty("m_OnValueChanged");
+		}
+
+		public override void OnInspectorGUI() {
+			base.OnInspectorGUI();
+			Space();
+			PropertyField(m_BodyRect);
+			PropertyField(m_HandleRect);
+			PropertyField(m_TextTMP);
+			Space();
+			I.minValue = FloatField("Min Value", I.minValue);
+			I.maxValue = FloatField("Max Value", I.maxValue);
+			I.value    = Slider    ("Value",     I.value,    I.minValue, I.maxValue);
+			I.step     = Slider    ("Step",      I.step,     I.minValue, I.maxValue);
+			I.fineStep = Slider    ("Fine Step", I.fineStep, I.minValue, I.maxValue);
+			I.format   = TextField ("Format",    I.format);
+			TextField(I.text, "{0} = Value, {1} = Min Value, {2} = Max Value");
+			Space();
+			PropertyField(m_OnStateUpdated);
+			PropertyField(m_OnValueChanged);
+			serializedObject.ApplyModifiedProperties();
+			if (GUI.changed) EditorUtility.SetDirty(target);
+		}
+	}
+#endif
+
+
+
 // ====================================================================================================
 // Custom Slider
 // ====================================================================================================
 
 public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 
-	[System.Serializable] public class SliderFresh : UnityEvent<CustomSlider> {}
-	[System.Serializable] public class SliderEvent : UnityEvent<float> {}
+	[Serializable] public class SliderUpdatedEvent : UnityEvent<CustomSlider> {}
+	[Serializable] public class SliderChangedEvent : UnityEvent<float> {}
 
 
 
 	// Fields
 
-	[SerializeField] RectTransform   bodyRect;
-	[SerializeField] RectTransform   handleRect;
-	[SerializeField] TextMeshProUGUI textTMP;
-	[SerializeField] TextMeshProUGUI labelTMP;
+	[SerializeField] RectTransform   m_BodyRect;
+	[SerializeField] RectTransform   m_HandleRect;
+	[SerializeField] TextMeshProUGUI m_TextTMP;
 
-	[SerializeField] float minValue = 0;
-	[SerializeField] float maxValue = 1;
-	[SerializeField] float value    = 1;
-	[SerializeField] float step     = 0.10f;
-	[SerializeField] float fineStep = 0.02f;
+	[SerializeField] float  m_MinValue = 0;
+	[SerializeField] float  m_MaxValue = 1;
+	[SerializeField] float  m_Value    = 1;
+	[SerializeField] float  m_Step     = 0.10f;
+	[SerializeField] float  m_FineStep = 0.02f;
+	[SerializeField] string m_Format   = "{0:P0}";
 
-	[SerializeField] string format = "{0:P0}";
-
-	public SliderFresh onFreshInvoked = new SliderFresh();
-	public SliderEvent onValueChanged = new SliderEvent();
+	[SerializeField] SliderUpdatedEvent m_OnStateUpdated = new SliderUpdatedEvent();
+	[SerializeField] SliderChangedEvent m_OnValueChanged = new SliderChangedEvent();
 
 
 
 	// Properties
 
-	RectTransform   BodyRect   { get => bodyRect;   set => bodyRect   = value; }
-	RectTransform   HandleRect { get => handleRect; set => handleRect = value; }
-	TextMeshProUGUI TextTMP    { get => textTMP;    set => textTMP    = value; }
-	TextMeshProUGUI LabelTMP   { get => labelTMP;   set => labelTMP   = value; }
+	RectTransform rectTransform => transform as RectTransform;
 
-	float MinValue {
-		get => minValue;
+	public float minValue {
+		get => m_MinValue;
 		set {
-			if (minValue == value) return;
-			minValue = Mathf.Min(value, MaxValue);
-			Value = Value;
+			m_MinValue = Mathf.Min(value, maxValue);
+			this.value = this.value;
 		}
 	}
 
-	float MaxValue {
-		get => maxValue;
+	public float maxValue {
+		get => m_MaxValue;
 		set {
-			if (maxValue == value) return;
-			maxValue = Mathf.Max(value, MinValue);
-			Value = Value;
+			m_MaxValue = Mathf.Max(value, minValue);
+			this.value = this.value;
 		}
 	}
 
-	float Value {
-		get => value;
+	public float value {
+		get => m_Value;
 		set {
-			if (this.value == value) return;
-			this.value = Mathf.Clamp(value, MinValue, MaxValue);
-			onValueChanged?.Invoke(Value);
-			onFreshInvoked?.Invoke(this );
+			m_Value = Mathf.Clamp(value, minValue, maxValue);
+			onValueChanged?.Invoke(m_Value);
+			Update();
 		}
 	}
 
-	float Step {
-		get => step;
-		set => step = Mathf.Clamp(value, 0, MaxValue - MinValue);
+	public float step {
+		get => m_Step;
+		set => m_Step = Mathf.Clamp(value, 0, maxValue - minValue);
 	}
 
-	float FineStep {
-		get => fineStep;
-		set => fineStep = Mathf.Clamp(value, 0, Step);
+	public float fineStep {
+		get => m_FineStep;
+		set => m_FineStep = Mathf.Clamp(value, 0, step);
 	}
 
-	string Format {
-		get => format;
+	public string format {
+		get => m_Format;
 		set {
-			if (format == value) return;
-			format = value;
-			onFreshInvoked?.Invoke(this);
+			m_Format = value;
+			Update();
 		}
 	}
 
-	string Formatted => string.Format(Format, Value, MinValue, MaxValue);
+	public SliderUpdatedEvent onStateUpdated {
+		get => m_OnStateUpdated;
+		set => m_OnStateUpdated = value;
+	}
 
+	public SliderChangedEvent onValueChanged {
+		get => m_OnValueChanged;
+		set => m_OnValueChanged = value;
+	}
 
-
-	// Editor
-
-	#if UNITY_EDITOR
-		[CustomEditor(typeof(CustomSlider)), CanEditMultipleObjects]
-		public class CustomSliderEditor : SelectableEditor {
-			CustomSlider I => target as CustomSlider;
-
-			T ObjectField<T>(string label, T obj) where T : Object {
-				return (T)EditorGUILayout.ObjectField(label, obj, typeof(T), true);
-			}
-
-			public override void OnInspectorGUI() {
-				base.OnInspectorGUI();
-				
-				Space();
-				LabelField("Slider", EditorStyles.boldLabel);
-				I.BodyRect    = ObjectField("Body Rect",   I.BodyRect  );
-				I.HandleRect  = ObjectField("Handle Rect", I.HandleRect);
-				I.TextTMP     = ObjectField("Text TMP",    I.TextTMP   );
-				I.LabelTMP    = ObjectField("Label TMP",   I.LabelTMP  );
-
-				Space();
-				LabelField("Values", EditorStyles.boldLabel);
-				I.MinValue    = FloatField("Value Min",    I.MinValue  );
-				I.MaxValue    = FloatField("Value Max",    I.MaxValue  );
-				I.Value       = Slider    ("Value",        I.Value,    I.MinValue, I.MaxValue);
-				I.Step        = Slider    ("Step",         I.Step,     I.MinValue, I.MaxValue);
-				I.FineStep    = Slider    ("Fine Step",    I.FineStep, I.MinValue, I.MaxValue);
-
-				Space();
-				LabelField("Format", EditorStyles.boldLabel);
-				TextField (I.Formatted, "{0} = Value, {1} = Min Value, {2} = Max Value");
-				I.Format      = TextField ("Format",      I.Format      );
-
-				Space();
-				PropertyField(serializedObject.FindProperty("onFreshInvoked"));
-				PropertyField(serializedObject.FindProperty("onValueChanged"));
-				
-				if (GUI.changed) EditorUtility.SetDirty(target);
-				serializedObject.ApplyModifiedProperties();
-			}
-		}
-	#endif
+	public string text => string.Format(format, value, minValue, maxValue);
+	
+	float ratio => (value - minValue) / (maxValue - minValue);
+	int   width => Mathf.RoundToInt(ratio * (rectTransform.rect.width - m_HandleRect.rect.width));
+	bool  fine  => Input.GetKey(KeyCode.LeftShift);
 
 
 
 	// Methods
 
-	RectTransform Rect => transform as RectTransform;
-
-	float Ratio => (Value - MinValue) / (MaxValue - MinValue);
-	int   Width => Mathf.RoundToInt(Ratio * (Rect.rect.width - HandleRect.rect.width));
-	bool  Ctrl  => Input.GetKey(KeyCode.LeftControl);
-
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable && !eventData.dragging) {
-			Vector2 point = Rect.InverseTransformPoint(eventData.position);
-			if (point.x < Width) Value -= Ctrl ? FineStep : Step;
-			if (Width < point.x) Value += Ctrl ? FineStep : Step;
+			Vector2 point = rectTransform.InverseTransformPoint(eventData.position);
+			if (point.x < width) value -= fine ? fineStep : step;
+			if (width < point.x) value += fine ? fineStep : step;
 		}
 	}
 	
 	public void OnDrag(PointerEventData eventData) {
 		if (interactable) {
-			Vector2 point = Rect.InverseTransformPoint(eventData.position);
-			float a = HandleRect.rect.width / 2;
-			float b = Rect.rect.width - HandleRect.rect.width / 2;
-			Value = Mathf.Lerp(MinValue, MaxValue, Mathf.InverseLerp(a, b, point.x));
+			Vector2 point = rectTransform.InverseTransformPoint(eventData.position);
+			float a = m_HandleRect.rect.width / 2;
+			float b = rectTransform.rect.width - m_HandleRect.rect.width / 2;
+			value = Mathf.Lerp(minValue, maxValue, Mathf.InverseLerp(a, b, point.x));
 		}
 	}
 
@@ -176,47 +178,61 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 		if (interactable) switch (eventData.moveDir) {
 			case MoveDirection.Left:
 				DoStateTransition(SelectionState.Pressed, false);
-				Value -= Ctrl ? FineStep : Step;
+				value -= fine ? fineStep : step;
 				return;
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				Value += Ctrl ? FineStep : Step;
+				value += fine ? fineStep : step;
 				return;
 		}
 		base.OnMove(eventData);
 	}
 
+	ScrollRect scrollRect;
+
+	bool TryGetComponentInParent<T>(out T component) where T : Component {
+		Transform parent = transform.parent;
+		while (parent) {
+			if (TryGetComponent(out component)) return true;
+			else parent = parent.parent;
+		}
+		component = null;
+		return false;
+	}
+
 	public override void OnSelect(BaseEventData eventData) {
 		base.OnSelect(eventData);
 		if (eventData is AxisEventData) {
-			ScrollRect scrollRect = GetComponentInParent<ScrollRect>();
-			if (scrollRect) {
+			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				anchoredPosition.y = -scrollRect.viewport.rect.height / 2;
-				anchoredPosition.y -= Rect.anchoredPosition.y - Rect.rect.height / 2;
+				float pivot = rectTransform.rect.height / 2 - rectTransform.anchoredPosition.y;
+				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
 		}
 	}
 
-
-
-	protected override void Start() {
-		base.Start();
-		onFreshInvoked?.Invoke(this);
+	public void Update() {
+		if (m_HandleRect) {
+			if (m_BodyRect) {
+				Vector2 sizeDelta = m_BodyRect.sizeDelta;
+				sizeDelta.x = m_HandleRect.rect.width / 2 + width;
+				m_BodyRect.sizeDelta = sizeDelta;
+			}
+			Vector2 anchoredPosition = m_HandleRect.anchoredPosition;
+			anchoredPosition.x = width;
+			m_HandleRect.anchoredPosition = anchoredPosition;
+		}
+		if (m_TextTMP) m_TextTMP.text = text;
+		onStateUpdated?.Invoke(this);
 	}
 
-	public void Fresh() {
-		if (BodyRect) {
-			Vector2 sizeDelta = BodyRect.sizeDelta;
-			sizeDelta.x = HandleRect.rect.width / 2 + Width;
-			BodyRect.sizeDelta = sizeDelta;
-		}
-		if (HandleRect) {
-			Vector2 anchoredPosition = HandleRect.anchoredPosition;
-			anchoredPosition.x = Width;
-			HandleRect.anchoredPosition = anchoredPosition;
-		}
-		if (TextTMP) TextTMP.text = Formatted;
+
+
+	// Cycle
+
+	protected override void OnEnable() {
+		base.OnEnable();
+		Update();
 	}
 }

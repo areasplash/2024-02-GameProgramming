@@ -16,7 +16,6 @@ MonoBehaviour:
   - rid: 5807965270378283008
   - rid: 5807965270378283009
   - rid: 5807965270378283010
-  - rid: 5807965270378283032
   - rid: 5807965270378283033
   m_AvailableLocales:
     rid: 5807965270378283011
@@ -207,11 +206,6 @@ MonoBehaviour:
         - default
         - d
         - 
-    - rid: 5807965270378283032
-      type: {class: SpecificLocaleSelector, ns: UnityEngine.Localization.Settings, asm: Unity.Localization}
-      data:
-        m_LocaleId:
-          m_Code: ja
     - rid: 5807965270378283033
       type: {class: SpecificLocaleSelector, ns: UnityEngine.Localization.Settings, asm: Unity.Localization}
       data:

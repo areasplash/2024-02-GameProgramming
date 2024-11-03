@@ -381,29 +381,13 @@ MonoBehaviour:
     m_DisabledTrigger: Disabled
   m_Interactable: 1
   m_TargetGraphic: {fileID: 0}
-  leftArrowRect: {fileID: 2056705762537311934}
-  rightArrowRect: {fileID: 1588773925514399224}
-  textTMP: {fileID: 388272278703991986}
-  labelTMP: {fileID: 1870884784755616310}
-  length: 1
-  value: 0
-  loop: 0
-  onFreshInvoked:
+  m_PrevRect: {fileID: 2056705762537311934}
+  m_NextRect: {fileID: 1588773925514399224}
+  m_TextTMP: {fileID: 388272278703991986}
+  m_OnStateUpdated:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2286907222880245904}
-        m_TargetAssemblyTypeName: CustomStepper, Assembly-CSharp
-        m_MethodName: Fresh
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 1
-  onValueChanged:
+      m_Calls: []
+  m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
 --- !u!95 &6464227784254998473
@@ -520,12 +504,12 @@ GameObject:
   - component: {fileID: 2231860227214314358}
   - component: {fileID: 5385432285888888067}
   m_Layer: 5
-  m_Name: RightArrow
+  m_Name: Next
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1588773925514399224
 RectTransform:
   m_ObjectHideFlags: 0
@@ -595,12 +579,12 @@ GameObject:
   - component: {fileID: 4284495785662793402}
   - component: {fileID: 5314345506993554028}
   m_Layer: 5
-  m_Name: LeftArrow
+  m_Name: Prev
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2056705762537311934
 RectTransform:
   m_ObjectHideFlags: 0

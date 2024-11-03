@@ -106,6 +106,26 @@ MonoBehaviour:
     m_Localized: Off
     m_Metadata:
       m_Items: []
+  - m_Id: 798827256647680
+    m_Localized: "Menu\t"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 927899748044800
+    m_Localized: Yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 927956203376640
+    m_Localized: No
+    m_Metadata:
+      m_Items: []
+  - m_Id: 928005914267648
+    m_Localized: Cancel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 987133344911360
+    m_Localized: Are you sure you wish to quit the game?
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

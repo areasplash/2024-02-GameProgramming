@@ -6,8 +6,7 @@ using System;
 // Animation Type
 // ====================================================================================================
 
-[Serializable]
-public enum AnimationType {
+[Serializable] public enum AnimationType {
 	Idle,
 	Moving,
 	Attacking,
@@ -20,8 +19,7 @@ public enum AnimationType {
 // Creature Type
 // ====================================================================================================
 
-[Serializable]
-public enum CreatureType {
+[Serializable] public enum CreatureType {
 	None,
 	Player,
 }
@@ -32,7 +30,6 @@ public enum CreatureType {
 // Particle Type
 // ====================================================================================================
 
-[Serializable]
-public enum ParticleType {
+[Serializable] public enum ParticleType {
 	None,
 }

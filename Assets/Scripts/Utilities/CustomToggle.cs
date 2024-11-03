@@ -1,7 +1,10 @@
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+
+using System;
+
 using TMPro;
 
 #if UNITY_EDITOR
@@ -12,94 +15,103 @@ using TMPro;
 
 
 
+#if UNITY_EDITOR
+	[CustomEditor(typeof(CustomToggle)), CanEditMultipleObjects]
+	public class CustomToggleEditor : SelectableEditor {
+
+		SerializedProperty m_PositiveRect;
+		SerializedProperty m_NegativeRect;
+		SerializedProperty m_PositiveTextTMP;
+		SerializedProperty m_NegativeTextTMP;
+		SerializedProperty m_OnStateUpdated;
+		SerializedProperty m_OnValueChanged;
+
+		CustomToggle I => target as CustomToggle;
+
+		protected override void OnEnable() {
+			base.OnEnable();
+			m_PositiveRect    = serializedObject.FindProperty("m_PositiveRect");
+			m_NegativeRect    = serializedObject.FindProperty("m_NegativeRect");
+			m_PositiveTextTMP = serializedObject.FindProperty("m_PositiveTextTMP");
+			m_NegativeTextTMP = serializedObject.FindProperty("m_NegativeTextTMP");
+			m_OnStateUpdated  = serializedObject.FindProperty("m_OnStateUpdated");
+			m_OnValueChanged  = serializedObject.FindProperty("m_OnValueChanged");
+		}
+
+		public override void OnInspectorGUI() {
+			base.OnInspectorGUI();
+			Space();
+			PropertyField(m_PositiveRect);
+			PropertyField(m_NegativeRect);
+			PropertyField(m_PositiveTextTMP);
+			PropertyField(m_NegativeTextTMP);
+			Space();
+			I.value = Toggle("Value", I.value);
+			Space();
+			PropertyField(m_OnStateUpdated);
+			PropertyField(m_OnValueChanged);
+			serializedObject.ApplyModifiedProperties();
+			if (GUI.changed) EditorUtility.SetDirty(target);
+		}
+	}
+#endif
+
+
+
 // ====================================================================================================
 // Custom Toggle
 // ====================================================================================================
 
 public class CustomToggle : Selectable, IPointerClickHandler {
 
-	[System.Serializable] public class ToggleFresh : UnityEvent<CustomToggle> {}
-	[System.Serializable] public class ToggleEvent : UnityEvent<bool> {}
+	[Serializable] public class ToggleUpdatedEvent : UnityEvent<CustomToggle> {}
+	[Serializable] public class ToggleChangedEvent : UnityEvent<bool> {}
 
 
 
 	// Fields
 
-	[SerializeField] RectTransform   falseRect;
-	[SerializeField] RectTransform   trueTect;
-	[SerializeField] TextMeshProUGUI falseTMP;
-	[SerializeField] TextMeshProUGUI trueTMP;
-	[SerializeField] TextMeshProUGUI labelTMP;
+	[SerializeField] RectTransform   m_PositiveRect;
+	[SerializeField] RectTransform   m_NegativeRect;
+	[SerializeField] TextMeshProUGUI m_PositiveTextTMP;
+	[SerializeField] TextMeshProUGUI m_NegativeTextTMP;
 
-	[SerializeField] bool value = false;
+	[SerializeField] bool m_Value = false;
 
-	public ToggleFresh onFreshInvoked = new ToggleFresh();
-	public ToggleEvent onValueChanged = new ToggleEvent();
+	[SerializeField] ToggleUpdatedEvent m_OnStateUpdated = new ToggleUpdatedEvent();
+	[SerializeField] ToggleChangedEvent m_OnValueChanged = new ToggleChangedEvent();
 
 
 
 	// Properties
 
-	RectTransform   FalseRect { get => falseRect; set => falseRect = value; }
-	RectTransform   TrueTect  { get => trueTect;  set => trueTect  = value; }
-	TextMeshProUGUI FalseTMP  { get => falseTMP;  set => falseTMP  = value; }
-	TextMeshProUGUI TrueTMP   { get => trueTMP;   set => trueTMP   = value; }
-	TextMeshProUGUI LabelTMP  { get => labelTMP;  set => labelTMP  = value; }
+	RectTransform rectTransform => transform as RectTransform;
 
-	public bool Value {
-		get => value;
+	public bool value {
+		get => m_Value;
 		set {
-			if (this.value == value) return;
-			this.value = value;
-			onValueChanged?.Invoke(Value);
-			onFreshInvoked?.Invoke(this );
+			m_Value = value;
+			onValueChanged?.Invoke(m_Value);
+			Update();
 		}
 	}
 
+	public ToggleUpdatedEvent onStateUpdated {
+		get => m_OnStateUpdated;
+		set => m_OnStateUpdated = value;
+	}
 
-
-	// Editor
-
-	#if UNITY_EDITOR
-		[CustomEditor(typeof(CustomToggle)), CanEditMultipleObjects]
-		public class CustomToggleEditor : SelectableEditor {
-			CustomToggle I => target as CustomToggle;
-
-			T ObjectField<T>(string label, T obj) where T : Object {
-				return (T)EditorGUILayout.ObjectField(label, obj, typeof(T), true);
-			}
-
-			public override void OnInspectorGUI() {
-				base.OnInspectorGUI();
-				
-				Space();
-				I.FalseRect   = ObjectField("False Rect", I.FalseRect);
-				I.TrueTect    = ObjectField("True Rect",  I.TrueTect );
-				I.FalseTMP    = ObjectField("False TMP",  I.FalseTMP );
-				I.TrueTMP     = ObjectField("True TMP",   I.TrueTMP  );
-				I.LabelTMP    = ObjectField("Label",      I.LabelTMP );
-
-				Space();
-				I.Value       = Toggle     ("Value",       I.Value   );
-
-				Space();
-				PropertyField(serializedObject.FindProperty("onFreshInvoked"));
-				PropertyField(serializedObject.FindProperty("onValueChanged"));
-				
-				if (GUI.changed) EditorUtility.SetDirty(target);
-				serializedObject.ApplyModifiedProperties();
-			}
-		}
-	#endif
+	public ToggleChangedEvent onValueChanged {
+		get => m_OnValueChanged;
+		set => m_OnValueChanged = value;
+	}
 
 
 
 	// Methods
 
-	RectTransform Rect => transform as RectTransform;
-
 	public void OnPointerClick(PointerEventData eventData) {
-		if (interactable) Value = !Value;
+		if (interactable) value = !value;
 	}
 
 	public override void OnMove(AxisEventData eventData) {
@@ -107,36 +119,50 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 			case MoveDirection.Left:
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				Value = !Value;
+				value = !value;
 				return;
 		}
 		base.OnMove(eventData);
 	}
 
+	ScrollRect scrollRect;
+
+	bool TryGetComponentInParent<T>(out T component) where T : Component {
+		Transform parent = transform.parent;
+		while (parent) {
+			if (TryGetComponent(out component)) return true;
+			else parent = parent.parent;
+		}
+		component = null;
+		return false;
+	}
+
 	public override void OnSelect(BaseEventData eventData) {
 		base.OnSelect(eventData);
 		if (eventData is AxisEventData) {
-			ScrollRect scrollRect = GetComponentInParent<ScrollRect>();
-			if (scrollRect) {
+			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				anchoredPosition.y = -scrollRect.viewport.rect.height / 2;
-				anchoredPosition.y -= Rect.anchoredPosition.y - Rect.rect.height / 2;
+				float pivot = rectTransform.rect.height / 2 - rectTransform.anchoredPosition.y;
+				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
 		}
 	}
 
-
-
-	protected override void Start() {
-		base.Start();
-		onFreshInvoked?.Invoke(this);
+	public void Update() {
+		if (m_PositiveRect) m_PositiveRect.gameObject.SetActive( value);
+		if (m_NegativeRect) m_NegativeRect.gameObject.SetActive(!value);
+		if (m_PositiveTextTMP) m_PositiveTextTMP.gameObject.SetActive( value);
+		if (m_NegativeTextTMP) m_NegativeTextTMP.gameObject.SetActive(!value);
+		onStateUpdated?.Invoke(this);
 	}
-	
-	public void Fresh() {
-		falseRect?.gameObject.SetActive(!value);
-		falseTMP ?.gameObject.SetActive(!value);
-		trueTect ?.gameObject.SetActive( value);
-		trueTMP  ?.gameObject.SetActive( value);
+
+
+
+	// Cycle
+
+	protected override void OnEnable() {
+		base.OnEnable();
+		Update();
 	}
 }

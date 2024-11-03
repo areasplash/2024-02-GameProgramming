@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 3860012545587263289}
   - component: {fileID: 9145748515353795023}
   m_Layer: 5
-  m_Name: False
+  m_Name: Negative
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1931080154415006528
 RectTransform:
   m_ObjectHideFlags: 0
@@ -162,12 +162,12 @@ GameObject:
   - component: {fileID: 6364496108511490715}
   - component: {fileID: 3135746138397230085}
   m_Layer: 5
-  m_Name: True
+  m_Name: Positive
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2146411967155901016
 RectTransform:
   m_ObjectHideFlags: 0
@@ -237,8 +237,8 @@ GameObject:
   - component: {fileID: 1721493452452989352}
   - component: {fileID: 7610491802230785212}
   - component: {fileID: 6728287366347308540}
-  - component: {fileID: 2882811721628148138}
   - component: {fileID: 782183732007199657}
+  - component: {fileID: 2882811721628148138}
   - component: {fileID: 3838914769268918949}
   m_Layer: 5
   m_Name: Custom Toggle
@@ -261,10 +261,10 @@ RectTransform:
   m_Children:
   - {fileID: 3036191763578781239}
   - {fileID: 1865202631720414228}
-  - {fileID: 1931080154415006528}
   - {fileID: 2146411967155901016}
-  - {fileID: 8667686404403193276}
+  - {fileID: 1931080154415006528}
   - {fileID: 2364158820537065655}
+  - {fileID: 8667686404403193276}
   - {fileID: 5754214874767902196}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -322,28 +322,15 @@ MonoBehaviour:
     m_DisabledTrigger: Disabled
   m_Interactable: 1
   m_TargetGraphic: {fileID: 0}
-  falseRect: {fileID: 1931080154415006528}
-  trueTect: {fileID: 2146411967155901016}
-  falseTMP: {fileID: 114987666858562470}
-  trueTMP: {fileID: 4565868515855356989}
-  labelTMP: {fileID: 1670821612342408339}
-  value: 0
-  onFreshInvoked:
+  m_PositiveRect: {fileID: 2146411967155901016}
+  m_NegativeRect: {fileID: 1931080154415006528}
+  m_PositiveTextTMP: {fileID: 4565868515855356989}
+  m_NegativeTextTMP: {fileID: 114987666858562470}
+  m_Value: 1
+  m_OnStateUpdated:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 7610491802230785212}
-        m_TargetAssemblyTypeName: CustomToggle, Assembly-CSharp
-        m_MethodName: Fresh
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 1
-  onValueChanged:
+      m_Calls: []
+  m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
 --- !u!95 &6728287366347308540
@@ -368,46 +355,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &2882811721628148138
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5293504820434482661}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_StringReference:
-    m_TableReference:
-      m_TableCollectionName: GUID:c742f1f458ace7e44813c5aae998306c
-    m_TableEntryReference:
-      m_KeyId: 154966578597888
-      m_Key: 
-    m_FallbackState: 0
-    m_WaitForCompletion: 0
-    m_LocalVariables: []
-  m_FormatArguments: []
-  m_UpdateString:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 114987666858562470}
-        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
-        m_MethodName: set_text
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 1
-  references:
-    version: 2
-    RefIds: []
 --- !u!114 &782183732007199657
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,6 +381,46 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4565868515855356989}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
+--- !u!114 &2882811721628148138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5293504820434482661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:c742f1f458ace7e44813c5aae998306c
+    m_TableEntryReference:
+      m_KeyId: 154966578597888
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 114987666858562470}
         m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
         m_MethodName: set_text
         m_Mode: 0
@@ -575,12 +562,12 @@ GameObject:
   - component: {fileID: 4039113310604685411}
   - component: {fileID: 4565868515855356989}
   m_Layer: 5
-  m_Name: Text True
+  m_Name: Positive Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2364158820537065655
 RectTransform:
   m_ObjectHideFlags: 0
@@ -847,12 +834,12 @@ GameObject:
   - component: {fileID: 8352539024485880764}
   - component: {fileID: 114987666858562470}
   m_Layer: 5
-  m_Name: Text False
+  m_Name: Negative Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8667686404403193276
 RectTransform:
   m_ObjectHideFlags: 0

@@ -582,32 +582,19 @@ MonoBehaviour:
     m_DisabledTrigger: Disabled
   m_Interactable: 1
   m_TargetGraphic: {fileID: 0}
-  bodyRect: {fileID: 9144795783801913139}
-  handleRect: {fileID: 9142096087570927396}
-  textTMP: {fileID: 5572194443332125631}
-  labelTMP: {fileID: 8065494362071904693}
-  minValue: 0
-  maxValue: 1
-  value: 1
-  step: 0.1
-  fineStep: 0.02
-  format: '{0:P0}'
-  onFreshInvoked:
+  m_BodyRect: {fileID: 9144795783801913139}
+  m_HandleRect: {fileID: 9142096087570927396}
+  m_TextTMP: {fileID: 5572194443332125631}
+  m_MinValue: 0
+  m_MaxValue: 1
+  m_Value: 1
+  m_Step: 0.1
+  m_FineStep: 0.02
+  m_Format: '{0:P0}'
+  m_OnStateUpdated:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 5588887053971547253}
-        m_TargetAssemblyTypeName: CustomSlider, Assembly-CSharp
-        m_MethodName: Fresh
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 1
-  onValueChanged:
+      m_Calls: []
+  m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
 --- !u!95 &7403421963413967933
