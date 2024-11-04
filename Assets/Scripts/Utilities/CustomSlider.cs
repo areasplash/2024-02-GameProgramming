@@ -15,6 +15,10 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Slider Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CustomSlider)), CanEditMultipleObjects]
 	public class CustomSliderEditor : SelectableEditor {
@@ -115,7 +119,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 		set {
 			m_Value = Mathf.Clamp(value, minValue, maxValue);
 			onValueChanged?.Invoke(m_Value);
-			Update();
+			Refresh();
 		}
 	}
 
@@ -133,7 +137,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 		get => m_Format;
 		set {
 			m_Format = value;
-			Update();
+			Refresh();
 		}
 	}
 
@@ -151,7 +155,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	
 	float ratio => (value - minValue) / (maxValue - minValue);
 	int   width => Mathf.RoundToInt(ratio * (rectTransform.rect.width - m_HandleRect.rect.width));
-	bool  fine  => Input.GetKey(KeyCode.LeftShift);
+	bool  fine  => InputManager.GetKey(KeyAction.Control);
 
 
 
@@ -193,7 +197,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		Transform parent = transform.parent;
 		while (parent) {
-			if (TryGetComponent(out component)) return true;
+			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
 		}
 		component = null;
@@ -212,7 +216,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 		}
 	}
 
-	public void Update() {
+	public void Refresh() {
 		if (m_HandleRect) {
 			if (m_BodyRect) {
 				Vector2 sizeDelta = m_BodyRect.sizeDelta;
@@ -233,6 +237,6 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	protected override void OnEnable() {
 		base.OnEnable();
-		Update();
+		Refresh();
 	}
 }

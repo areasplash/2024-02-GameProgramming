@@ -14,6 +14,10 @@ using UnityEngine.Localization.Settings;
 
 
 
+// ====================================================================================================
+// UI Manager Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(UIManager)), CanEditMultipleObjects]
 	public class UIManagerEditor : Editor {
@@ -25,38 +29,65 @@ using UnityEngine.Localization.Settings;
 		SerializedProperty m_SettingsCanvas;
 		SerializedProperty m_DialogCanvas;
 		SerializedProperty m_FadeCanvas;
+
+		SerializedProperty m_MainMenuFirstSelected;
+		SerializedProperty m_GameFirstSelected;
+		SerializedProperty m_BlurFirstSelected;
+		SerializedProperty m_MenuFirstSelected;
+		SerializedProperty m_SettingsFirstSelected;
+		SerializedProperty m_DialogFirstSelected;
+		SerializedProperty m_FadeFirstSelected;
+
 		SerializedProperty m_ResolutionPresets;
 
 		UIManager I => target as UIManager;
 
 		void OnEnable() {
-			m_MainMenuCanvas    = serializedObject.FindProperty("m_MainMenuCanvas");
-			m_GameCanvas        = serializedObject.FindProperty("m_GameCanvas");
-			m_BlurCanvas        = serializedObject.FindProperty("m_BlurCanvas");
-			m_MenuCanvas        = serializedObject.FindProperty("m_MenuCanvas");
-			m_SettingsCanvas    = serializedObject.FindProperty("m_SettingsCanvas");
-			m_DialogCanvas      = serializedObject.FindProperty("m_DialogCanvas");
-			m_FadeCanvas        = serializedObject.FindProperty("m_FadeCanvas");
+			m_MainMenuCanvas = serializedObject.FindProperty("m_MainMenuCanvas");
+			m_GameCanvas     = serializedObject.FindProperty("m_GameCanvas");
+			m_BlurCanvas     = serializedObject.FindProperty("m_BlurCanvas");
+			m_MenuCanvas     = serializedObject.FindProperty("m_MenuCanvas");
+			m_SettingsCanvas = serializedObject.FindProperty("m_SettingsCanvas");
+			m_DialogCanvas   = serializedObject.FindProperty("m_DialogCanvas");
+			m_FadeCanvas     = serializedObject.FindProperty("m_FadeCanvas");
+
+			m_MainMenuFirstSelected = serializedObject.FindProperty("m_MainMenuFirstSelected");
+			m_GameFirstSelected     = serializedObject.FindProperty("m_GameFirstSelected");
+			m_BlurFirstSelected     = serializedObject.FindProperty("m_BlurFirstSelected");
+			m_MenuFirstSelected     = serializedObject.FindProperty("m_MenuFirstSelected");
+			m_SettingsFirstSelected = serializedObject.FindProperty("m_SettingsFirstSelected");
+			m_DialogFirstSelected   = serializedObject.FindProperty("m_DialogFirstSelected");
+			m_FadeFirstSelected     = serializedObject.FindProperty("m_FadeFirstSelected");
+
 			m_ResolutionPresets = serializedObject.FindProperty("m_ResolutionPresets");
 		}
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Space();
-			LabelField("UI Primary", EditorStyles.boldLabel);
+			LabelField("Canvas", EditorStyles.boldLabel);
 			PropertyField(m_MainMenuCanvas);
 			PropertyField(m_GameCanvas);
 			Space();
-			LabelField("UI Overlay", EditorStyles.boldLabel);
 			PropertyField(m_BlurCanvas);
 			PropertyField(m_MenuCanvas);
 			PropertyField(m_SettingsCanvas);
 			PropertyField(m_DialogCanvas);
 			PropertyField(m_FadeCanvas);
 			Space();
+			LabelField("First Selected", EditorStyles.boldLabel);
+			PropertyField(m_MainMenuFirstSelected);
+			PropertyField(m_GameFirstSelected);
+			Space();
+			PropertyField(m_BlurFirstSelected);
+			PropertyField(m_MenuFirstSelected);
+			PropertyField(m_SettingsFirstSelected);
+			PropertyField(m_DialogFirstSelected);
+			PropertyField(m_FadeFirstSelected);
+			Space();
 			LabelField("UI Properties", EditorStyles.boldLabel);
-			I.pixelPerfect        = Toggle         ("Pixel Perfect",        I.pixelPerfect       );
-			I.pixelPerUnit        = FloatField     ("Pixel Per Unit",       I.pixelPerUnit       );
+			I.pixelPerfect        = Toggle         ("Pixel Perfect",        I.pixelPerfect);
+			I.pixelPerUnit        = FloatField     ("Pixel Per Unit",       I.pixelPerUnit);
 			I.referenceResolution = Vector2IntField("Reference Resolution", I.referenceResolution);
 			PropertyField(m_ResolutionPresets);
 			serializedObject.ApplyModifiedProperties();
@@ -72,6 +103,8 @@ using UnityEngine.Localization.Settings;
 // ====================================================================================================
 
 public class UIManager : MonoSingleton<UIManager> {
+
+	static readonly Vector2Int DefaultResolution = new Vector2Int(1280, 720);
 
 	[Serializable] public enum PrimaryCanvas {
 		MainMenu = 0,
@@ -99,9 +132,17 @@ public class UIManager : MonoSingleton<UIManager> {
 	[SerializeField] Canvas m_DialogCanvas;
 	[SerializeField] Canvas m_FadeCanvas;
 
+	[SerializeField] Selectable m_MainMenuFirstSelected;
+	[SerializeField] Selectable m_GameFirstSelected;
+	[SerializeField] Selectable m_BlurFirstSelected;
+	[SerializeField] Selectable m_MenuFirstSelected;
+	[SerializeField] Selectable m_SettingsFirstSelected;
+	[SerializeField] Selectable m_DialogFirstSelected;
+	[SerializeField] Selectable m_FadeFirstSelected;
+
 	[SerializeField] bool         m_PixelPerfect        = true;
 	[SerializeField] float        m_PixelPerUnit        = 16.0f;
-	[SerializeField] Vector2Int   m_ReferenceResolution = new Vector2Int(640, 360);
+	[SerializeField] Vector2Int   m_ReferenceResolution = DefaultResolution;
 	[SerializeField] Vector2Int[] m_ResolutionPresets   = new Vector2Int[] {
 		new Vector2Int( 640,  360),
 		new Vector2Int(1280,  720),
@@ -109,6 +150,14 @@ public class UIManager : MonoSingleton<UIManager> {
 		new Vector2Int(2560, 1440),
 		new Vector2Int(3840, 2160),
 	};
+
+	[SerializeField] int        m_LanguageIndex    = 0;
+	[SerializeField] bool       m_FullScreen       = false;
+	[SerializeField] Vector2Int m_ScreenResolution = DefaultResolution;
+	[SerializeField] float      m_Music            = 1.0f;
+	[SerializeField] float      m_SoundFX          = 1.0f;
+	[SerializeField] float      m_MouseSensitivity = 1.0f;
+	//[SerializeField] 
 
 
 
@@ -206,6 +255,7 @@ public class UIManager : MonoSingleton<UIManager> {
 		}
 		if (0 != (overlayCanvas & OverlayCanvas.Settings)) {
 			overlayCanvas &= ~OverlayCanvas.Settings;
+			if (primaryCanvas == PrimaryCanvas.Game) OpenMenu();
 			if (overlayCanvas == OverlayCanvas.Blur) overlayCanvas = OverlayCanvas.None;
 			return;
 		}
@@ -224,7 +274,8 @@ public class UIManager : MonoSingleton<UIManager> {
 		}
 		if (primaryCanvas == PrimaryCanvas.MainMenu) {
 			OpenDialog("Quit", "Quit Dialog", "Quit", "Cancel");
-			dialogPositive.onClick.AddListener(() => Quit());
+			dialogPositive?.onClick.RemoveAllListeners();
+			dialogPositive?.onClick.AddListener(() => Quit());
 			return;
 		}
 	}
@@ -248,7 +299,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	}
 
 	void Update() {
-		if (Input.GetKeyDown(KeyCode.Escape)) Back();
+		//if (Input.GetKeyDown(KeyCode.Escape)) Back();
 	}
 
 
@@ -295,6 +346,7 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	public void OpenSettings() {
 		overlayCanvas |= OverlayCanvas.Blur | OverlayCanvas.Settings;
+		overlayCanvas &= ~OverlayCanvas.Menu;
 	}
 
 
@@ -326,8 +378,8 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 	bool          fullScreen            = false;
-	Vector2Int    previousResolution    = new Vector2Int(1280, 720);
-	Vector2Int    windowedResolution    = new Vector2Int(1280, 720);
+	Vector2Int    previousResolution    = DefaultResolution;
+	Vector2Int    windowedResolution    = DefaultResolution;
 	CustomStepper screenResolution;
 	int           screenResolutionIndex = 1;
 	CanvasScaler  managerCanvasScaler;
@@ -345,8 +397,8 @@ public class UIManager : MonoSingleton<UIManager> {
 			preset.x < Screen.currentResolution.width &&
 			preset.y < Screen.currentResolution.height);
 		int multiplier = Mathf.Max(1, Mathf.Min(
-			previousResolution.x / Instance.referenceResolution.x,
-			previousResolution.y / Instance.referenceResolution.y));
+			previousResolution.x / referenceResolution.x,
+			previousResolution.y / referenceResolution.y));
 
 		if (managerCanvasScaler || TryGetComponent(out managerCanvasScaler)) {
 			managerCanvasScaler.scaleFactor = multiplier;
@@ -377,6 +429,7 @@ public class UIManager : MonoSingleton<UIManager> {
 			resolution.y = Screen.currentResolution.height;
 		}
 		Screen.SetResolution(resolution.x, resolution.y, value);
+		UpdateScreenResolution(screenResolution);
 	}
 
 	public void SetScreenResolution(int value) {
@@ -391,6 +444,7 @@ public class UIManager : MonoSingleton<UIManager> {
 		screenResolutionIndex = Mathf.Clamp(screenResolutionIndex + value, 0, indexLast);
 		Vector2Int resolution = m_ResolutionPresets[screenResolutionIndex];
 		Screen.SetResolution(resolution.x, resolution.y, Screen.fullScreen);
+		UpdateScreenResolution(screenResolution);
 	}
 
 	void LateUpdate() {
@@ -416,17 +470,29 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void UpdateDialogPositive(CustomButton button) => dialogPositive = button;
 	public void UpdateDialogNegative(CustomButton button) => dialogNegative = button;
 
-
-
 	public void OpenDialog(string arg0, string arg1, string arg2, string arg3) {
 		overlayCanvas |= OverlayCanvas.Blur | OverlayCanvas.Dialog;
 		dialogTitle   ?.SetLocalizeText("UI Table", arg0);
 		dialogMessage ?.SetLocalizeText("UI Table", arg1);
 		dialogPositive?.SetLocalizeText("UI Table", arg2);
 		dialogNegative?.SetLocalizeText("UI Table", arg3);
-		dialogPositive?.onClick?.RemoveAllListeners();
-		dialogNegative?.onClick?.RemoveAllListeners();
-		dialogPositive?.onClick?.AddListener(() => Back());
-		dialogNegative?.onClick?.AddListener(() => Back());
+		dialogPositive?.onClick.RemoveAllListeners();
+		dialogNegative?.onClick.RemoveAllListeners();
+		dialogPositive?.onClick.AddListener(() => Back());
+		dialogNegative?.onClick.AddListener(() => Back());
+	}
+
+
+
+	// ------------------------------------------------------------------------------------------------
+	// Fade Window
+	// ------------------------------------------------------------------------------------------------
+
+	public void FadeOut() {
+
+	}
+
+	public void FadeIn() {
+
 	}
 }

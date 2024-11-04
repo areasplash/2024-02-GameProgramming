@@ -15,6 +15,10 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Toggle Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CustomToggle)), CanEditMultipleObjects]
 	public class CustomToggleEditor : SelectableEditor {
@@ -92,7 +96,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 		set {
 			m_Value = value;
 			onValueChanged?.Invoke(m_Value);
-			Update();
+			Refresh();
 		}
 	}
 
@@ -130,7 +134,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		Transform parent = transform.parent;
 		while (parent) {
-			if (TryGetComponent(out component)) return true;
+			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
 		}
 		component = null;
@@ -149,7 +153,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 		}
 	}
 
-	public void Update() {
+	public void Refresh() {
 		if (m_PositiveRect) m_PositiveRect.gameObject.SetActive( value);
 		if (m_NegativeRect) m_NegativeRect.gameObject.SetActive(!value);
 		if (m_PositiveTextTMP) m_PositiveTextTMP.gameObject.SetActive( value);
@@ -163,6 +167,6 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 
 	protected override void OnEnable() {
 		base.OnEnable();
-		Update();
+		Refresh();
 	}
 }

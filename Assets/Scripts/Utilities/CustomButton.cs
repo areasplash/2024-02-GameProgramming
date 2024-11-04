@@ -17,6 +17,10 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Button Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CustomButton)), CanEditMultipleObjects]
 	public class CustomButtonEditor : SelectableEditor {
@@ -119,7 +123,7 @@ public class CustomButton : Selectable, IPointerClickHandler {
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		Transform parent = transform.parent;
 		while (parent) {
-			if (TryGetComponent(out component)) return true;
+			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
 		}
 		component = null;
@@ -148,7 +152,7 @@ public class CustomButton : Selectable, IPointerClickHandler {
 		}
 	}
 
-	public void Update() {
+	public void Refresh() {
 		onStateUpdated?.Invoke(this);
 	}
 
@@ -158,6 +162,6 @@ public class CustomButton : Selectable, IPointerClickHandler {
 
 	protected override void OnEnable() {
 		base.OnEnable();
-		Update();
+		Refresh();
 	}
 }

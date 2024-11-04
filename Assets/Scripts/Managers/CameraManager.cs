@@ -7,6 +7,10 @@ using UnityEngine;
 
 
 
+// ====================================================================================================
+// Camera Manager Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CameraManager)), CanEditMultipleObjects]
 	public class GameManagerEditor : Editor {

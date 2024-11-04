@@ -13,6 +13,10 @@ using UnityEngine.ProBuilder;
 
 
 
+// ====================================================================================================
+// Atlas Map SO Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(AtlasMapSO)), CanEditMultipleObjects]
 	public class AtlasMapSOEditor : Editor {

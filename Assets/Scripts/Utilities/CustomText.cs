@@ -16,6 +16,10 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Text Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CustomText)), CanEditMultipleObjects]
 	public class CustomTextEditor : SelectableEditor {
@@ -99,7 +103,7 @@ public class CustomText : Selectable {
 		}
 	}
 
-	public void Update() {
+	public void Refresh() {
 		onStateUpdated?.Invoke(this);
 	}
 
@@ -109,6 +113,6 @@ public class CustomText : Selectable {
 
 	protected override void OnEnable() {
 		base.OnEnable();
-		Update();
+		Refresh();
 	}
 }

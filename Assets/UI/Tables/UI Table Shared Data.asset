@@ -79,6 +79,10 @@ MonoBehaviour:
     m_Key: Controls
     m_Metadata:
       m_Items: []
+  - m_Id: 1463730225188864
+    m_Key: Mouse Sensitivity
+    m_Metadata:
+      m_Items: []
   - m_Id: 450197622784
     m_Key: Move Left
     m_Metadata:

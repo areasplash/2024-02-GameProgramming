@@ -17,6 +17,10 @@ using TMPro;
 
 
 
+// ====================================================================================================
+// Custom Stepper Editor
+// ====================================================================================================
+
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CustomStepper)), CanEditMultipleObjects]
 	public class CustomStepperEditor : SelectableEditor {
@@ -113,7 +117,7 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 		get => 0;
 		set {
 			onValueChanged?.Invoke(value);
-			Update();
+			Refresh();
 		}
 	}
 	
@@ -157,7 +161,7 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		Transform parent = transform.parent;
 		while (parent) {
-			if (TryGetComponent(out component)) return true;
+			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
 		}
 		component = null;
@@ -186,7 +190,7 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 		}
 	}
 
-	public void Update() {
+	public void Refresh() {
 		onStateUpdated?.Invoke(this);
 	}
 
@@ -196,6 +200,6 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 
 	protected override void OnEnable() {
 		base.OnEnable();
-		Update();
+		Refresh();
 	}
 }

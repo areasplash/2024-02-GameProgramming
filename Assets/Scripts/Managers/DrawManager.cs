@@ -265,7 +265,7 @@ struct ParticleData {
 // Draw Manager
 // ====================================================================================================
 
-public class DrawManager : MonoSingleton<DrawManager> {
+public class DrawManager : MonoBehaviour {
 
 	// Fields
 
