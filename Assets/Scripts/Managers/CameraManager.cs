@@ -13,7 +13,7 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CameraManager)), CanEditMultipleObjects]
-	public class GameManagerEditor : Editor {
+	public class CameraManagerEditor : Editor {
 
 		SerializedProperty m_MainCamera;
 		SerializedProperty m_FadeCamera;
@@ -86,23 +86,20 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	// Properties
 
-	public Camera mainCamera { get => m_MainCamera; set => m_MainCamera = value; }
-	public Camera fadeCamera { get => m_FadeCamera; set => m_FadeCamera = value; }
-
 	public Vector2Int renderTextureSize {
 		get => m_RenderTextureSize;
 		set {
-			if (mainCamera && mainCamera.targetTexture) {
-				mainCamera.targetTexture.Release();
-				mainCamera.targetTexture.width  = value.x;
-				mainCamera.targetTexture.height = value.y;
-				mainCamera.targetTexture.Create();
+			if (m_MainCamera?.targetTexture) {
+				m_MainCamera.targetTexture.Release();
+				m_MainCamera.targetTexture.width  = value.x;
+				m_MainCamera.targetTexture.height = value.y;
+				m_MainCamera.targetTexture.Create();
 			}
-			if (fadeCamera && fadeCamera.targetTexture) {
-				fadeCamera.targetTexture.Release();
-				fadeCamera.targetTexture.width  = value.x;
-				fadeCamera.targetTexture.height = value.y;
-				fadeCamera.targetTexture.Create();
+			if (m_FadeCamera?.targetTexture) {
+				m_FadeCamera.targetTexture.Release();
+				m_FadeCamera.targetTexture.width  = value.x;
+				m_FadeCamera.targetTexture.height = value.y;
+				m_FadeCamera.targetTexture.Create();
 			}
 		}
 	}
@@ -111,8 +108,8 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		get => m_FieldOfView;
 		set {
 			m_FieldOfView = value;
-			if (mainCamera) mainCamera.fieldOfView = m_FieldOfView;
-			if (fadeCamera) fadeCamera.fieldOfView = m_FieldOfView;
+			if (m_MainCamera) m_MainCamera.fieldOfView = m_FieldOfView;
+			if (m_FadeCamera) m_FadeCamera.fieldOfView = m_FieldOfView;
 		}
 	}
 
@@ -120,8 +117,8 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		get => m_OrthographicSize;
 		set {
 			m_OrthographicSize = value;
-			if (mainCamera) mainCamera.orthographicSize = orthographicSize;
-			if (fadeCamera) fadeCamera.orthographicSize = orthographicSize;
+			if (m_MainCamera)m_MainCamera.orthographicSize = orthographicSize;
+			if (m_FadeCamera)m_FadeCamera.orthographicSize = orthographicSize;
 			projection = projection;
 		}
 	}
@@ -129,22 +126,22 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	public float projection {
 		get => m_Projection;
 		set {
-			if (!mainCamera) return;
+			if (!m_MainCamera) return;
 			m_Projection = value;
-			float aspect = (float)mainCamera.targetTexture.width / mainCamera.targetTexture.height;
+			float aspect = (float)m_MainCamera.targetTexture.width / m_MainCamera.targetTexture.height;
 			float left   = -orthographicSize * aspect;
 			float right  =  orthographicSize * aspect;
 			float bottom = -orthographicSize;
 			float top    =  orthographicSize;
-			float nearClipPlane = mainCamera.nearClipPlane;
-			float farClipPlane  = mainCamera.farClipPlane;
+			float nearClipPlane = m_MainCamera.nearClipPlane;
+			float farClipPlane  = m_MainCamera.farClipPlane;
 
 			Matrix4x4 a = Matrix4x4.Perspective(fieldOfView, aspect, nearClipPlane, farClipPlane);
 			Matrix4x4 b = Matrix4x4.Ortho(left, right, bottom, top,  nearClipPlane, farClipPlane);
-			Matrix4x4 m = mainCamera.projectionMatrix;
+			Matrix4x4 m = m_MainCamera.projectionMatrix;
 			for (int i = 0; i < 16; i++) m[i] = Mathf.Lerp(a[i], b[i], projection);
-			if (mainCamera) mainCamera.projectionMatrix = m;
-			if (fadeCamera) fadeCamera.projectionMatrix = m;
+			if (m_MainCamera) m_MainCamera.projectionMatrix = m;
+			if (m_FadeCamera) m_FadeCamera.projectionMatrix = m;
 		}
 	}
 
@@ -152,9 +149,10 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		get => m_TargetDistance;
 		set {
 			m_TargetDistance = value;
-			Vector3 position = targetPosition + transform.forward * -m_TargetDistance;
-			if (mainCamera) mainCamera.transform.position = position;
-			if (fadeCamera) fadeCamera.transform.position = position;
+			Vector3 position = target ? target.transform.position : targetPosition;
+			position += transform.forward * -m_TargetDistance;
+			if (m_MainCamera) m_MainCamera.transform.position = position;
+			if (m_FadeCamera) m_FadeCamera.transform.position = position;
 		}
 	}
 
@@ -164,7 +162,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	}
 
 	public Vector3 targetPosition {
-		get => m_Target ? m_Target.transform.position : m_TargetPosition;
+		get => m_TargetPosition;
 		set => m_TargetPosition = value;
 	}
 
@@ -176,9 +174,9 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		return Instance ? Instance.ScreenPointToRay_Internal(position) : new Ray();
 	}
 	Ray ScreenPointToRay_Internal(Vector3 position) {
-		float multiplier = mainCamera.targetTexture.width / Screen.width;
-		Vector3 viewport = mainCamera.ScreenToViewportPoint(position * multiplier);
-		return mainCamera.ViewportPointToRay(viewport);
+		float multiplier = m_MainCamera.targetTexture.width / Screen.width;
+		Vector3 viewport = m_MainCamera.ScreenToViewportPoint(position * multiplier);
+		return m_MainCamera.ViewportPointToRay(viewport);
 	}
 
 	

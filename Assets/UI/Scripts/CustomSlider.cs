@@ -117,6 +117,7 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 	public float value {
 		get => m_Value;
 		set {
+			if (m_Value == value) return;
 			m_Value = Mathf.Clamp(value, minValue, maxValue);
 			onValueChanged?.Invoke(m_Value);
 			Refresh();

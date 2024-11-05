@@ -94,6 +94,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 	public bool value {
 		get => m_Value;
 		set {
+			if (m_Value == value) return;
 			m_Value = value;
 			onValueChanged?.Invoke(m_Value);
 			Refresh();

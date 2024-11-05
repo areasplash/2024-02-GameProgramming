@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using System;
-using System.Collections;
+using System.Collections.Generic;
 
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
@@ -151,13 +151,18 @@ public class UIManager : MonoSingleton<UIManager> {
 		new Vector2Int(3840, 2160),
 	};
 
-	[SerializeField] int        m_LanguageIndex    = 0;
-	[SerializeField] bool       m_FullScreen       = false;
-	[SerializeField] Vector2Int m_ScreenResolution = DefaultResolution;
-	[SerializeField] float      m_Music            = 1.0f;
-	[SerializeField] float      m_SoundFX          = 1.0f;
-	[SerializeField] float      m_MouseSensitivity = 1.0f;
-	//[SerializeField] 
+	[SerializeField] string       m_Language   = null;
+	[SerializeField] bool         m_FullScreen = false;
+	[SerializeField] float        m_Music      = 1.0f;
+	[SerializeField] float        m_SoundFX    = 1.0f;
+
+	[SerializeField] float        m_MouseSensitivity = 1.0f;
+	[SerializeField] List<string> m_KeysMoveUp       = new List<string>{ "upArrow"     };
+	[SerializeField] List<string> m_KeysMoveDown     = new List<string>{ "leftArrow"   };
+	[SerializeField] List<string> m_KeysMoveLeft     = new List<string>{ "downArrow"   };
+	[SerializeField] List<string> m_KeysMoveRight    = new List<string>{ "rightArrow"  };
+	[SerializeField] List<string> m_KeysInteract     = new List<string>{ "z", "enter"  };
+	[SerializeField] List<string> m_KeysCancel       = new List<string>{ "x", "escape" };
 
 
 
@@ -229,6 +234,56 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	// Methods
 
+	List<string> ToKeys(string data) {
+		List<string> keys = new List<string>();
+		foreach (string key in data.Split(", ")) keys.Add(key);
+		return keys;
+	}
+
+	string ToData(List<string> keys) {
+		string data = null;
+		for (int i = 0; i < keys.Count; i++) data += keys[i] + (i != keys.Count - 1 ? ", " : "");
+		return data;
+	}
+
+	void LoadSettings() {
+		m_Language         = PlayerPrefs.GetString("Language",          m_Language);
+		m_FullScreen	   = PlayerPrefs.GetInt   ("FullScreen",        m_FullScreen ? 1 : 0) != 0;
+		m_Music            = PlayerPrefs.GetFloat ("Music",             m_Music);
+		m_SoundFX          = PlayerPrefs.GetFloat ("SoundFX",           m_SoundFX);
+		m_MouseSensitivity = PlayerPrefs.GetFloat ("MouseSensitivity",  m_MouseSensitivity);
+
+		m_KeysMoveUp    = ToKeys(PlayerPrefs.GetString("KeysMoveUp",    ToData(m_KeysMoveUp)));
+		m_KeysMoveDown  = ToKeys(PlayerPrefs.GetString("KeysMoveDown",  ToData(m_KeysMoveDown)));
+		m_KeysMoveLeft  = ToKeys(PlayerPrefs.GetString("KeysMoveLeft",  ToData(m_KeysMoveLeft)));
+		m_KeysMoveRight = ToKeys(PlayerPrefs.GetString("KeysMoveRight", ToData(m_KeysMoveRight)));
+		m_KeysInteract  = ToKeys(PlayerPrefs.GetString("KeysInteract",  ToData(m_KeysInteract)));
+		m_KeysCancel    = ToKeys(PlayerPrefs.GetString("KeysCancel",    ToData(m_KeysCancel)));
+
+		UpdateLanguage(null);
+		UpdateFullScreen(null);
+		UpdateScreenResolution(null);
+	}
+
+	void SaveSettings() {
+		PlayerPrefs.SetString("Language",         m_Language);
+		PlayerPrefs.SetInt   ("FullScreen",       m_FullScreen ? 1 : 0);
+		PlayerPrefs.SetFloat ("Music",            m_Music);
+		PlayerPrefs.SetFloat ("SoundFX",          m_SoundFX);
+		PlayerPrefs.SetFloat ("MouseSensitivity", m_MouseSensitivity);
+
+		PlayerPrefs.SetString("KeysMoveUp",    ToData(m_KeysMoveUp));
+		PlayerPrefs.SetString("KeysMoveDown",  ToData(m_KeysMoveDown));
+		PlayerPrefs.SetString("KeysMoveLeft",  ToData(m_KeysMoveLeft));
+		PlayerPrefs.SetString("KeysMoveRight", ToData(m_KeysMoveRight));
+		PlayerPrefs.SetString("KeysInteract",  ToData(m_KeysInteract));
+		PlayerPrefs.SetString("KeysCancel",    ToData(m_KeysCancel));
+
+		PlayerPrefs.Save();
+	}
+
+
+
 	public static Vector3 GetPixelated(Vector3 position) {
 		return Instance ? Instance.GetPixelated_Internal(position) : position;
 	}
@@ -254,6 +309,7 @@ public class UIManager : MonoSingleton<UIManager> {
 			return;
 		}
 		if (0 != (overlayCanvas & OverlayCanvas.Settings)) {
+			SaveSettings();
 			overlayCanvas &= ~OverlayCanvas.Settings;
 			if (primaryCanvas == PrimaryCanvas.Game) OpenMenu();
 			if (overlayCanvas == OverlayCanvas.Blur) overlayCanvas = OverlayCanvas.None;
@@ -293,13 +349,10 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Cycle
 
 	void Start() {
+		LoadSettings();
 		primaryCanvas = PrimaryCanvas.MainMenu;
 		overlayCanvas = OverlayCanvas.None;
 		// Fade In
-	}
-
-	void Update() {
-		//if (Input.GetKeyDown(KeyCode.Escape)) Back();
 	}
 
 
@@ -351,108 +404,134 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
-	bool isLanguageChanging = false;
-	int  langaugeIndex      = -1;
+	int languageIndex = -1;
+
+	List<Locale> locales => LocalizationSettings.AvailableLocales.Locales;
 
 	public void UpdateLanguage(CustomStepper stepper) {
-		if (langaugeIndex == -1) langaugeIndex = LocalizationSettings.AvailableLocales.Locales.IndexOf(LocalizationSettings.SelectedLocale);
-		if (langaugeIndex == -1) langaugeIndex = 0;
-		Locale locale = LocalizationSettings.AvailableLocales.Locales[langaugeIndex];
-		stepper.text  = locale.Identifier.CultureInfo.NativeName;
-		//stepper.text  = LocalizationSettings.SelectedLocale.Identifier.CultureInfo.NativeName;
+		if (languageIndex == -1) {
+			m_Language ??= Application.systemLanguage.ToString();
+			languageIndex = Mathf.Max(0, locales.FindIndex(locale => {
+				return locale.Identifier.CultureInfo.NativeName.Equals(m_Language);
+			}));
+		}
+		LocalizationSettings.SelectedLocale = locales[languageIndex];
+		if (stepper) stepper.text = m_Language;
 	}
 
 	public void SetLanguage(int value) {
-		if (isLanguageChanging == false) {
-			isLanguageChanging = true;
-			langaugeIndex = (int)Mathf.Repeat(langaugeIndex + value, LocalizationSettings.AvailableLocales.Locales.Count);
-			StartCoroutine(SetLanguageRoutine(langaugeIndex));
+		languageIndex = (int)Mathf.Repeat(languageIndex + value, locales.Count);
+		m_Language = locales[languageIndex].Identifier.CultureInfo.NativeName;
+	}
+
+
+
+	Vector2Int windowedResolution = DefaultResolution;
+
+	public void UpdateFullScreen(CustomToggle toggle) {
+		if (toggle) toggle.value = m_FullScreen;
+	}
+
+	public void SetFullScreen(bool value) {
+		m_FullScreen = value;
+		Vector2Int resolution = windowedResolution;
+		if (m_FullScreen) {
+			if (!Screen.fullScreen) windowedResolution = new Vector2Int(Screen.width, Screen.height);
+			resolution.x = Screen.currentResolution.width;
+			resolution.y = Screen.currentResolution.height;
 		}
-	}
-	IEnumerator SetLanguageRoutine(int value) {
-		yield return LocalizationSettings.InitializationOperation;
-		LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[value];
-		isLanguageChanging = false;
+		Screen.SetResolution(resolution.x, resolution.y, m_FullScreen);
+		UpdateScreenResolution(screenResolution);
 	}
 
 
 
-	bool          fullScreen            = false;
-	Vector2Int    previousResolution    = DefaultResolution;
-	Vector2Int    windowedResolution    = DefaultResolution;
 	CustomStepper screenResolution;
-	int           screenResolutionIndex = 1;
 	CanvasScaler  managerCanvasScaler;
 
-	public void UpdateScreenResolution(CustomStepper stepper) {
+	int screenIndex => Array.FindIndex(m_ResolutionPresets, preset =>
+		preset.x == Screen.width &&
+		preset.y == Screen.height);
+	int screenIndexFloor => Array.FindLastIndex(m_ResolutionPresets, preset =>
+		preset.x <= Screen.width &&
+		preset.y <= Screen.height);
+	int screenIndexMax => Array.FindLastIndex(m_ResolutionPresets, preset =>
+		preset.x < Screen.currentResolution.width &&
+		preset.y < Screen.currentResolution.height);
+	int multiplier => Mathf.Max(1, Mathf.Min(
+		Screen.width  / referenceResolution.x,
+		Screen.height / referenceResolution.y));
+
+	public void UpdateScreenResolution(CustomStepper stepper = null) {
 		screenResolution = stepper;
-
-		int index = Array.FindIndex(m_ResolutionPresets, preset =>
-			preset.x == previousResolution.x &&
-			preset.y == previousResolution.y);
-		int indexNear = Array.FindLastIndex(m_ResolutionPresets, preset =>
-			preset.x <= previousResolution.x &&
-			preset.y <= previousResolution.y);
-		int indexLast = Array.FindLastIndex(m_ResolutionPresets, preset =>
-			preset.x < Screen.currentResolution.width &&
-			preset.y < Screen.currentResolution.height);
-		int multiplier = Mathf.Max(1, Mathf.Min(
-			previousResolution.x / referenceResolution.x,
-			previousResolution.y / referenceResolution.y));
-
+		if (screenResolution) {
+			stepper.text = $"{Screen.width} x {Screen.height}";
+			stepper.interactable = !m_FullScreen;
+			stepper.canMovePrev  = !m_FullScreen && screenIndex != 0 && screenIndexFloor != -1;
+			stepper.canMoveNext  = !m_FullScreen && screenIndexFloor < screenIndexMax;
+		}
 		if (managerCanvasScaler || TryGetComponent(out managerCanvasScaler)) {
 			managerCanvasScaler.scaleFactor = multiplier;
 		}
-		if (screenResolution) {
-			screenResolution.interactable = !fullScreen;
-			screenResolution.canMovePrev  = !fullScreen && index != 0;
-			screenResolution.canMoveNext  = !fullScreen && indexNear != indexLast;
-			screenResolution.text         = $"{previousResolution.x} x {previousResolution.y}";
-		}
-		Vector2Int size = previousResolution;
-		if (pixelPerfect) {
-			size.x = (int)Mathf.Ceil(previousResolution.x / multiplier);
-			size.y = (int)Mathf.Ceil(previousResolution.y / multiplier);
-		}
 		if (CameraManager.Instance) {
+			Vector2Int size = new Vector2Int(Screen.width, Screen.height);
+			if (pixelPerfect) {
+				size.x = (int)Mathf.Ceil(Screen.width  / multiplier);
+				size.y = (int)Mathf.Ceil(Screen.height / multiplier);
+			}
 			CameraManager.Instance.renderTextureSize = size;
 			CameraManager.Instance.orthographicSize  = size.y / 2 / pixelPerUnit;
 		}
 	}
 
-	public void SetFullScreen(bool value) {
-		fullScreen = value;
-		Vector2Int resolution = windowedResolution;
-		if (value) {
-			if (!Screen.fullScreen) windowedResolution = new Vector2Int(Screen.width, Screen.height);
-			resolution.x = Screen.currentResolution.width;
-			resolution.y = Screen.currentResolution.height;
-		}
-		Screen.SetResolution(resolution.x, resolution.y, value);
-		UpdateScreenResolution(screenResolution);
-	}
-
 	public void SetScreenResolution(int value) {
-		int index = Array.FindIndex(m_ResolutionPresets, preset =>
-			preset.x == previousResolution.x &&
-			preset.y == previousResolution.y);
-		int indexLast = Array.FindLastIndex(m_ResolutionPresets, preset =>
-			preset.x < Screen.currentResolution.width &&
-			preset.y < Screen.currentResolution.height);
-
-		if (index == -1 && value == -1) value = 0;
-		screenResolutionIndex = Mathf.Clamp(screenResolutionIndex + value, 0, indexLast);
-		Vector2Int resolution = m_ResolutionPresets[screenResolutionIndex];
-		Screen.SetResolution(resolution.x, resolution.y, Screen.fullScreen);
-		UpdateScreenResolution(screenResolution);
+		if (m_FullScreen) return;
+		if (screenIndex == -1 && value == -1) value = 0;
+		Vector2Int resolution = m_ResolutionPresets[Mathf.Min(screenIndexFloor + value, screenIndexMax)];
+		Screen.SetResolution(resolution.x, resolution.y, m_FullScreen);
 	}
+
+	Vector2Int cacheResolution = DefaultResolution;
 
 	void LateUpdate() {
-		if (previousResolution.x != Screen.width || previousResolution.y != Screen.height) {
-			previousResolution = new Vector2Int(Screen.width, Screen.height);
+		if (cacheResolution.x != Screen.width || cacheResolution.y != Screen.height) {
+			cacheResolution = new Vector2Int(Screen.width, Screen.height);
 			UpdateScreenResolution(screenResolution);
 		}
 	}
+
+
+
+	public void UpdateMusic  (CustomSlider slider) => slider.value = m_Music;
+	public void UpdateSoundFX(CustomSlider slider) => slider.value = m_SoundFX;
+
+	public void SetMusic  (float value) => m_Music   = value;
+	public void SetSoundFX(float value) => m_SoundFX = value;
+
+	public void UpdateMouseSensitivity(CustomSlider slider) => slider.value = m_MouseSensitivity;
+	public void SetMouseSensitivity(float value) => m_MouseSensitivity = value;
+
+	void UpdateKeys(CustomButton button, KeyAction keyAction) {
+		button.text = ToData(InputManager.GetKeysBinding(keyAction));
+	}
+
+	public void UpdateMoveUp   (CustomButton button) => UpdateKeys(button, KeyAction.MoveUp);
+	public void UpdateMoveLeft (CustomButton button) => UpdateKeys(button, KeyAction.MoveLeft);
+	public void UpdateMoveDown (CustomButton button) => UpdateKeys(button, KeyAction.MoveDown);
+	public void UpdateMoveRight(CustomButton button) => UpdateKeys(button, KeyAction.MoveRight);
+	public void UpdateInteract (CustomButton button) => UpdateKeys(button, KeyAction.Interact);
+	public void UpdateCancel   (CustomButton button) => UpdateKeys(button, KeyAction.Cancel);
+
+	void SetKeys(KeyAction keyAction) {
+		OpenDialog("Key Binding", "Key Binding Dialog", "Save", "Cancel");
+	}
+
+	public void SetMoveUp   () => SetKeys(KeyAction.MoveUp);
+	public void SetMoveLeft () => SetKeys(KeyAction.MoveLeft);
+	public void SetMoveDown () => SetKeys(KeyAction.MoveDown);
+	public void SetMoveRight() => SetKeys(KeyAction.MoveRight);
+	public void SetInteract () => SetKeys(KeyAction.Interact);
+	public void SetCancel   () => SetKeys(KeyAction.Cancel);
 
 
 
@@ -488,11 +567,32 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Fade Window
 	// ------------------------------------------------------------------------------------------------
 
-	public void FadeOut() {
+	int   fadeState = 0;
+	Image fadeImage;
 
+	public void FadeOut() {
+		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
+			overlayCanvas |= OverlayCanvas.Fade;
+			fadeState = 1;
+		}
 	}
 
 	public void FadeIn() {
+		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
+			overlayCanvas |= OverlayCanvas.Fade;
+			fadeState = 2;
+		}
+	}
 
+	void Update() {
+		if (fadeState != 0) {
+			Color color = fadeImage.color;
+			color.a = Mathf.MoveTowards(color.a, fadeState == 1 ? 1.0f : 0.0f, Time.deltaTime);
+			fadeImage.color = color;
+			if (color.a == 0.0f) {
+				overlayCanvas &= ~OverlayCanvas.Fade;
+				fadeState = 0;
+			}
+		}
 	}
 }

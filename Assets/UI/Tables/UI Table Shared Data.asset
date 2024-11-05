@@ -103,6 +103,10 @@ MonoBehaviour:
     m_Key: Interact
     m_Metadata:
       m_Items: []
+  - m_Id: 928005914267648
+    m_Key: Cancel
+    m_Metadata:
+      m_Items: []
   - m_Id: 692800360448
     m_Key: Advanced
     m_Metadata:
@@ -119,12 +123,20 @@ MonoBehaviour:
     m_Key: No
     m_Metadata:
       m_Items: []
-  - m_Id: 928005914267648
-    m_Key: Cancel
+  - m_Id: 1871881067991040
+    m_Key: Save
     m_Metadata:
       m_Items: []
   - m_Id: 987133344911360
     m_Key: Quit Dialog
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1872011284353024
+    m_Key: Key Binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1872402461921280
+    m_Key: Key Binding Dialog
     m_Metadata:
       m_Items: []
   m_Metadata:

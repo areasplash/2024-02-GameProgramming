@@ -130,6 +130,18 @@ MonoBehaviour:
     m_Localized: Mouse Sensitivity
     m_Metadata:
       m_Items: []
+  - m_Id: 1871881067991040
+    m_Localized: Save
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1872011284353024
+    m_Localized: Key Binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1872402461921280
+    m_Localized: Press Any Key
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

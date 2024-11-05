@@ -1,5 +1,5 @@
 {
-    "name": "Test",
+    "name": "InputAction",
     "maps": [
         {
             "name": "User",
@@ -47,15 +47,6 @@
                     "id": "0c9eb14a-3033-450e-a6b6-35ff4f0eff7d",
                     "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Move",
-                    "type": "PassThrough",
-                    "id": "d7e7df40-889b-4e98-89f3-8d4aa1c7f14d",
-                    "expectedControlType": "Vector2",
-                    "processors": "NormalizeVector2",
                     "interactions": "",
                     "initialStateCheck": true
                 },
@@ -150,6 +141,15 @@
                     "initialStateCheck": true
                 },
                 {
+                    "name": "Move",
+                    "type": "PassThrough",
+                    "id": "d7e7df40-889b-4e98-89f3-8d4aa1c7f14d",
+                    "expectedControlType": "Vector2",
+                    "processors": "NormalizeVector2",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
                     "name": "Control",
                     "type": "PassThrough",
                     "id": "f05c71ef-9360-407a-bef0-c5963420c529",
@@ -161,7 +161,7 @@
             ],
             "bindings": [
                 {
-                    "name": "2D Vector",
+                    "name": "2DVector",
                     "id": "9a05815b-f716-4313-b518-2b774a7d9fad",
                     "path": "2DVector",
                     "interactions": "",
