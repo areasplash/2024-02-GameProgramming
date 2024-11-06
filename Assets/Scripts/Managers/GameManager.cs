@@ -62,6 +62,12 @@ public class GameManager : MonoSingleton<GameManager> {
 	Vector3 eulerAngles;
 
 	void Update() {
+		if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
+			Ray ray = CameraManager.ScreenPointToRay(InputManager.pointPosition);
+			if (Physics.Raycast(ray, out RaycastHit hit)) {
+				Debug.Log(hit.point);
+			}
+		}
 		if (CameraManager.Instance) {
 			if (InputManager.GetKeyDown(KeyAction.RightClick)) {
 				pointPosition = InputManager.pointPosition;
@@ -74,22 +80,5 @@ public class GameManager : MonoSingleton<GameManager> {
 					eulerAngles.z);
 			}
 		}
-
-		if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
-			Ray ray = CameraManager.ScreenPointToRay(InputManager.pointPosition);
-			if (Physics.Raycast(ray, out RaycastHit hit)) {
-				Debug.Log(hit.point);
-			}
-		}
-
-		/*if (InputManager.GetKeyDown(KeyAction.Interact)) {
-			if (UIManager.selected && UIManager.selected.TryGetComponent(out Selectable selectable)) {
-				if (selectable is CustomButton  button ) button .OnSubmit();
-				if (selectable is CustomToggle  toggle ) toggle .OnSubmit();
-				if (selectable is CustomStepper stepper) stepper.OnSubmit();
-				if (selectable is CustomSlider  slider ) slider .OnSubmit();
-			}
-		}*/
-		if (InputManager.GetKeyDown(KeyAction.Cancel)) UIManager.Back();
 	}
 }

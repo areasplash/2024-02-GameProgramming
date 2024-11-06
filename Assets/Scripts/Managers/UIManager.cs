@@ -178,50 +178,25 @@ public class UIManager : MonoSingleton<UIManager> {
 			m_SettingsCanvas.gameObject.SetActive(0 != (value & CanvasType.Settings));
 			m_DialogCanvas  .gameObject.SetActive(0 != (value & CanvasType.Dialog));
 			m_FadeCanvas    .gameObject.SetActive(0 != (value & CanvasType.Fade));
-
-			m_MainMenuLastSelected ??= m_MainMenuFirstSelected;
-			m_GameLastSelected     ??= m_GameFirstSelected;
-			m_MenuLastSelected     ??= m_MenuFirstSelected;
-			m_SettingsLastSelected ??= m_SettingsFirstSelected;
-			m_DialogLastSelected   ??= m_DialogFirstSelected;
-			m_FadeLastSelected     ??= m_FadeFirstSelected;
-			switch (highestCanvas) {
-				case CanvasType.MainMenu: selected = m_MainMenuLastSelected; break;
-				case CanvasType.Game:     selected = m_GameLastSelected;     break;
-				case CanvasType.Menu:     selected = m_MenuLastSelected;     break;
-				case CanvasType.Settings: selected = m_SettingsLastSelected; break;
-				case CanvasType.Dialog:   selected = m_DialogLastSelected;   break;
-				case CanvasType.Fade:     selected = m_FadeLastSelected;     break;
-			}
 		}
 	}
 
 	CanvasType highestCanvas {
 		get {
-			CanvasType value = activeCanvas;
-			if ((value & CanvasType.MainMenu) != 0) value = CanvasType.MainMenu;
-			if ((value & CanvasType.Game    ) != 0) value = CanvasType.Game;
-			if ((value & CanvasType.Menu    ) != 0) value = CanvasType.Menu;
-			if ((value & CanvasType.Settings) != 0) value = CanvasType.Settings;
-			if ((value & CanvasType.Dialog  ) != 0) value = CanvasType.Dialog;
-			if ((value & CanvasType.Fade    ) != 0) value = CanvasType.Fade;
+			CanvasType value = CanvasType.None;
+			if (m_MainMenuCanvas.gameObject.activeSelf) value = CanvasType.MainMenu;
+			if (m_GameCanvas    .gameObject.activeSelf) value = CanvasType.Game;
+			if (m_MenuCanvas    .gameObject.activeSelf) value = CanvasType.Menu;
+			if (m_SettingsCanvas.gameObject.activeSelf) value = CanvasType.Settings;
+			if (m_DialogCanvas  .gameObject.activeSelf) value = CanvasType.Dialog;
+			if (m_FadeCanvas    .gameObject.activeSelf) value = CanvasType.Fade;
 			return value;
 		}
 	}
 
 	GameObject selected {
 		get => EventSystem.current.currentSelectedGameObject;
-		set {
-			EventSystem.current.SetSelectedGameObject(value);
-			if (value) switch (highestCanvas) {
-				case CanvasType.MainMenu: m_MainMenuLastSelected = value; break;
-				case CanvasType.Game:     m_GameLastSelected     = value; break;
-				case CanvasType.Menu:     m_MenuLastSelected     = value; break;
-				case CanvasType.Settings: m_SettingsLastSelected = value; break;
-				case CanvasType.Dialog:   m_DialogLastSelected   = value; break;
-				case CanvasType.Fade:     m_FadeLastSelected     = value; break;
-			}
-		}
+		set => EventSystem.current.SetSelectedGameObject(value);
 	}
 
 	
@@ -260,51 +235,84 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	// Methods
 
+	public static CanvasType GetHighestCanvas() {
+		return Instance ? Instance.highestCanvas : CanvasType.None;
+	}
+
 	readonly CanvasType primary = CanvasType.MainMenu | CanvasType.Game;
-	readonly CanvasType overlay = CanvasType.Menu | CanvasType.Settings | CanvasType.Dialog;
 
 	Stack<CanvasType> stack = new Stack<CanvasType>();
 
+	void SaveLastSelected() {
+		switch (highestCanvas) {
+			case CanvasType.MainMenu: m_MainMenuLastSelected = selected; break;
+			case CanvasType.Game:     m_GameLastSelected     = selected; break;
+			case CanvasType.Menu:     m_MenuLastSelected     = selected; break;
+			case CanvasType.Settings: m_SettingsLastSelected = selected; break;
+			case CanvasType.Dialog:   m_DialogLastSelected   = selected; break;
+			case CanvasType.Fade:     m_FadeLastSelected     = selected; break;
+		}
+	}
+
+	void LoadLastSelected() {
+		if (!m_MainMenuLastSelected) m_MainMenuLastSelected = m_MainMenuFirstSelected;
+		if (!m_GameLastSelected    ) m_GameLastSelected     = m_GameFirstSelected;
+		if (!m_MenuLastSelected    ) m_MenuLastSelected     = m_MenuFirstSelected;
+		if (!m_SettingsLastSelected) m_SettingsLastSelected = m_SettingsFirstSelected;
+		if (!m_DialogLastSelected  ) m_DialogLastSelected   = m_DialogFirstSelected;
+		if (!m_FadeLastSelected    ) m_FadeLastSelected     = m_FadeFirstSelected;
+		
+		switch (highestCanvas) {
+			case CanvasType.MainMenu: selected = m_MainMenuLastSelected; break;
+			case CanvasType.Game:     selected = m_GameLastSelected;     break;
+			case CanvasType.Menu:     selected = m_MenuLastSelected;     break;
+			case CanvasType.Settings: selected = m_SettingsLastSelected; break;
+			case CanvasType.Dialog:   selected = m_DialogLastSelected;   break;
+			case CanvasType.Fade:     selected = m_FadeLastSelected;     break;
+		}
+	}
+
 	void Open(CanvasType canvas) {
+		SaveLastSelected();
 		switch (canvas) {
 			case CanvasType.MainMenu:
 				stack.Clear();
-				stack.Push(CanvasType.MainMenu);
+				stack.Push(activeCanvas);
 				activeCanvas = CanvasType.MainMenu;
 				break;
 			
 			case CanvasType.Game:
 				stack.Clear();
-				stack.Push(CanvasType.Game);
+				stack.Push(activeCanvas);
 				activeCanvas = CanvasType.Game;
 				break;
 
 			case CanvasType.Menu:
-				stack.Push(CanvasType.Menu);
+				stack.Push(activeCanvas);
 				activeCanvas = (activeCanvas & primary) | CanvasType.Menu;
 				break;
 
 			case CanvasType.Settings:
-				stack.Push(CanvasType.Settings);
+				stack.Push(activeCanvas);
 				activeCanvas = (activeCanvas & primary) | CanvasType.Settings;
 				break;
 
 			case CanvasType.Dialog:
-				stack.Push(CanvasType.Dialog);
+				stack.Push(activeCanvas);
 				activeCanvas = (activeCanvas & primary) | CanvasType.Dialog;
 				break;
 			
 			case CanvasType.Fade:
-				stack.Push(CanvasType.Fade);
+				stack.Push(activeCanvas);
 				activeCanvas = activeCanvas | CanvasType.Fade;
 				break;
 		}
+		LoadLastSelected();
 	}
 
-	public static void Back() {
-		Instance?.Back_Internal();
-	}
+	public static void Back() => Instance?.Back_Internal();
 	void Back_Internal() {
+		SaveLastSelected();
 		switch (highestCanvas) {
 			case CanvasType.MainMenu:
 				OpenDialog("Quit", "Quit Message", "Quit", "Cancel");
@@ -317,21 +325,22 @@ public class UIManager : MonoSingleton<UIManager> {
 				break;
 
 			case CanvasType.Menu:
-				activeCanvas &= ~CanvasType.Menu;
+				activeCanvas = stack.Pop();
 				break;
 
 			case CanvasType.Settings:
-				activeCanvas &= ~CanvasType.Settings;
 				SaveSettings();
+				activeCanvas = stack.Pop();
 				break;
 
 			case CanvasType.Dialog:
-				activeCanvas &= ~CanvasType.Dialog;
+				activeCanvas = stack.Pop();
 				break;
 			
 			case CanvasType.Fade:
 				break;
 		}
+		LoadLastSelected();
 	}
 
 	public static void Quit() {
@@ -377,7 +386,8 @@ public class UIManager : MonoSingleton<UIManager> {
 	string defaultInteract;
 	string defaultCancel;
 
-	void LoadSettings() {
+	public static void LoadSettings() => Instance?.LoadSettings_Internal();
+	void LoadSettings_Internal() {
 		m_Language          = PlayerPrefs.GetString("Language", "");
 		m_Music             = PlayerPrefs.GetFloat ("Music", 1f);
 		m_SoundFX           = PlayerPrefs.GetFloat ("SoundFX", 1f);
@@ -409,7 +419,8 @@ public class UIManager : MonoSingleton<UIManager> {
 		UpdateScreenResolution(null);
 	}
 
-	void SaveSettings() {
+	public static void SaveSettings() => Instance?.SaveSettings_Internal();
+	void SaveSettings_Internal() {
 		PlayerPrefs.SetString("Language",         m_Language);
 		PlayerPrefs.SetFloat ("Music",            m_Music);
 		PlayerPrefs.SetFloat ("SoundFX",          m_SoundFX);
@@ -438,8 +449,35 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	void Start() {
 		LoadSettings();
-		activeCanvas = CanvasType.MainMenu;
+		OpenMainMenu();
 		// Fade In
+	}
+
+	void Update() {
+		bool move = false;
+		move |= InputManager.GetKeyDown(KeyAction.MoveUp   );
+		move |= InputManager.GetKeyDown(KeyAction.MoveLeft );
+		move |= InputManager.GetKeyDown(KeyAction.MoveDown );
+		move |= InputManager.GetKeyDown(KeyAction.MoveRight);
+		if (move) {
+			if (!selected) switch (highestCanvas) {
+				case CanvasType.MainMenu: selected = m_MainMenuFirstSelected; break;
+				case CanvasType.Game:     selected = m_GameFirstSelected;     break;
+				case CanvasType.Menu:     selected = m_MenuFirstSelected;     break;
+				case CanvasType.Settings: selected = m_SettingsFirstSelected; break;
+				case CanvasType.Dialog:   selected = m_DialogFirstSelected;   break;
+				case CanvasType.Fade:     selected = m_FadeFirstSelected;     break;
+			}
+		}
+		if (InputManager.GetKeyDown(KeyAction.Interact)) {
+			if (selected && selected.TryGetComponent(out Selectable selectable)) {
+				if (selectable is CustomButton  button ) button .OnSubmit();
+				if (selectable is CustomToggle  toggle ) toggle .OnSubmit();
+				if (selectable is CustomStepper stepper) stepper.OnSubmit();
+				if (selectable is CustomSlider  slider ) slider .OnSubmit();
+			}
+		}
+		if (InputManager.GetKeyDown(KeyAction.Cancel)) Back();
 	}
 
 
@@ -448,9 +486,10 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Main Menu Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public void SetMainMenu() {
+	public static void OpenMainMenu() => Instance?.OpenMainMenu_Internal();
+	void OpenMainMenu_Internal() {
 		// Fade Out
-		activeCanvas = CanvasType.MainMenu;
+		Open(CanvasType.MainMenu);
 		// Fade In
 	}
 
@@ -460,9 +499,10 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Game Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public void SetGame() {
+	public void OpenGame() => Instance?.OpenGame_Internal();
+	void OpenGame_Internal() {
 		// Fade Out
-		activeCanvas = CanvasType.Game;
+		Open(CanvasType.Game);
 		// Fade In
 	}
 
@@ -472,8 +512,9 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Menu Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public void OpenMenu() {
-		activeCanvas |= CanvasType.Menu;
+	public void OpenMenu() => Instance?.OpenMenu_Internal();
+	public void OpenMenu_Internal() {
+		Open(CanvasType.Menu);
 	}
 
 
@@ -482,8 +523,9 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Settings Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public void OpenSettings() {
-		activeCanvas |= CanvasType.Settings;
+	public void OpenSettings() => Instance?.OpenSettings_Internal();
+	public void OpenSettings_Internal() {
+		Open(CanvasType.Settings);
 	}
 
 
@@ -632,13 +674,9 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void SetInteract () => SetKeys(KeyAction.Interact);
 	public void SetCancel   () => SetKeys(KeyAction.Cancel);
 
-	bool isKeyBinding = false;
-
 	void SetKeys(KeyAction keyAction) => StartCoroutine(SetKeysCoroutine(keyAction));
 	IEnumerator SetKeysCoroutine(KeyAction keyAction) {
-		isKeyBinding = true;
 		OpenDialog("Binding", "Binding Message", "Apply Binding", "Cancel Binding");
-		selected = null;
 		List<string> keys = new List<string>();
 		dialogPositive?.onClick.AddListener(() => InputManager.SetKeysBinding(keyAction, keys));
 
@@ -666,7 +704,6 @@ public class UIManager : MonoSingleton<UIManager> {
 		}
 		InputManager.StopRecordKeys();
 		action[(int)keyAction]?.Refresh();
-		isKeyBinding = false;
 	}
 
 
@@ -696,9 +733,11 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void UpdateDialogPositive(CustomButton button) => dialogPositive = button;
 	public void UpdateDialogNegative(CustomButton button) => dialogNegative = button;
 
-	public void OpenDialog(string arg0, string arg1, string arg2, string arg3) {
-		activeCanvas |= CanvasType.Dialog;
-
+	public static void OpenDialog(string arg0, string arg1, string arg2, string arg3) {
+		Instance?.OpenDialog_Internal(arg0, arg1, arg2, arg3);
+	}
+	void OpenDialog_Internal(string arg0, string arg1, string arg2, string arg3) {
+		Open(CanvasType.Dialog);
 		dialogTitle   ?.SetLocalizeText("UI Table", arg0);
 		dialogMessage ?.SetLocalizeText("UI Table", arg1);
 		dialogPositive?.SetLocalizeText("UI Table", arg2);
@@ -718,21 +757,23 @@ public class UIManager : MonoSingleton<UIManager> {
 	int   fadeState = 0;
 	Image fadeImage;
 
-	public void FadeOut() {
+	public static void FadeOut() => Instance?.FadeOut_Internal();
+	void FadeOut_Internal() {
 		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
-			activeCanvas |= CanvasType.Fade;
+			Open(CanvasType.Fade);
 			fadeState = 1;
 		}
 	}
 
-	public void FadeIn() {
+	public static void FadeIn() => Instance?.FadeIn_Internal();
+	void FadeIn_Internal() {
 		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
-			activeCanvas |= CanvasType.Fade;
+			Open(CanvasType.Fade);
 			fadeState = 2;
 		}
 	}
 
-	void Update() {
+	void FixedUpdate() {
 		if (fadeState != 0) {
 			Color color = fadeImage.color;
 			color.a = Mathf.MoveTowards(color.a, fadeState == 1 ? 1.0f : 0.0f, Time.deltaTime);
@@ -743,5 +784,4 @@ public class UIManager : MonoSingleton<UIManager> {
 			}
 		}
 	}
-	
 }

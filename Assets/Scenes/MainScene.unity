@@ -1709,7 +1709,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2487736354931202648, guid: 69442d7ddf841d24bb22dca21d92e86b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: SetMainMenu
+      value: OpenMainMenu
       objectReference: {fileID: 0}
     - target: {fileID: 2487736354931202648, guid: 69442d7ddf841d24bb22dca21d92e86b, type: 3}
       propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -4410,18 +4410,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MainMenuCanvas: {fileID: 487035301}
   m_GameCanvas: {fileID: 887296739}
-  m_BlurCanvas: {fileID: 0}
   m_MenuCanvas: {fileID: 707620387}
   m_SettingsCanvas: {fileID: 1796962170}
   m_DialogCanvas: {fileID: 1921404191}
   m_FadeCanvas: {fileID: 1869775099}
   m_MainMenuFirstSelected: {fileID: 1985549636}
   m_GameFirstSelected: {fileID: 0}
-  m_BlurFirstSelected: {fileID: 0}
   m_MenuFirstSelected: {fileID: 1246514931}
   m_SettingsFirstSelected: {fileID: 1827512807}
   m_DialogFirstSelected: {fileID: 795465563}
   m_FadeFirstSelected: {fileID: 0}
+  m_MainMenuLastSelected: {fileID: 0}
+  m_GameLastSelected: {fileID: 0}
+  m_MenuLastSelected: {fileID: 0}
+  m_SettingsLastSelected: {fileID: 0}
+  m_DialogLastSelected: {fileID: 0}
+  m_FadeLastSelected: {fileID: 0}
   m_PixelPerfect: 1
   m_PixelPerUnit: 16
   m_ReferenceResolution: {x: 640, y: 360}
@@ -4847,7 +4851,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2487736354931202648, guid: 69442d7ddf841d24bb22dca21d92e86b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: SetGame
+      value: OpenGame
       objectReference: {fileID: 0}
     - target: {fileID: 2487736354931202648, guid: 69442d7ddf841d24bb22dca21d92e86b, type: 3}
       propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -5887,7 +5891,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2487736354931202648, guid: 69442d7ddf841d24bb22dca21d92e86b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: SetGame
+      value: OpenGame
       objectReference: {fileID: 0}
     - target: {fileID: 2487736354931202648, guid: 69442d7ddf841d24bb22dca21d92e86b, type: 3}
       propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
