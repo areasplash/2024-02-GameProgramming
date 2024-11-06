@@ -103,8 +103,8 @@ MonoBehaviour:
     m_Key: Interact
     m_Metadata:
       m_Items: []
-  - m_Id: 928005914267648
-    m_Key: Cancel
+  - m_Id: 1989887584538624
+    m_Key: Cancel or Open Menu
     m_Metadata:
       m_Items: []
   - m_Id: 692800360448
@@ -115,6 +115,10 @@ MonoBehaviour:
     m_Key: Delete All Data
     m_Metadata:
       m_Items: []
+  - m_Id: 987133344911360
+    m_Key: Quit Message
+    m_Metadata:
+      m_Items: []
   - m_Id: 927899748044800
     m_Key: Yes
     m_Metadata:
@@ -123,20 +127,32 @@ MonoBehaviour:
     m_Key: No
     m_Metadata:
       m_Items: []
-  - m_Id: 1871881067991040
-    m_Key: Save
-    m_Metadata:
-      m_Items: []
-  - m_Id: 987133344911360
-    m_Key: Quit Dialog
+  - m_Id: 928005914267648
+    m_Key: Cancel
     m_Metadata:
       m_Items: []
   - m_Id: 1872011284353024
-    m_Key: Key Binding
+    m_Key: Binding
     m_Metadata:
       m_Items: []
   - m_Id: 1872402461921280
-    m_Key: Key Binding Dialog
+    m_Key: Binding Message
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2179268467396608
+    m_Key: Cancel Binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2179381604552704
+    m_Key: Apply Binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1995620086616064
+    m_Key: Delete All Data Message
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1995861284261888
+    m_Key: Delete
     m_Metadata:
       m_Items: []
   m_Metadata:

@@ -119,6 +119,13 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 		if (interactable) value = !value;
 	}
 
+	public void OnSubmit() {
+		if (interactable) {
+			DoStateTransition(SelectionState.Pressed, false);
+			value = !value;
+		}
+	}
+
 	public override void OnMove(AxisEventData eventData) {
 		if (interactable) switch (eventData.moveDir) {
 			case MoveDirection.Left:

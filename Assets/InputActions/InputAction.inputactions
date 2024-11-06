@@ -228,8 +228,8 @@
                 },
                 {
                     "name": "",
-                    "id": "972c1282-36bd-4d5c-a635-37045755f45d",
-                    "path": "<Keyboard>/enter",
+                    "id": "df4e4679-0f3b-44d6-aa03-0717afa464e9",
+                    "path": "*/{Submit}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -250,8 +250,8 @@
                 },
                 {
                     "name": "",
-                    "id": "3a0bf5fd-eccf-4783-aabe-a6c97124332e",
-                    "path": "<Keyboard>/escape",
+                    "id": "a6bf761f-0506-4f8b-8036-b6c30e39af3b",
+                    "path": "*/{Cancel}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

@@ -107,6 +107,13 @@ public class CustomButton : Selectable, IPointerClickHandler {
 		if (interactable) onClick?.Invoke();
 	}
 
+	public void OnSubmit() {
+		if (interactable) {
+			DoStateTransition(SelectionState.Pressed, false);
+			onClick?.Invoke();
+		}
+	}
+
 	public override void OnMove(AxisEventData eventData) {
 		if (interactable) switch (eventData.moveDir) {
 			case MoveDirection.Left:

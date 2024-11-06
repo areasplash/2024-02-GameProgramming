@@ -1,7 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine.Localization;
@@ -24,7 +26,6 @@ using UnityEngine.Localization.Settings;
 
 		SerializedProperty m_MainMenuCanvas;
 		SerializedProperty m_GameCanvas;
-		SerializedProperty m_BlurCanvas;
 		SerializedProperty m_MenuCanvas;
 		SerializedProperty m_SettingsCanvas;
 		SerializedProperty m_DialogCanvas;
@@ -32,7 +33,6 @@ using UnityEngine.Localization.Settings;
 
 		SerializedProperty m_MainMenuFirstSelected;
 		SerializedProperty m_GameFirstSelected;
-		SerializedProperty m_BlurFirstSelected;
 		SerializedProperty m_MenuFirstSelected;
 		SerializedProperty m_SettingsFirstSelected;
 		SerializedProperty m_DialogFirstSelected;
@@ -45,7 +45,6 @@ using UnityEngine.Localization.Settings;
 		void OnEnable() {
 			m_MainMenuCanvas = serializedObject.FindProperty("m_MainMenuCanvas");
 			m_GameCanvas     = serializedObject.FindProperty("m_GameCanvas");
-			m_BlurCanvas     = serializedObject.FindProperty("m_BlurCanvas");
 			m_MenuCanvas     = serializedObject.FindProperty("m_MenuCanvas");
 			m_SettingsCanvas = serializedObject.FindProperty("m_SettingsCanvas");
 			m_DialogCanvas   = serializedObject.FindProperty("m_DialogCanvas");
@@ -53,7 +52,6 @@ using UnityEngine.Localization.Settings;
 
 			m_MainMenuFirstSelected = serializedObject.FindProperty("m_MainMenuFirstSelected");
 			m_GameFirstSelected     = serializedObject.FindProperty("m_GameFirstSelected");
-			m_BlurFirstSelected     = serializedObject.FindProperty("m_BlurFirstSelected");
 			m_MenuFirstSelected     = serializedObject.FindProperty("m_MenuFirstSelected");
 			m_SettingsFirstSelected = serializedObject.FindProperty("m_SettingsFirstSelected");
 			m_DialogFirstSelected   = serializedObject.FindProperty("m_DialogFirstSelected");
@@ -69,7 +67,6 @@ using UnityEngine.Localization.Settings;
 			PropertyField(m_MainMenuCanvas);
 			PropertyField(m_GameCanvas);
 			Space();
-			PropertyField(m_BlurCanvas);
 			PropertyField(m_MenuCanvas);
 			PropertyField(m_SettingsCanvas);
 			PropertyField(m_DialogCanvas);
@@ -79,7 +76,6 @@ using UnityEngine.Localization.Settings;
 			PropertyField(m_MainMenuFirstSelected);
 			PropertyField(m_GameFirstSelected);
 			Space();
-			PropertyField(m_BlurFirstSelected);
 			PropertyField(m_MenuFirstSelected);
 			PropertyField(m_SettingsFirstSelected);
 			PropertyField(m_DialogFirstSelected);
@@ -99,50 +95,53 @@ using UnityEngine.Localization.Settings;
 
 
 // ====================================================================================================
+// Canvas Type
+// ====================================================================================================
+
+[Serializable, Flags] public enum CanvasType {
+	None	 = 0,
+	MainMenu = 1 << 0,
+	Game     = 1 << 1,
+	Menu     = 1 << 2,
+	Settings = 1 << 3,
+	Dialog   = 1 << 4,
+	Fade     = 1 << 5,
+}
+
+
+
+// ====================================================================================================
 // UI Manager
 // ====================================================================================================
 
 public class UIManager : MonoSingleton<UIManager> {
 
-	static readonly Vector2Int DefaultResolution = new Vector2Int(1280, 720);
-
-	[Serializable] public enum PrimaryCanvas {
-		MainMenu = 0,
-		Game     = 1,
-	};
-
-	[Serializable, Flags] public enum OverlayCanvas {
-		None     = 0,
-		Blur     = 1 << 0,
-		Menu     = 1 << 1,
-		Settings = 1 << 2,
-		Dialog   = 1 << 3,
-		Fade     = 1 << 4,
-	};
-
-
-
 	// Fields
 
 	[SerializeField] Canvas m_MainMenuCanvas;
 	[SerializeField] Canvas m_GameCanvas;
-	[SerializeField] Canvas m_BlurCanvas;
 	[SerializeField] Canvas m_MenuCanvas;
 	[SerializeField] Canvas m_SettingsCanvas;
 	[SerializeField] Canvas m_DialogCanvas;
 	[SerializeField] Canvas m_FadeCanvas;
 
-	[SerializeField] Selectable m_MainMenuFirstSelected;
-	[SerializeField] Selectable m_GameFirstSelected;
-	[SerializeField] Selectable m_BlurFirstSelected;
-	[SerializeField] Selectable m_MenuFirstSelected;
-	[SerializeField] Selectable m_SettingsFirstSelected;
-	[SerializeField] Selectable m_DialogFirstSelected;
-	[SerializeField] Selectable m_FadeFirstSelected;
+	[SerializeField] GameObject m_MainMenuFirstSelected;
+	[SerializeField] GameObject m_GameFirstSelected;
+	[SerializeField] GameObject m_MenuFirstSelected;
+	[SerializeField] GameObject m_SettingsFirstSelected;
+	[SerializeField] GameObject m_DialogFirstSelected;
+	[SerializeField] GameObject m_FadeFirstSelected;
+
+	[SerializeField] GameObject m_MainMenuLastSelected;
+	[SerializeField] GameObject m_GameLastSelected;
+	[SerializeField] GameObject m_MenuLastSelected;
+	[SerializeField] GameObject m_SettingsLastSelected;
+	[SerializeField] GameObject m_DialogLastSelected;
+	[SerializeField] GameObject m_FadeLastSelected;
 
 	[SerializeField] bool         m_PixelPerfect        = true;
 	[SerializeField] float        m_PixelPerUnit        = 16.0f;
-	[SerializeField] Vector2Int   m_ReferenceResolution = DefaultResolution;
+	[SerializeField] Vector2Int   m_ReferenceResolution = new Vector2Int(640, 360);
 	[SerializeField] Vector2Int[] m_ResolutionPresets   = new Vector2Int[] {
 		new Vector2Int( 640,  360),
 		new Vector2Int(1280,  720),
@@ -151,54 +150,81 @@ public class UIManager : MonoSingleton<UIManager> {
 		new Vector2Int(3840, 2160),
 	};
 
-	[SerializeField] string       m_Language   = null;
-	[SerializeField] bool         m_FullScreen = false;
-	[SerializeField] float        m_Music      = 1.0f;
-	[SerializeField] float        m_SoundFX    = 1.0f;
-
-	[SerializeField] float        m_MouseSensitivity = 1.0f;
-	[SerializeField] List<string> m_KeysMoveUp       = new List<string>{ "upArrow"     };
-	[SerializeField] List<string> m_KeysMoveDown     = new List<string>{ "leftArrow"   };
-	[SerializeField] List<string> m_KeysMoveLeft     = new List<string>{ "downArrow"   };
-	[SerializeField] List<string> m_KeysMoveRight    = new List<string>{ "rightArrow"  };
-	[SerializeField] List<string> m_KeysInteract     = new List<string>{ "z", "enter"  };
-	[SerializeField] List<string> m_KeysCancel       = new List<string>{ "x", "escape" };
+	[SerializeField] string m_Language;
+	[SerializeField] float  m_Music;
+	[SerializeField] float  m_SoundFX;
+	[SerializeField] float  m_MouseSensitivity;
 
 
 
 	// Properties
 
-	PrimaryCanvas primaryCanvas {
+	CanvasType activeCanvas {
 		get {
-			PrimaryCanvas value = PrimaryCanvas.MainMenu;
-			if (m_MainMenuCanvas.gameObject.activeSelf) value = PrimaryCanvas.MainMenu;
-			if (m_GameCanvas    .gameObject.activeSelf) value = PrimaryCanvas.Game;
+			CanvasType value = CanvasType.None;
+			if (m_MainMenuCanvas.gameObject.activeSelf) value |= CanvasType.MainMenu;
+			if (m_GameCanvas    .gameObject.activeSelf) value |= CanvasType.Game;
+			if (m_MenuCanvas    .gameObject.activeSelf) value |= CanvasType.Menu;
+			if (m_SettingsCanvas.gameObject.activeSelf) value |= CanvasType.Settings;
+			if (m_DialogCanvas  .gameObject.activeSelf) value |= CanvasType.Dialog;
+			if (m_FadeCanvas    .gameObject.activeSelf) value |= CanvasType.Fade;
 			return value;
 		}
 		set {
-			m_MainMenuCanvas.gameObject.SetActive(value == PrimaryCanvas.MainMenu);
-			m_GameCanvas    .gameObject.SetActive(value == PrimaryCanvas.Game);
+			if (value == activeCanvas) return;
+			m_MainMenuCanvas.gameObject.SetActive(0 != (value & CanvasType.MainMenu));
+			m_GameCanvas    .gameObject.SetActive(0 != (value & CanvasType.Game));
+			m_MenuCanvas    .gameObject.SetActive(0 != (value & CanvasType.Menu));
+			m_SettingsCanvas.gameObject.SetActive(0 != (value & CanvasType.Settings));
+			m_DialogCanvas  .gameObject.SetActive(0 != (value & CanvasType.Dialog));
+			m_FadeCanvas    .gameObject.SetActive(0 != (value & CanvasType.Fade));
+
+			m_MainMenuLastSelected ??= m_MainMenuFirstSelected;
+			m_GameLastSelected     ??= m_GameFirstSelected;
+			m_MenuLastSelected     ??= m_MenuFirstSelected;
+			m_SettingsLastSelected ??= m_SettingsFirstSelected;
+			m_DialogLastSelected   ??= m_DialogFirstSelected;
+			m_FadeLastSelected     ??= m_FadeFirstSelected;
+			switch (highestCanvas) {
+				case CanvasType.MainMenu: selected = m_MainMenuLastSelected; break;
+				case CanvasType.Game:     selected = m_GameLastSelected;     break;
+				case CanvasType.Menu:     selected = m_MenuLastSelected;     break;
+				case CanvasType.Settings: selected = m_SettingsLastSelected; break;
+				case CanvasType.Dialog:   selected = m_DialogLastSelected;   break;
+				case CanvasType.Fade:     selected = m_FadeLastSelected;     break;
+			}
 		}
 	}
 
-	OverlayCanvas overlayCanvas {
+	CanvasType highestCanvas {
 		get {
-			OverlayCanvas value = OverlayCanvas.None;
-			if (m_BlurCanvas    .gameObject.activeSelf) value |= OverlayCanvas.Blur;
-			if (m_MenuCanvas    .gameObject.activeSelf) value |= OverlayCanvas.Menu;
-			if (m_SettingsCanvas.gameObject.activeSelf) value |= OverlayCanvas.Settings;
-			if (m_DialogCanvas  .gameObject.activeSelf) value |= OverlayCanvas.Dialog;
-			if (m_FadeCanvas    .gameObject.activeSelf) value |= OverlayCanvas.Fade;
+			CanvasType value = activeCanvas;
+			if ((value & CanvasType.MainMenu) != 0) value = CanvasType.MainMenu;
+			if ((value & CanvasType.Game    ) != 0) value = CanvasType.Game;
+			if ((value & CanvasType.Menu    ) != 0) value = CanvasType.Menu;
+			if ((value & CanvasType.Settings) != 0) value = CanvasType.Settings;
+			if ((value & CanvasType.Dialog  ) != 0) value = CanvasType.Dialog;
+			if ((value & CanvasType.Fade    ) != 0) value = CanvasType.Fade;
 			return value;
 		}
+	}
+
+	GameObject selected {
+		get => EventSystem.current.currentSelectedGameObject;
 		set {
-			m_BlurCanvas    .gameObject.SetActive(0 != (value & OverlayCanvas.Blur));
-			m_MenuCanvas    .gameObject.SetActive(0 != (value & OverlayCanvas.Menu));
-			m_SettingsCanvas.gameObject.SetActive(0 != (value & OverlayCanvas.Settings));
-			m_DialogCanvas  .gameObject.SetActive(0 != (value & OverlayCanvas.Dialog));
-			m_FadeCanvas    .gameObject.SetActive(0 != (value & OverlayCanvas.Fade));
+			EventSystem.current.SetSelectedGameObject(value);
+			if (value) switch (highestCanvas) {
+				case CanvasType.MainMenu: m_MainMenuLastSelected = value; break;
+				case CanvasType.Game:     m_GameLastSelected     = value; break;
+				case CanvasType.Menu:     m_MenuLastSelected     = value; break;
+				case CanvasType.Settings: m_SettingsLastSelected = value; break;
+				case CanvasType.Dialog:   m_DialogLastSelected   = value; break;
+				case CanvasType.Fade:     m_FadeLastSelected     = value; break;
+			}
 		}
 	}
+
+	
 
 	Canvas managerCanvas;
 
@@ -234,52 +260,86 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	// Methods
 
-	List<string> ToKeys(string data) {
-		List<string> keys = new List<string>();
-		foreach (string key in data.Split(", ")) keys.Add(key);
-		return keys;
+	readonly CanvasType primary = CanvasType.MainMenu | CanvasType.Game;
+	readonly CanvasType overlay = CanvasType.Menu | CanvasType.Settings | CanvasType.Dialog;
+
+	Stack<CanvasType> stack = new Stack<CanvasType>();
+
+	void Open(CanvasType canvas) {
+		switch (canvas) {
+			case CanvasType.MainMenu:
+				stack.Clear();
+				stack.Push(CanvasType.MainMenu);
+				activeCanvas = CanvasType.MainMenu;
+				break;
+			
+			case CanvasType.Game:
+				stack.Clear();
+				stack.Push(CanvasType.Game);
+				activeCanvas = CanvasType.Game;
+				break;
+
+			case CanvasType.Menu:
+				stack.Push(CanvasType.Menu);
+				activeCanvas = (activeCanvas & primary) | CanvasType.Menu;
+				break;
+
+			case CanvasType.Settings:
+				stack.Push(CanvasType.Settings);
+				activeCanvas = (activeCanvas & primary) | CanvasType.Settings;
+				break;
+
+			case CanvasType.Dialog:
+				stack.Push(CanvasType.Dialog);
+				activeCanvas = (activeCanvas & primary) | CanvasType.Dialog;
+				break;
+			
+			case CanvasType.Fade:
+				stack.Push(CanvasType.Fade);
+				activeCanvas = activeCanvas | CanvasType.Fade;
+				break;
+		}
 	}
 
-	string ToData(List<string> keys) {
-		string data = null;
-		for (int i = 0; i < keys.Count; i++) data += keys[i] + (i != keys.Count - 1 ? ", " : "");
-		return data;
+	public static void Back() {
+		Instance?.Back_Internal();
+	}
+	void Back_Internal() {
+		switch (highestCanvas) {
+			case CanvasType.MainMenu:
+				OpenDialog("Quit", "Quit Message", "Quit", "Cancel");
+				dialogPositive?.onClick.RemoveAllListeners();
+				dialogPositive?.onClick.AddListener(() => Quit());
+				break;
+			
+			case CanvasType.Game:
+				OpenMenu();
+				break;
+
+			case CanvasType.Menu:
+				activeCanvas &= ~CanvasType.Menu;
+				break;
+
+			case CanvasType.Settings:
+				activeCanvas &= ~CanvasType.Settings;
+				SaveSettings();
+				break;
+
+			case CanvasType.Dialog:
+				activeCanvas &= ~CanvasType.Dialog;
+				break;
+			
+			case CanvasType.Fade:
+				break;
+		}
 	}
 
-	void LoadSettings() {
-		m_Language         = PlayerPrefs.GetString("Language",          m_Language);
-		m_FullScreen	   = PlayerPrefs.GetInt   ("FullScreen",        m_FullScreen ? 1 : 0) != 0;
-		m_Music            = PlayerPrefs.GetFloat ("Music",             m_Music);
-		m_SoundFX          = PlayerPrefs.GetFloat ("SoundFX",           m_SoundFX);
-		m_MouseSensitivity = PlayerPrefs.GetFloat ("MouseSensitivity",  m_MouseSensitivity);
-
-		m_KeysMoveUp    = ToKeys(PlayerPrefs.GetString("KeysMoveUp",    ToData(m_KeysMoveUp)));
-		m_KeysMoveDown  = ToKeys(PlayerPrefs.GetString("KeysMoveDown",  ToData(m_KeysMoveDown)));
-		m_KeysMoveLeft  = ToKeys(PlayerPrefs.GetString("KeysMoveLeft",  ToData(m_KeysMoveLeft)));
-		m_KeysMoveRight = ToKeys(PlayerPrefs.GetString("KeysMoveRight", ToData(m_KeysMoveRight)));
-		m_KeysInteract  = ToKeys(PlayerPrefs.GetString("KeysInteract",  ToData(m_KeysInteract)));
-		m_KeysCancel    = ToKeys(PlayerPrefs.GetString("KeysCancel",    ToData(m_KeysCancel)));
-
-		UpdateLanguage(null);
-		UpdateFullScreen(null);
-		UpdateScreenResolution(null);
-	}
-
-	void SaveSettings() {
-		PlayerPrefs.SetString("Language",         m_Language);
-		PlayerPrefs.SetInt   ("FullScreen",       m_FullScreen ? 1 : 0);
-		PlayerPrefs.SetFloat ("Music",            m_Music);
-		PlayerPrefs.SetFloat ("SoundFX",          m_SoundFX);
-		PlayerPrefs.SetFloat ("MouseSensitivity", m_MouseSensitivity);
-
-		PlayerPrefs.SetString("KeysMoveUp",    ToData(m_KeysMoveUp));
-		PlayerPrefs.SetString("KeysMoveDown",  ToData(m_KeysMoveDown));
-		PlayerPrefs.SetString("KeysMoveLeft",  ToData(m_KeysMoveLeft));
-		PlayerPrefs.SetString("KeysMoveRight", ToData(m_KeysMoveRight));
-		PlayerPrefs.SetString("KeysInteract",  ToData(m_KeysInteract));
-		PlayerPrefs.SetString("KeysCancel",    ToData(m_KeysCancel));
-
-		PlayerPrefs.Save();
+	public static void Quit() {
+		#if UNITY_EDITOR
+			EditorApplication.isPlaying = false;
+		#else
+			Application.Quit();
+		#endif
 	}
 
 
@@ -296,52 +356,80 @@ public class UIManager : MonoSingleton<UIManager> {
 		return CameraManager.Instance.transform.TransformDirection(position);
 	}
 
-	public static void Back() {
-		Instance?.Back_Internal();
-	}
-	void Back_Internal() {
-		if (0 != (overlayCanvas & OverlayCanvas.Fade)) {
-			return;
-		}
-		if (0 != (overlayCanvas & OverlayCanvas.Dialog)) {
-			overlayCanvas &= ~OverlayCanvas.Dialog;
-			if (overlayCanvas == OverlayCanvas.Blur) overlayCanvas = OverlayCanvas.None;
-			return;
-		}
-		if (0 != (overlayCanvas & OverlayCanvas.Settings)) {
-			SaveSettings();
-			overlayCanvas &= ~OverlayCanvas.Settings;
-			if (primaryCanvas == PrimaryCanvas.Game) OpenMenu();
-			if (overlayCanvas == OverlayCanvas.Blur) overlayCanvas = OverlayCanvas.None;
-			return;
-		}
-		if (0 != (overlayCanvas & OverlayCanvas.Menu)) {
-			overlayCanvas &= ~OverlayCanvas.Menu;
-			if (overlayCanvas == OverlayCanvas.Blur) overlayCanvas = OverlayCanvas.None;
-			return;
-		}
-		if (0 != (overlayCanvas & OverlayCanvas.Blur)) {
-			overlayCanvas &= ~OverlayCanvas.Blur;
-			return;
-		}
-		if (primaryCanvas == PrimaryCanvas.Game) {
-			OpenMenu();
-			return;
-		}
-		if (primaryCanvas == PrimaryCanvas.MainMenu) {
-			OpenDialog("Quit", "Quit Dialog", "Quit", "Cancel");
-			dialogPositive?.onClick.RemoveAllListeners();
-			dialogPositive?.onClick.AddListener(() => Quit());
-			return;
-		}
+
+
+	List<string> ToKeys(string str) {
+		List<string> keys = new List<string>();
+		foreach (string key in str.Split(", ")) if (key != string.Empty) keys.Add(key);
+		return keys;
 	}
 
-	public static void Quit() {
-		#if UNITY_EDITOR
-			EditorApplication.isPlaying = false;
-		#else
-			Application.Quit();
-		#endif
+	string ToString(List<string> keys) {
+		string str = "";
+		for (int i = 0; i < keys.Count; i++) str += keys[i] + (i != keys.Count - 1 ? ", " : "");
+		return str;
+	}
+
+	string defaultMoveUp;
+	string defaultMoveLeft;
+	string defaultMoveDown;
+	string defaultMoveRight;
+	string defaultInteract;
+	string defaultCancel;
+
+	void LoadSettings() {
+		m_Language          = PlayerPrefs.GetString("Language", "");
+		m_Music             = PlayerPrefs.GetFloat ("Music", 1f);
+		m_SoundFX           = PlayerPrefs.GetFloat ("SoundFX", 1f);
+		m_MouseSensitivity  = PlayerPrefs.GetFloat ("MouseSensitivity", 1f);
+
+		defaultMoveUp    ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveUp));
+		defaultMoveLeft  ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveLeft));
+		defaultMoveDown  ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveDown));
+		defaultMoveRight ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveRight));
+		defaultInteract  ??= ToString(InputManager.GetKeysBinding(KeyAction.Interact));
+		defaultCancel    ??= ToString(InputManager.GetKeysBinding(KeyAction.Cancel));
+
+		string strMoveUp    = PlayerPrefs.GetString("MoveUp",    defaultMoveUp);
+		string strMoveLeft  = PlayerPrefs.GetString("MoveLeft",  defaultMoveLeft);
+		string strMoveDown  = PlayerPrefs.GetString("MoveDown",  defaultMoveDown);
+		string strMoveRight = PlayerPrefs.GetString("MoveRight", defaultMoveRight);
+		string strInteract  = PlayerPrefs.GetString("Interact",  defaultInteract);
+		string strCancel    = PlayerPrefs.GetString("Cancel",    defaultCancel);
+
+		InputManager.SetKeysBinding(KeyAction.MoveUp,    ToKeys(strMoveUp));
+		InputManager.SetKeysBinding(KeyAction.MoveLeft,  ToKeys(strMoveLeft));
+		InputManager.SetKeysBinding(KeyAction.MoveDown,  ToKeys(strMoveDown));
+		InputManager.SetKeysBinding(KeyAction.MoveRight, ToKeys(strMoveRight));
+		InputManager.SetKeysBinding(KeyAction.Interact,  ToKeys(strInteract));
+		InputManager.SetKeysBinding(KeyAction.Cancel,    ToKeys(strCancel));
+		
+		UpdateLanguage(null);
+		UpdateFullScreen(null);
+		UpdateScreenResolution(null);
+	}
+
+	void SaveSettings() {
+		PlayerPrefs.SetString("Language",         m_Language);
+		PlayerPrefs.SetFloat ("Music",            m_Music);
+		PlayerPrefs.SetFloat ("SoundFX",          m_SoundFX);
+		PlayerPrefs.SetFloat ("MouseSensitivity", m_MouseSensitivity);
+
+		string strMoveUp	= ToString(InputManager.GetKeysBinding(KeyAction.MoveUp));
+		string strMoveLeft	= ToString(InputManager.GetKeysBinding(KeyAction.MoveLeft));
+		string strMoveDown	= ToString(InputManager.GetKeysBinding(KeyAction.MoveDown));
+		string strMoveRight	= ToString(InputManager.GetKeysBinding(KeyAction.MoveRight));
+		string strInteract	= ToString(InputManager.GetKeysBinding(KeyAction.Interact));
+		string strCancel	= ToString(InputManager.GetKeysBinding(KeyAction.Cancel));
+
+		PlayerPrefs.SetString("MoveUp",    strMoveUp);
+		PlayerPrefs.SetString("MoveLeft",  strMoveLeft);
+		PlayerPrefs.SetString("MoveDown",  strMoveDown);
+		PlayerPrefs.SetString("MoveRight", strMoveRight);
+		PlayerPrefs.SetString("Interact",  strInteract);
+		PlayerPrefs.SetString("Cancel",    strCancel);
+
+		PlayerPrefs.Save();
 	}
 
 
@@ -350,98 +438,101 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	void Start() {
 		LoadSettings();
-		primaryCanvas = PrimaryCanvas.MainMenu;
-		overlayCanvas = OverlayCanvas.None;
+		activeCanvas = CanvasType.MainMenu;
 		// Fade In
 	}
 
 
 
 	// ------------------------------------------------------------------------------------------------
-	// Main Menu Scene
+	// Main Menu Canvas
 	// ------------------------------------------------------------------------------------------------
 
 	public void SetMainMenu() {
 		// Fade Out
-		primaryCanvas = PrimaryCanvas.MainMenu;
-		overlayCanvas = OverlayCanvas.None;
+		activeCanvas = CanvasType.MainMenu;
 		// Fade In
 	}
 
 
 
 	// ------------------------------------------------------------------------------------------------
-	// Game Scene
+	// Game Canvas
 	// ------------------------------------------------------------------------------------------------
 
 	public void SetGame() {
 		// Fade Out
-		primaryCanvas = PrimaryCanvas.Game;
-		overlayCanvas = OverlayCanvas.None;
+		activeCanvas = CanvasType.Game;
 		// Fade In
 	}
 
 
 
 	// ------------------------------------------------------------------------------------------------
-	// Menu Window
+	// Menu Canvas
 	// ------------------------------------------------------------------------------------------------
 
 	public void OpenMenu() {
-		overlayCanvas |= OverlayCanvas.Blur | OverlayCanvas.Menu;
+		activeCanvas |= CanvasType.Menu;
 	}
 
 
 
 	// ------------------------------------------------------------------------------------------------
-	// Settings Window
+	// Settings Canvas
 	// ------------------------------------------------------------------------------------------------
 
 	public void OpenSettings() {
-		overlayCanvas |= OverlayCanvas.Blur | OverlayCanvas.Settings;
-		overlayCanvas &= ~OverlayCanvas.Menu;
+		activeCanvas |= CanvasType.Settings;
 	}
 
 
 
-	int languageIndex = -1;
-
-	List<Locale> locales => LocalizationSettings.AvailableLocales.Locales;
-
 	public void UpdateLanguage(CustomStepper stepper) {
-		if (languageIndex == -1) {
-			m_Language ??= Application.systemLanguage.ToString();
-			languageIndex = Mathf.Max(0, locales.FindIndex(locale => {
-				return locale.Identifier.CultureInfo.NativeName.Equals(m_Language);
-			}));
-		}
-		LocalizationSettings.SelectedLocale = locales[languageIndex];
+		if (string.IsNullOrEmpty(m_Language)) m_Language = Application.systemLanguage.ToString();
+		int index = Mathf.Max(0, LocalizationSettings.AvailableLocales.Locales.FindIndex(locale => {
+			return locale.Identifier.CultureInfo.NativeName.Equals(m_Language);
+		}));
+		LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[index];
 		if (stepper) stepper.text = m_Language;
 	}
 
 	public void SetLanguage(int value) {
-		languageIndex = (int)Mathf.Repeat(languageIndex + value, locales.Count);
-		m_Language = locales[languageIndex].Identifier.CultureInfo.NativeName;
+		int count = LocalizationSettings.AvailableLocales.Locales.Count;
+		int index = Mathf.Max(0, LocalizationSettings.AvailableLocales.Locales.FindIndex(locale => {
+			return locale.Identifier.CultureInfo.NativeName.Equals(m_Language);
+		}));
+		index = (int)Mathf.Repeat(index + value, count);
+		Locale locale = LocalizationSettings.AvailableLocales.Locales[index];
+		m_Language = locale.Identifier.CultureInfo.NativeName;
 	}
 
 
 
-	Vector2Int windowedResolution = DefaultResolution;
+	int fullScreenCache = -1;
+	Vector2Int windowedResolution;
 
 	public void UpdateFullScreen(CustomToggle toggle) {
-		if (toggle) toggle.value = m_FullScreen;
+		if (fullScreenCache == -1) fullScreenCache = Screen.fullScreen ? 3 : 2;
+		if (toggle) switch (fullScreenCache) {
+			case  3: toggle.value = true;  break;
+			case  2: toggle.value = false; break;
+			default:
+				Vector2Int resolution = windowedResolution;
+				if (toggle.value) {
+					resolution.x = Screen.currentResolution.width;
+					resolution.y = Screen.currentResolution.height;
+					windowedResolution = new Vector2Int(Screen.width, Screen.height);
+				}
+				else resolution = windowedResolution;
+				Screen.SetResolution(resolution.x, resolution.y, toggle.value);
+				break;
+		}
 	}
 
 	public void SetFullScreen(bool value) {
-		m_FullScreen = value;
-		Vector2Int resolution = windowedResolution;
-		if (m_FullScreen) {
-			if (!Screen.fullScreen) windowedResolution = new Vector2Int(Screen.width, Screen.height);
-			resolution.x = Screen.currentResolution.width;
-			resolution.y = Screen.currentResolution.height;
-		}
-		Screen.SetResolution(resolution.x, resolution.y, m_FullScreen);
-		UpdateScreenResolution(screenResolution);
+		fullScreenCache = value ? 1 : 0;
+		Screen.fullScreen = value;
 	}
 
 
@@ -462,13 +553,17 @@ public class UIManager : MonoSingleton<UIManager> {
 		Screen.width  / referenceResolution.x,
 		Screen.height / referenceResolution.y));
 
-	public void UpdateScreenResolution(CustomStepper stepper = null) {
+	public void UpdateScreenResolution(CustomStepper stepper) {
 		screenResolution = stepper;
+
+		bool interactable = !Screen.fullScreen;
+		bool activatePrev = !Screen.fullScreen && screenIndex != 0 && screenIndexFloor != -1;
+		bool activateNext = !Screen.fullScreen && screenIndexFloor < screenIndexMax;
 		if (screenResolution) {
-			stepper.text = $"{Screen.width} x {Screen.height}";
-			stepper.interactable = !m_FullScreen;
-			stepper.canMovePrev  = !m_FullScreen && screenIndex != 0 && screenIndexFloor != -1;
-			stepper.canMoveNext  = !m_FullScreen && screenIndexFloor < screenIndexMax;
+			screenResolution.text = $"{Screen.width} x {Screen.height}";
+			screenResolution.interactable = interactable;
+			screenResolution.activatePrev = activatePrev;
+			screenResolution.activateNext = activateNext;
 		}
 		if (managerCanvasScaler || TryGetComponent(out managerCanvasScaler)) {
 			managerCanvasScaler.scaleFactor = multiplier;
@@ -485,17 +580,17 @@ public class UIManager : MonoSingleton<UIManager> {
 	}
 
 	public void SetScreenResolution(int value) {
-		if (m_FullScreen) return;
-		if (screenIndex == -1 && value == -1) value = 0;
-		Vector2Int resolution = m_ResolutionPresets[Mathf.Min(screenIndexFloor + value, screenIndexMax)];
-		Screen.SetResolution(resolution.x, resolution.y, m_FullScreen);
+		if (value == -1 && screenIndex == -1) value = 0;
+		int index = Mathf.Clamp(screenIndexFloor + value, 0, screenIndexMax);
+		Vector2Int resolution = m_ResolutionPresets[index];
+		Screen.SetResolution(resolution.x, resolution.y, Screen.fullScreen);
 	}
 
-	Vector2Int cacheResolution = DefaultResolution;
+	Vector2Int screenResolutionCache;
 
 	void LateUpdate() {
-		if (cacheResolution.x != Screen.width || cacheResolution.y != Screen.height) {
-			cacheResolution = new Vector2Int(Screen.width, Screen.height);
+		if (screenResolutionCache.x != Screen.width || screenResolutionCache.y != Screen.height) {
+			screenResolutionCache = new Vector2Int(Screen.width, Screen.height);
 			UpdateScreenResolution(screenResolution);
 		}
 	}
@@ -511,10 +606,6 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void UpdateMouseSensitivity(CustomSlider slider) => slider.value = m_MouseSensitivity;
 	public void SetMouseSensitivity(float value) => m_MouseSensitivity = value;
 
-	void UpdateKeys(CustomButton button, KeyAction keyAction) {
-		button.text = ToData(InputManager.GetKeysBinding(keyAction));
-	}
-
 	public void UpdateMoveUp   (CustomButton button) => UpdateKeys(button, KeyAction.MoveUp);
 	public void UpdateMoveLeft (CustomButton button) => UpdateKeys(button, KeyAction.MoveLeft);
 	public void UpdateMoveDown (CustomButton button) => UpdateKeys(button, KeyAction.MoveDown);
@@ -522,8 +613,16 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void UpdateInteract (CustomButton button) => UpdateKeys(button, KeyAction.Interact);
 	public void UpdateCancel   (CustomButton button) => UpdateKeys(button, KeyAction.Cancel);
 
-	void SetKeys(KeyAction keyAction) {
-		OpenDialog("Key Binding", "Key Binding Dialog", "Save", "Cancel");
+	CustomButton[] action = new CustomButton[Enum.GetValues(typeof(KeyAction)).Length];
+
+	void UpdateKeys(CustomButton button, KeyAction keyAction) {
+		action[(int)keyAction] = button;
+		string str = ToString(InputManager.GetKeysBinding(keyAction));
+		str = str.Replace("upArrow",    "↑");
+		str = str.Replace("leftArrow",  "←");
+		str = str.Replace("downArrow",  "↓");
+		str = str.Replace("rightArrow", "→");
+		if (button) button.text = str;
 	}
 
 	public void SetMoveUp   () => SetKeys(KeyAction.MoveUp);
@@ -533,10 +632,58 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void SetInteract () => SetKeys(KeyAction.Interact);
 	public void SetCancel   () => SetKeys(KeyAction.Cancel);
 
+	bool isKeyBinding = false;
+
+	void SetKeys(KeyAction keyAction) => StartCoroutine(SetKeysCoroutine(keyAction));
+	IEnumerator SetKeysCoroutine(KeyAction keyAction) {
+		isKeyBinding = true;
+		OpenDialog("Binding", "Binding Message", "Apply Binding", "Cancel Binding");
+		selected = null;
+		List<string> keys = new List<string>();
+		dialogPositive?.onClick.AddListener(() => InputManager.SetKeysBinding(keyAction, keys));
+
+		InputManager.RecordKeys();
+		while (highestCanvas == CanvasType.Dialog) {
+			yield return null;
+			bool flag = true;
+			flag &= !string.IsNullOrEmpty(InputManager.anyKey);
+			flag &= !"escape".Equals(InputManager.anyKey);
+			flag &= !keys.Exists(key => key.Equals(InputManager.anyKey));
+			if ("enter".Equals(InputManager.anyKey)) {
+				if (!selected || !selected.TryGetComponent(out Selectable selectable)) {
+					dialogPositive?.onClick.Invoke();
+				}
+			}
+			else if (flag) {
+				keys.Add(InputManager.anyKey);
+				string str = ToString(keys);
+				str = str.Replace("upArrow",    "↑");
+				str = str.Replace("leftArrow",  "←");
+				str = str.Replace("downArrow",  "↓");
+				str = str.Replace("rightArrow", "→");
+				if (dialogMessage) dialogMessage.text = str;
+			}
+		}
+		InputManager.StopRecordKeys();
+		action[(int)keyAction]?.Refresh();
+		isKeyBinding = false;
+	}
+
+
+
+	public void SetDeleteAllData() {
+		OpenDialog("Delete All Data", "Delete All Data Message", "Delete", "Cancel");
+		dialogPositive?.onClick.AddListener(() => {
+			PlayerPrefs.DeleteAll();
+			LoadSettings();
+			Back();
+		});
+	}
+
 
 
 	// ------------------------------------------------------------------------------------------------
-	// Dialog Window
+	// Dialog Canvas
 	// ------------------------------------------------------------------------------------------------
 
 	CustomText   dialogTitle;
@@ -550,7 +697,8 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void UpdateDialogNegative(CustomButton button) => dialogNegative = button;
 
 	public void OpenDialog(string arg0, string arg1, string arg2, string arg3) {
-		overlayCanvas |= OverlayCanvas.Blur | OverlayCanvas.Dialog;
+		activeCanvas |= CanvasType.Dialog;
+
 		dialogTitle   ?.SetLocalizeText("UI Table", arg0);
 		dialogMessage ?.SetLocalizeText("UI Table", arg1);
 		dialogPositive?.SetLocalizeText("UI Table", arg2);
@@ -564,7 +712,7 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 	// ------------------------------------------------------------------------------------------------
-	// Fade Window
+	// Fade Canvas
 	// ------------------------------------------------------------------------------------------------
 
 	int   fadeState = 0;
@@ -572,14 +720,14 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	public void FadeOut() {
 		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
-			overlayCanvas |= OverlayCanvas.Fade;
+			activeCanvas |= CanvasType.Fade;
 			fadeState = 1;
 		}
 	}
 
 	public void FadeIn() {
 		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
-			overlayCanvas |= OverlayCanvas.Fade;
+			activeCanvas |= CanvasType.Fade;
 			fadeState = 2;
 		}
 	}
@@ -590,9 +738,10 @@ public class UIManager : MonoSingleton<UIManager> {
 			color.a = Mathf.MoveTowards(color.a, fadeState == 1 ? 1.0f : 0.0f, Time.deltaTime);
 			fadeImage.color = color;
 			if (color.a == 0.0f) {
-				overlayCanvas &= ~OverlayCanvas.Fade;
+				activeCanvas &= ~CanvasType.Fade;
 				fadeState = 0;
 			}
 		}
 	}
+	
 }

@@ -49,8 +49,8 @@ using TMPro;
 			PropertyField(m_NextRect);
 			PropertyField(m_TextTMP);
 			Space();
-			I.canMovePrev = Toggle("Can Move Prev", I.canMovePrev);
-			I.canMoveNext = Toggle("Can Move Next", I.canMoveNext);
+			I.activatePrev = Toggle("Can Move Prev", I.activatePrev);
+			I.activateNext = Toggle("Can Move Next", I.activateNext);
 			Space();
 			PropertyField(m_OnStateUpdated);
 			PropertyField(m_OnValueChanged);
@@ -88,14 +88,14 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 
 	RectTransform rectTransform => transform as RectTransform;
 	
-	public bool canMovePrev {
+	public bool activatePrev {
 		get => m_PrevRect && m_PrevRect.gameObject.activeSelf;
 		set {
 			if (m_PrevRect) m_PrevRect.gameObject.SetActive(value);
 		}
 	}
 
-	public bool canMoveNext {
+	public bool activateNext {
 		get => m_NextRect && m_NextRect.gameObject.activeSelf;
 		set {
 			if (m_NextRect) m_NextRect.gameObject.SetActive(value);
@@ -139,6 +139,13 @@ public class CustomStepper : Selectable, IPointerClickHandler {
 		if (interactable) {
 			Vector2 point = rectTransform.InverseTransformPoint(eventData.position);
 			value = (0 <= point.x) && (point.x < rectTransform.rect.width / 3) ? -1 : 1;
+		}
+	}
+
+	public void OnSubmit() {
+		if (interactable) {
+			DoStateTransition(SelectionState.Pressed, false);
+			value = 1;
 		}
 	}
 

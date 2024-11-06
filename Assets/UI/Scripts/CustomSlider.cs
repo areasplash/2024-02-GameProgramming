@@ -179,6 +179,13 @@ public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
 		}
 	}
 
+	public void OnSubmit() {
+		if (interactable) {
+			DoStateTransition(SelectionState.Pressed, false);
+			value += fine ? fineStep : step;
+		}
+	}
+
 	public override void OnMove(AxisEventData eventData) {
 		if (interactable) switch (eventData.moveDir) {
 			case MoveDirection.Left:

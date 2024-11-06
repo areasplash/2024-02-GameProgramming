@@ -4,9 +4,11 @@ using UnityEngine.InputSystem.Utilities;
 
 using System;
 using System.Collections.Generic;
+using UnityEngine.UI;
+
 
 #if UNITY_EDITOR
-	using UnityEditor;
+using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
 
@@ -80,6 +82,14 @@ public class GameManager : MonoSingleton<GameManager> {
 			}
 		}
 
+		/*if (InputManager.GetKeyDown(KeyAction.Interact)) {
+			if (UIManager.selected && UIManager.selected.TryGetComponent(out Selectable selectable)) {
+				if (selectable is CustomButton  button ) button .OnSubmit();
+				if (selectable is CustomToggle  toggle ) toggle .OnSubmit();
+				if (selectable is CustomStepper stepper) stepper.OnSubmit();
+				if (selectable is CustomSlider  slider ) slider .OnSubmit();
+			}
+		}*/
 		if (InputManager.GetKeyDown(KeyAction.Cancel)) UIManager.Back();
 	}
 }
