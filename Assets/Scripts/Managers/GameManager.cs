@@ -1,14 +1,7 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Utilities;
-
-using System;
-using System.Collections.Generic;
-using UnityEngine.UI;
-
 
 #if UNITY_EDITOR
-using UnityEditor;
+	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
 
@@ -59,25 +52,23 @@ public class GameManager : MonoSingleton<GameManager> {
 	// Cycle
 
 	Vector2 pointPosition;
-	Vector3 eulerAngles;
+	Vector3 rotation;
 
 	void Update() {
-		if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
-			Ray ray = CameraManager.ScreenPointToRay(InputManager.pointPosition);
-			if (Physics.Raycast(ray, out RaycastHit hit)) {
-				Debug.Log(hit.point);
+		if (UIManager.GetActiveCanvas() == CanvasType.Game) {
+			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
+				Ray ray = CameraManager.ScreenPointToRay(InputManager.PointPosition);
+				if (Physics.Raycast(ray, out RaycastHit hit)) {
+					Debug.Log(hit.point);
+				}
 			}
-		}
-		if (CameraManager.Instance) {
 			if (InputManager.GetKeyDown(KeyAction.RightClick)) {
-				pointPosition = InputManager.pointPosition;
-				eulerAngles = CameraManager.Instance.transform.eulerAngles;
+				pointPosition = InputManager.PointPosition;
+				rotation = CameraManager.Rotation;
 			}
 			if (InputManager.GetKey(KeyAction.RightClick)) {
-				CameraManager.Instance.transform.rotation = Quaternion.Euler(
-					eulerAngles.x,
-					eulerAngles.y + (InputManager.pointPosition.x - pointPosition.x) * 1f,
-					eulerAngles.z);
+				float delta = (InputManager.PointPosition.x - pointPosition.x) * 1f;
+				CameraManager.Rotation = rotation + new Vector3(0, delta, 0);
 			}
 		}
 	}

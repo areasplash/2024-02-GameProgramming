@@ -5,6 +5,8 @@ using UnityEngine.Events;
 
 using System;
 
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 using TMPro;
 
 #if UNITY_EDITOR
@@ -16,44 +18,33 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Toggle Editor
+// Custom Button Editor
 // ====================================================================================================
 
 #if UNITY_EDITOR
-	[CustomEditor(typeof(CustomToggle)), CanEditMultipleObjects]
-	public class CustomToggleEditor : SelectableEditor {
+	[CustomEditor(typeof(SettingsButton)), CanEditMultipleObjects]
+	public class SettingsButtonEditor : SelectableEditor {
 
-		SerializedProperty m_PositiveRect;
-		SerializedProperty m_NegativeRect;
-		SerializedProperty m_PositiveTextTMP;
-		SerializedProperty m_NegativeTextTMP;
+		SerializedProperty m_TextTMP;
 		SerializedProperty m_OnStateUpdated;
-		SerializedProperty m_OnValueChanged;
+		SerializedProperty m_OnClick;
 
-		CustomToggle I => target as CustomToggle;
+		SettingsButton I => target as SettingsButton;
 
 		protected override void OnEnable() {
 			base.OnEnable();
-			m_PositiveRect    = serializedObject.FindProperty("m_PositiveRect");
-			m_NegativeRect    = serializedObject.FindProperty("m_NegativeRect");
-			m_PositiveTextTMP = serializedObject.FindProperty("m_PositiveTextTMP");
-			m_NegativeTextTMP = serializedObject.FindProperty("m_NegativeTextTMP");
-			m_OnStateUpdated  = serializedObject.FindProperty("m_OnStateUpdated");
-			m_OnValueChanged  = serializedObject.FindProperty("m_OnValueChanged");
+			m_TextTMP        = serializedObject.FindProperty("m_TextTMP");
+			m_OnStateUpdated = serializedObject.FindProperty("m_OnStateUpdated");
+			m_OnClick        = serializedObject.FindProperty("m_OnClick");
 		}
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
 			Space();
-			PropertyField(m_PositiveRect);
-			PropertyField(m_NegativeRect);
-			PropertyField(m_PositiveTextTMP);
-			PropertyField(m_NegativeTextTMP);
-			Space();
-			I.value = Toggle("Value", I.value);
+			PropertyField(m_TextTMP);
 			Space();
 			PropertyField(m_OnStateUpdated);
-			PropertyField(m_OnValueChanged);
+			PropertyField(m_OnClick);
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -63,27 +54,22 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Toggle
+// Custom Button
 // ====================================================================================================
 
-public class CustomToggle : Selectable, IPointerClickHandler {
+public class SettingsButton : Selectable, IPointerClickHandler {
 
-	[Serializable] public class ToggleUpdatedEvent : UnityEvent<CustomToggle> {}
-	[Serializable] public class ToggleChangedEvent : UnityEvent<bool> {}
+	[Serializable] public class ButtonUpdatedEvent : UnityEvent<SettingsButton> {}
+	[Serializable] public class ButtonClickedEvent : UnityEvent {}
 
 
 
 	// Fields
 
-	[SerializeField] RectTransform   m_PositiveRect;
-	[SerializeField] RectTransform   m_NegativeRect;
-	[SerializeField] TextMeshProUGUI m_PositiveTextTMP;
-	[SerializeField] TextMeshProUGUI m_NegativeTextTMP;
+	[SerializeField] TextMeshProUGUI m_TextTMP;
 
-	[SerializeField] bool m_Value = false;
-
-	[SerializeField] ToggleUpdatedEvent m_OnStateUpdated = new ToggleUpdatedEvent();
-	[SerializeField] ToggleChangedEvent m_OnValueChanged = new ToggleChangedEvent();
+	[SerializeField] ButtonUpdatedEvent m_OnStateUpdated = new ButtonUpdatedEvent();
+	[SerializeField] ButtonClickedEvent m_OnClick        = new ButtonClickedEvent();
 
 
 
@@ -91,24 +77,26 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 
 	RectTransform rectTransform => transform as RectTransform;
 
-	public bool value {
-		get => m_Value;
+	LocalizeStringEvent localizeStringEvent;
+
+	public string text {
+		get => m_TextTMP ? m_TextTMP.text : string.Empty;
 		set {
-			if (m_Value == value) return;
-			m_Value = value;
-			onValueChanged?.Invoke(m_Value);
-			Refresh();
+			if (localizeStringEvent || TryGetComponent(out localizeStringEvent)) {
+				localizeStringEvent.StringReference = null;
+			}
+			if (m_TextTMP) m_TextTMP.text = value;
 		}
 	}
 
-	public ToggleUpdatedEvent onStateUpdated {
+	public ButtonUpdatedEvent onStateUpdated {
 		get => m_OnStateUpdated;
 		set => m_OnStateUpdated = value;
 	}
 
-	public ToggleChangedEvent onValueChanged {
-		get => m_OnValueChanged;
-		set => m_OnValueChanged = value;
+	public ButtonClickedEvent onClick {
+		get => m_OnClick;
+		set => m_OnClick = value;
 	}
 
 
@@ -116,13 +104,13 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
-		if (interactable) value = !value;
+		if (interactable) onClick?.Invoke();
 	}
 
 	public void OnSubmit() {
 		if (interactable) {
 			DoStateTransition(SelectionState.Pressed, false);
-			value = !value;
+			onClick?.Invoke();
 		}
 	}
 
@@ -131,7 +119,7 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 			case MoveDirection.Left:
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				value = !value;
+				onClick?.Invoke();
 				return;
 		}
 		base.OnMove(eventData);
@@ -161,11 +149,17 @@ public class CustomToggle : Selectable, IPointerClickHandler {
 		}
 	}
 
+	public void SetLocalizeText(string table, string tableEntry) {
+		if (localizeStringEvent || TryGetComponent(out localizeStringEvent)) {
+			localizeStringEvent.StringReference = new LocalizedString {
+				TableReference      = table,
+				TableEntryReference = tableEntry
+			};
+			localizeStringEvent.RefreshString();
+		}
+	}
+
 	public void Refresh() {
-		if (m_PositiveRect) m_PositiveRect.gameObject.SetActive( value);
-		if (m_NegativeRect) m_NegativeRect.gameObject.SetActive(!value);
-		if (m_PositiveTextTMP) m_PositiveTextTMP.gameObject.SetActive( value);
-		if (m_NegativeTextTMP) m_NegativeTextTMP.gameObject.SetActive(!value);
 		onStateUpdated?.Invoke(this);
 	}
 

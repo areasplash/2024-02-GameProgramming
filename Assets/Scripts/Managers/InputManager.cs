@@ -13,16 +13,13 @@ using System.Collections.Generic;
 
 
 [Serializable] public enum KeyAction {
-	// Common (Bindable)
 	MoveUp,
 	MoveLeft,
 	MoveDown,
 	MoveRight,
 	Interact,
 	Cancel,
-	// Game (Bindable)
-	// - Skill, Dash, Etc.
-	// UI
+	
 	Point,
 	LeftClick,
 	MiddleClick,
@@ -42,13 +39,12 @@ using System.Collections.Generic;
 	[CustomEditor(typeof(InputManager)), CanEditMultipleObjects]
 	public class InputManagerEditor : Editor {
 
-		InputManager I => target as InputManager;
-
 		void OnEnable() {
 		}
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
+			Undo.RecordObject(target, "Change Input Manager Properties");
 			Space();
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
@@ -64,29 +60,139 @@ using System.Collections.Generic;
 
 public class InputManager : MonoSingleton<InputManager> {
 
+	// ------------------------------------------------------------------------------------------------
 	// Fields
+	// ------------------------------------------------------------------------------------------------
 
 
 
+	// ------------------------------------------------------------------------------------------------
 	// Properties
+	// ------------------------------------------------------------------------------------------------
+
+	public static Vector2 MoveDirection { get; private set; }
+	public static Vector2 PointPosition { get; private set; }
+	public static Vector2 ScrollWheel   { get; private set; }
+
+	public static string RecordedKey { get; private set; }
 
 
 
+	// ------------------------------------------------------------------------------------------------
 	// Methods
+	// ------------------------------------------------------------------------------------------------
 
-	static bool[] keyPrev = new bool[Enum.GetValues(typeof(KeyAction)).Length];
-	static bool[] keyNext = new bool[Enum.GetValues(typeof(KeyAction)).Length];
+	static PlayerInput playerInput;
+	static InputAction inputAction;
+
+	
+
+	// Move Direction
+
+	static Vector2 moveDirection;
+
+	static void BindMoveDirection() {
+		if (playerInput || (Instance && Instance.TryGetComponent(out playerInput))) {
+			playerInput.actions[KeyAction.Move.ToString()].performed += context => {
+				moveDirection = context.ReadValue<Vector2>();
+			};
+		}
+	}
+
+	static void UpdateMoveDirection() {
+		Vector2 md = moveDirection;
+		Vector2 dir = Vector2.zero;
+		if (GetKey(KeyAction.MoveUp   ) && (0 < md.y || GetKeyUp(KeyAction.MoveDown ))) dir.y = +1;
+		if (GetKey(KeyAction.MoveLeft ) && (md.x < 0 || GetKeyUp(KeyAction.MoveRight))) dir.x = -1;
+		if (GetKey(KeyAction.MoveDown ) && (md.y < 0 || GetKeyUp(KeyAction.MoveUp   ))) dir.y = -1;
+		if (GetKey(KeyAction.MoveRight) && (0 < md.x || GetKeyUp(KeyAction.MoveLeft ))) dir.x = +1;
+		if (GetKeyDown(KeyAction.MoveUp   )) dir.y = +1;
+		if (GetKeyDown(KeyAction.MoveLeft )) dir.x = -1;
+		if (GetKeyDown(KeyAction.MoveDown )) dir.y = -1;
+		if (GetKeyDown(KeyAction.MoveRight)) dir.x = +1;
+		dir.Normalize();
+		MoveDirection = dir != Vector2.zero? dir : moveDirection;
+	}
+
+
+
+	// Point Position
+
+	static Vector2 pointPosition;
+
+	static void BindPointPosition() {
+		if (playerInput || (Instance && Instance.TryGetComponent(out playerInput))) {
+			playerInput.actions[KeyAction.Point.ToString()].performed += context => {
+				PointPosition = context.ReadValue<Vector2>();
+			};
+		}
+	}
+
+	static void UpdatePointPosition() {
+		pointPosition = PointPosition;
+	}
+
+
+
+	// Scroll Wheel
+
+	static void BindScrollWheel() {
+		if (playerInput || (Instance && Instance.TryGetComponent(out playerInput))) {
+			playerInput.actions[KeyAction.Scroll.ToString()].performed += context => {
+				ScrollWheel = context.ReadValue<Vector2>();
+			};
+		}
+	}
+
+
+
+	// Record Keys
+
+	public static void RecordKeys    () => RecordedKey = "";
+	public static void StopRecordKeys() => RecordedKey = null;
+
+	static void BindRecordKeys() {
+		InputSystem.onAnyButtonPress.Call(inputControl => {
+			if (RecordedKey != null) {
+				string[] parts = inputControl.path.Split('/');
+				if (parts[1].Equals("Keyboard")) RecordedKey = parts[2];
+				// path: "/Device/Key"
+			}
+		});
+	}
+
+
+
+	// Keys
+
+	static readonly bool[] keyPrev = new bool[Enum.GetValues(typeof(KeyAction)).Length];
+	static readonly bool[] keyNext = new bool[Enum.GetValues(typeof(KeyAction)).Length];
 
 	public static bool GetKey    (KeyAction key) =>  keyNext[(int)key];
 	public static bool GetKeyDown(KeyAction key) =>  keyNext[(int)key] && !keyPrev[(int)key];
 	public static bool GetKeyUp  (KeyAction key) => !keyNext[(int)key] &&  keyPrev[(int)key];
 
-	public static Vector2 moveDirection { get; private set; }
-	public static Vector2 pointPosition { get; private set; }
-	public static Vector2 scrollWheel   { get; private set; }
+	static void BindKeys() {
+		if (playerInput || (Instance && Instance.TryGetComponent(out playerInput))) {
+			for (int i = 0; i < keyNext.Length; i++) {
+				int index = i;
+				playerInput.actions[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
+					KeyAction.Move   => context => keyNext[index] = moveDirection != Vector2.zero,
+					KeyAction.Point  => context => keyNext[index] = PointPosition != pointPosition,
+					KeyAction.Scroll => context => keyNext[index] = ScrollWheel   != Vector2.zero,
+					_                => context => keyNext[index] = context.action.IsPressed(),
+				};
+			}
+		}
+	}
 
-	static PlayerInput playerInput;
-	static InputAction inputAction;
+	static void UpdateKeys() {
+		for (int i = 0; i < keyPrev.Length; i++) keyPrev[i] = keyNext[i];
+	}
+
+
+
+	// Bindings
 
 	public static List<string> GetKeysBinding(KeyAction keyAction) {
 		List<string> keys = new List<string>();
@@ -113,10 +219,10 @@ public class InputManager : MonoSingleton<InputManager> {
 				foreach (string key in keys) inputAction.AddBinding("<Keyboard>/" + key);
 			}
 		}
-		SetMoveKeysBinding();
+		UpdateMoveBinding();
 	}
 
-	static void SetMoveKeysBinding() {
+	static void UpdateMoveBinding() {
 		List<string> keysUp    = GetKeysBinding(KeyAction.MoveUp   );
 		List<string> keysLeft  = GetKeysBinding(KeyAction.MoveLeft );
 		List<string> keysDown  = GetKeysBinding(KeyAction.MoveDown );
@@ -137,46 +243,23 @@ public class InputManager : MonoSingleton<InputManager> {
 		}
 	}
 
-	static bool recordKeys = false;
-
-	public static string  anyKey { get; private set; }
-
-	public static void RecordKeys() {
-		anyKey = null;
-		recordKeys = true;
-	}
-
-	public static void StopRecordKeys() {
-		recordKeys = false;
-	}
 
 
-
+	// ------------------------------------------------------------------------------------------------
 	// Cycle
+	// ------------------------------------------------------------------------------------------------
 
 	void Start() {
-		if (playerInput || TryGetComponent(out playerInput)) {
-			for (int i = 0; i < keyNext.Length; i++) {
-				int index = i;
-				Action<InputAction.CallbackContext> callback = (KeyAction)index switch {
-					KeyAction.Move   => context => moveDirection  = context.ReadValue<Vector2>(),
-					KeyAction.Point  => context => pointPosition  = context.ReadValue<Vector2>(),
-					KeyAction.Scroll => context => scrollWheel    = context.ReadValue<Vector2>(),
-					_                => context => keyNext[index] = context.action.IsPressed(),
-				};
-				playerInput.actions[((KeyAction)i).ToString()].performed += callback;
-			}
-		}
-		InputSystem.onAnyButtonPress.Call(inputControl => {
-			if (recordKeys) {
-				string[] parts = inputControl.path.Split('/');
-				if (parts[1].Equals("Keyboard")) anyKey = parts[2];
-				// path: "/Device/Key"
-			}
-		});
+		BindMoveDirection();
+		BindPointPosition();
+		BindScrollWheel();
+		BindRecordKeys();
+		BindKeys();
 	}
 
 	void LateUpdate() {
-		for (int i = 0; i < keyPrev.Length; i++) keyPrev[i] = keyNext[i];
+		UpdateMoveDirection();
+		UpdatePointPosition();
+		UpdateKeys();
 	}
 }

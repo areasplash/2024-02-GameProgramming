@@ -3,15 +3,16 @@ using UnityEngine;
 
 
 public class MonoSingleton<T> : MonoBehaviour where T : Object {
-    
-	public static T Instance { get; set; }
 
+	static T instance;
+
+	public static T Instance => instance? instance : instance = FindAnyObjectByType<T>();
+    
 	protected virtual void Awake() {
-		if (Instance == null) {
-			Instance = this as T;
+		if (instance == null || instance == this) {
+			instance = this as T;
 			DontDestroyOnLoad(gameObject);
-		} else {
-			Destroy(gameObject);
 		}
+		else Destroy(gameObject);
 	}
 }

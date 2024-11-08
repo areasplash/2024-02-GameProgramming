@@ -114,17 +114,6 @@ public class CustomButton : Selectable, IPointerClickHandler {
 		}
 	}
 
-	public override void OnMove(AxisEventData eventData) {
-		if (interactable) switch (eventData.moveDir) {
-			case MoveDirection.Left:
-			case MoveDirection.Right:
-				DoStateTransition(SelectionState.Pressed, false);
-				onClick?.Invoke();
-				return;
-		}
-		base.OnMove(eventData);
-	}
-
 	ScrollRect scrollRect;
 
 	bool TryGetComponentInParent<T>(out T component) where T : Component {

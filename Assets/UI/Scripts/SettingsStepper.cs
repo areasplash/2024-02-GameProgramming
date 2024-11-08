@@ -22,8 +22,8 @@ using TMPro;
 // ====================================================================================================
 
 #if UNITY_EDITOR
-	[CustomEditor(typeof(CustomStepper)), CanEditMultipleObjects]
-	public class CustomStepperEditor : SelectableEditor {
+	[CustomEditor(typeof(SettingsStepper)), CanEditMultipleObjects]
+	public class SettingsStepperEditor : SelectableEditor {
 
 		SerializedProperty m_PrevRect;
 		SerializedProperty m_NextRect;
@@ -31,7 +31,7 @@ using TMPro;
 		SerializedProperty m_OnStateUpdated;
 		SerializedProperty m_OnValueChanged;
 
-		CustomStepper I => target as CustomStepper;
+		SettingsStepper I => target as SettingsStepper;
 
 		protected override void OnEnable() {
 			base.OnEnable();
@@ -66,9 +66,9 @@ using TMPro;
 // Custom Stepper
 // ====================================================================================================
 
-public class CustomStepper : Selectable, IPointerClickHandler {
+public class SettingsStepper : Selectable, IPointerClickHandler {
 
-	[Serializable] public class StepperUpdatedEvent : UnityEvent<CustomStepper> {}
+	[Serializable] public class StepperUpdatedEvent : UnityEvent<SettingsStepper> {}
 	[Serializable] public class StepperChangedEvent : UnityEvent<int> {}
 
 

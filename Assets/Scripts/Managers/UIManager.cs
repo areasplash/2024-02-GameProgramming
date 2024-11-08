@@ -66,7 +66,6 @@ using UnityEngine.Localization.Settings;
 			LabelField("Canvas", EditorStyles.boldLabel);
 			PropertyField(m_MainMenuCanvas);
 			PropertyField(m_GameCanvas);
-			Space();
 			PropertyField(m_MenuCanvas);
 			PropertyField(m_SettingsCanvas);
 			PropertyField(m_DialogCanvas);
@@ -75,7 +74,6 @@ using UnityEngine.Localization.Settings;
 			LabelField("First Selected", EditorStyles.boldLabel);
 			PropertyField(m_MainMenuFirstSelected);
 			PropertyField(m_GameFirstSelected);
-			Space();
 			PropertyField(m_MenuFirstSelected);
 			PropertyField(m_SettingsFirstSelected);
 			PropertyField(m_DialogFirstSelected);
@@ -162,41 +160,41 @@ public class UIManager : MonoSingleton<UIManager> {
 	CanvasType activeCanvas {
 		get {
 			CanvasType value = CanvasType.None;
-			if (m_MainMenuCanvas.gameObject.activeSelf) value |= CanvasType.MainMenu;
-			if (m_GameCanvas    .gameObject.activeSelf) value |= CanvasType.Game;
-			if (m_MenuCanvas    .gameObject.activeSelf) value |= CanvasType.Menu;
-			if (m_SettingsCanvas.gameObject.activeSelf) value |= CanvasType.Settings;
-			if (m_DialogCanvas  .gameObject.activeSelf) value |= CanvasType.Dialog;
-			if (m_FadeCanvas    .gameObject.activeSelf) value |= CanvasType.Fade;
+			if (m_MainMenuCanvas.enabled) value |= CanvasType.MainMenu;
+			if (m_GameCanvas    .enabled) value |= CanvasType.Game;
+			if (m_MenuCanvas    .enabled) value |= CanvasType.Menu;
+			if (m_SettingsCanvas.enabled) value |= CanvasType.Settings;
+			if (m_DialogCanvas  .enabled) value |= CanvasType.Dialog;
+			if (m_FadeCanvas    .enabled) value |= CanvasType.Fade;
 			return value;
 		}
 		set {
 			if (value == activeCanvas) return;
-			m_MainMenuCanvas.gameObject.SetActive(0 != (value & CanvasType.MainMenu));
-			m_GameCanvas    .gameObject.SetActive(0 != (value & CanvasType.Game));
-			m_MenuCanvas    .gameObject.SetActive(0 != (value & CanvasType.Menu));
-			m_SettingsCanvas.gameObject.SetActive(0 != (value & CanvasType.Settings));
-			m_DialogCanvas  .gameObject.SetActive(0 != (value & CanvasType.Dialog));
-			m_FadeCanvas    .gameObject.SetActive(0 != (value & CanvasType.Fade));
+			m_MainMenuCanvas.enabled = 0 != (value & CanvasType.MainMenu);
+			m_GameCanvas    .enabled = 0 != (value & CanvasType.Game);
+			m_MenuCanvas    .enabled = 0 != (value & CanvasType.Menu);
+			m_SettingsCanvas.enabled = 0 != (value & CanvasType.Settings);
+			m_DialogCanvas  .enabled = 0 != (value & CanvasType.Dialog);
+			m_FadeCanvas    .enabled = 0 != (value & CanvasType.Fade);
 		}
 	}
 
 	CanvasType highestCanvas {
 		get {
 			CanvasType value = CanvasType.None;
-			if (m_MainMenuCanvas.gameObject.activeSelf) value = CanvasType.MainMenu;
-			if (m_GameCanvas    .gameObject.activeSelf) value = CanvasType.Game;
-			if (m_MenuCanvas    .gameObject.activeSelf) value = CanvasType.Menu;
-			if (m_SettingsCanvas.gameObject.activeSelf) value = CanvasType.Settings;
-			if (m_DialogCanvas  .gameObject.activeSelf) value = CanvasType.Dialog;
-			if (m_FadeCanvas    .gameObject.activeSelf) value = CanvasType.Fade;
+			if (m_MainMenuCanvas.enabled) value = CanvasType.MainMenu;
+			if (m_GameCanvas    .enabled) value = CanvasType.Game;
+			if (m_MenuCanvas    .enabled) value = CanvasType.Menu;
+			if (m_SettingsCanvas.enabled) value = CanvasType.Settings;
+			if (m_DialogCanvas  .enabled) value = CanvasType.Dialog;
+			if (m_FadeCanvas    .enabled) value = CanvasType.Fade;
 			return value;
 		}
 	}
 
 	GameObject selected {
-		get => EventSystem.current.currentSelectedGameObject;
-		set => EventSystem.current.SetSelectedGameObject(value);
+		get => EventSystem.current?.currentSelectedGameObject;
+		set => EventSystem.current?.SetSelectedGameObject(value);
 	}
 
 	
@@ -235,13 +233,9 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	// Methods
 
-	public static CanvasType GetHighestCanvas() {
-		return Instance ? Instance.highestCanvas : CanvasType.None;
+	public static CanvasType GetActiveCanvas() {
+		return Instance ? Instance.activeCanvas : CanvasType.None;
 	}
-
-	readonly CanvasType primary = CanvasType.MainMenu | CanvasType.Game;
-
-	Stack<CanvasType> stack = new Stack<CanvasType>();
 
 	void SaveLastSelected() {
 		switch (highestCanvas) {
@@ -272,45 +266,49 @@ public class UIManager : MonoSingleton<UIManager> {
 		}
 	}
 
+	Stack<CanvasType> stack = new Stack<CanvasType>();
+
 	void Open(CanvasType canvas) {
 		SaveLastSelected();
+		CanvasType primary = activeCanvas & (CanvasType.MainMenu | CanvasType.Game);
+		CanvasType fade    = activeCanvas & CanvasType.Fade;
 		switch (canvas) {
 			case CanvasType.MainMenu:
 				stack.Clear();
 				stack.Push(activeCanvas);
-				activeCanvas = CanvasType.MainMenu;
+				activeCanvas = canvas | fade;
 				break;
 			
 			case CanvasType.Game:
 				stack.Clear();
 				stack.Push(activeCanvas);
-				activeCanvas = CanvasType.Game;
+				activeCanvas = canvas | fade;
 				break;
 
 			case CanvasType.Menu:
 				stack.Push(activeCanvas);
-				activeCanvas = (activeCanvas & primary) | CanvasType.Menu;
+				activeCanvas = primary | canvas | fade;
 				break;
 
 			case CanvasType.Settings:
 				stack.Push(activeCanvas);
-				activeCanvas = (activeCanvas & primary) | CanvasType.Settings;
+				activeCanvas = primary | canvas | fade;
 				break;
 
 			case CanvasType.Dialog:
 				stack.Push(activeCanvas);
-				activeCanvas = (activeCanvas & primary) | CanvasType.Dialog;
+				activeCanvas = primary | canvas | fade;
 				break;
 			
 			case CanvasType.Fade:
-				stack.Push(activeCanvas);
-				activeCanvas = activeCanvas | CanvasType.Fade;
 				break;
 		}
 		LoadLastSelected();
 	}
 
-	public static void Back() => Instance?.Back_Internal();
+	public static void Back() {
+		Instance?.Back_Internal();
+	}
 	void Back_Internal() {
 		SaveLastSelected();
 		switch (highestCanvas) {
@@ -386,7 +384,9 @@ public class UIManager : MonoSingleton<UIManager> {
 	string defaultInteract;
 	string defaultCancel;
 
-	public static void LoadSettings() => Instance?.LoadSettings_Internal();
+	public static void LoadSettings() {
+		Instance?.LoadSettings_Internal();
+	}
 	void LoadSettings_Internal() {
 		m_Language          = PlayerPrefs.GetString("Language", "");
 		m_Music             = PlayerPrefs.GetFloat ("Music", 1f);
@@ -419,7 +419,9 @@ public class UIManager : MonoSingleton<UIManager> {
 		UpdateScreenResolution(null);
 	}
 
-	public static void SaveSettings() => Instance?.SaveSettings_Internal();
+	public static void SaveSettings() {
+		Instance?.SaveSettings_Internal();
+	}
 	void SaveSettings_Internal() {
 		PlayerPrefs.SetString("Language",         m_Language);
 		PlayerPrefs.SetFloat ("Music",            m_Music);
@@ -454,12 +456,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	}
 
 	void Update() {
-		bool move = false;
-		move |= InputManager.GetKeyDown(KeyAction.MoveUp   );
-		move |= InputManager.GetKeyDown(KeyAction.MoveLeft );
-		move |= InputManager.GetKeyDown(KeyAction.MoveDown );
-		move |= InputManager.GetKeyDown(KeyAction.MoveRight);
-		if (move) {
+		if (InputManager.GetKeyDown(KeyAction.Move)) {
 			if (!selected) switch (highestCanvas) {
 				case CanvasType.MainMenu: selected = m_MainMenuFirstSelected; break;
 				case CanvasType.Game:     selected = m_GameFirstSelected;     break;
@@ -471,10 +468,11 @@ public class UIManager : MonoSingleton<UIManager> {
 		}
 		if (InputManager.GetKeyDown(KeyAction.Interact)) {
 			if (selected && selected.TryGetComponent(out Selectable selectable)) {
-				if (selectable is CustomButton  button ) button .OnSubmit();
-				if (selectable is CustomToggle  toggle ) toggle .OnSubmit();
-				if (selectable is CustomStepper stepper) stepper.OnSubmit();
-				if (selectable is CustomSlider  slider ) slider .OnSubmit();
+				if (selectable is CustomButton    customButton   ) customButton   .OnSubmit();
+				if (selectable is SettingsButton  settingsButton ) settingsButton .OnSubmit();
+				if (selectable is SettingsToggle  settingsToggle ) settingsToggle .OnSubmit();
+				if (selectable is SettingsStepper settingsStepper) settingsStepper.OnSubmit();
+				if (selectable is SettingsSlider  settingsSlider ) settingsSlider .OnSubmit();
 			}
 		}
 		if (InputManager.GetKeyDown(KeyAction.Cancel)) Back();
@@ -486,7 +484,9 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Main Menu Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public static void OpenMainMenu() => Instance?.OpenMainMenu_Internal();
+	public static void OpenMainMenu() {
+		Instance?.OpenMainMenu_Internal();
+	}
 	void OpenMainMenu_Internal() {
 		// Fade Out
 		Open(CanvasType.MainMenu);
@@ -499,7 +499,9 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Game Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public void OpenGame() => Instance?.OpenGame_Internal();
+	public void OpenGame() {
+		Instance?.OpenGame_Internal();
+	}
 	void OpenGame_Internal() {
 		// Fade Out
 		Open(CanvasType.Game);
@@ -512,8 +514,10 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Menu Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public void OpenMenu() => Instance?.OpenMenu_Internal();
-	public void OpenMenu_Internal() {
+	public void OpenMenu() {
+		Instance?.OpenMenu_Internal();
+	}
+	void OpenMenu_Internal() {
 		Open(CanvasType.Menu);
 	}
 
@@ -523,14 +527,16 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Settings Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public void OpenSettings() => Instance?.OpenSettings_Internal();
-	public void OpenSettings_Internal() {
+	public void OpenSettings() {
+		Instance?.OpenSettings_Internal();
+	}
+	void OpenSettings_Internal() {
 		Open(CanvasType.Settings);
 	}
 
 
 
-	public void UpdateLanguage(CustomStepper stepper) {
+	public void UpdateLanguage(SettingsStepper stepper) {
 		if (string.IsNullOrEmpty(m_Language)) m_Language = Application.systemLanguage.ToString();
 		int index = Mathf.Max(0, LocalizationSettings.AvailableLocales.Locales.FindIndex(locale => {
 			return locale.Identifier.CultureInfo.NativeName.Equals(m_Language);
@@ -554,7 +560,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	int fullScreenCache = -1;
 	Vector2Int windowedResolution;
 
-	public void UpdateFullScreen(CustomToggle toggle) {
+	public void UpdateFullScreen(SettingsToggle toggle) {
 		if (fullScreenCache == -1) fullScreenCache = Screen.fullScreen ? 3 : 2;
 		if (toggle) switch (fullScreenCache) {
 			case  3: toggle.value = true;  break;
@@ -579,7 +585,7 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
-	CustomStepper screenResolution;
+	SettingsStepper screenResolution;
 	CanvasScaler  managerCanvasScaler;
 
 	int screenIndex => Array.FindIndex(m_ResolutionPresets, preset =>
@@ -595,7 +601,7 @@ public class UIManager : MonoSingleton<UIManager> {
 		Screen.width  / referenceResolution.x,
 		Screen.height / referenceResolution.y));
 
-	public void UpdateScreenResolution(CustomStepper stepper) {
+	public void UpdateScreenResolution(SettingsStepper stepper) {
 		screenResolution = stepper;
 
 		bool interactable = !Screen.fullScreen;
@@ -616,8 +622,8 @@ public class UIManager : MonoSingleton<UIManager> {
 				size.x = (int)Mathf.Ceil(Screen.width  / multiplier);
 				size.y = (int)Mathf.Ceil(Screen.height / multiplier);
 			}
-			CameraManager.Instance.renderTextureSize = size;
-			CameraManager.Instance.orthographicSize  = size.y / 2 / pixelPerUnit;
+			CameraManager.RenderTextureSize = size;
+			CameraManager. OrthographicSize = size.y / 2 / pixelPerUnit;
 		}
 	}
 
@@ -639,25 +645,25 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
-	public void UpdateMusic  (CustomSlider slider) => slider.value = m_Music;
-	public void UpdateSoundFX(CustomSlider slider) => slider.value = m_SoundFX;
+	public void UpdateMusic  (SettingsSlider slider) => slider.value = m_Music;
+	public void UpdateSoundFX(SettingsSlider slider) => slider.value = m_SoundFX;
 
 	public void SetMusic  (float value) => m_Music   = value;
 	public void SetSoundFX(float value) => m_SoundFX = value;
 
-	public void UpdateMouseSensitivity(CustomSlider slider) => slider.value = m_MouseSensitivity;
+	public void UpdateMouseSensitivity(SettingsSlider slider) => slider.value = m_MouseSensitivity;
 	public void SetMouseSensitivity(float value) => m_MouseSensitivity = value;
 
-	public void UpdateMoveUp   (CustomButton button) => UpdateKeys(button, KeyAction.MoveUp);
-	public void UpdateMoveLeft (CustomButton button) => UpdateKeys(button, KeyAction.MoveLeft);
-	public void UpdateMoveDown (CustomButton button) => UpdateKeys(button, KeyAction.MoveDown);
-	public void UpdateMoveRight(CustomButton button) => UpdateKeys(button, KeyAction.MoveRight);
-	public void UpdateInteract (CustomButton button) => UpdateKeys(button, KeyAction.Interact);
-	public void UpdateCancel   (CustomButton button) => UpdateKeys(button, KeyAction.Cancel);
+	public void UpdateMoveUp   (SettingsButton button) => UpdateKeys(button, KeyAction.MoveUp);
+	public void UpdateMoveLeft (SettingsButton button) => UpdateKeys(button, KeyAction.MoveLeft);
+	public void UpdateMoveDown (SettingsButton button) => UpdateKeys(button, KeyAction.MoveDown);
+	public void UpdateMoveRight(SettingsButton button) => UpdateKeys(button, KeyAction.MoveRight);
+	public void UpdateInteract (SettingsButton button) => UpdateKeys(button, KeyAction.Interact);
+	public void UpdateCancel   (SettingsButton button) => UpdateKeys(button, KeyAction.Cancel);
 
-	CustomButton[] action = new CustomButton[Enum.GetValues(typeof(KeyAction)).Length];
+	SettingsButton[] action = new SettingsButton[Enum.GetValues(typeof(KeyAction)).Length];
 
-	void UpdateKeys(CustomButton button, KeyAction keyAction) {
+	void UpdateKeys(SettingsButton button, KeyAction keyAction) {
 		action[(int)keyAction] = button;
 		string str = ToString(InputManager.GetKeysBinding(keyAction));
 		str = str.Replace("upArrow",    "↑");
@@ -684,16 +690,16 @@ public class UIManager : MonoSingleton<UIManager> {
 		while (highestCanvas == CanvasType.Dialog) {
 			yield return null;
 			bool flag = true;
-			flag &= !string.IsNullOrEmpty(InputManager.anyKey);
-			flag &= !"escape".Equals(InputManager.anyKey);
-			flag &= !keys.Exists(key => key.Equals(InputManager.anyKey));
-			if ("enter".Equals(InputManager.anyKey)) {
+			flag &= !string.IsNullOrEmpty(InputManager.RecordedKey);
+			flag &= !"escape".Equals(InputManager.RecordedKey);
+			flag &= !keys.Exists(key => key.Equals(InputManager.RecordedKey));
+			if ("enter".Equals(InputManager.RecordedKey)) {
 				if (!selected || !selected.TryGetComponent(out Selectable selectable)) {
 					dialogPositive?.onClick.Invoke();
 				}
 			}
 			else if (flag) {
-				keys.Add(InputManager.anyKey);
+				keys.Add(InputManager.RecordedKey);
 				string str = ToString(keys);
 				str = str.Replace("upArrow",    "↑");
 				str = str.Replace("leftArrow",  "←");
@@ -757,18 +763,22 @@ public class UIManager : MonoSingleton<UIManager> {
 	int   fadeState = 0;
 	Image fadeImage;
 
-	public static void FadeOut() => Instance?.FadeOut_Internal();
+	public static void FadeOut() {
+		Instance?.FadeOut_Internal();
+	}
 	void FadeOut_Internal() {
 		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
-			Open(CanvasType.Fade);
+			activeCanvas |= CanvasType.Fade;
 			fadeState = 1;
 		}
 	}
 
-	public static void FadeIn() => Instance?.FadeIn_Internal();
+	public static void FadeIn() {
+		Instance?.FadeIn_Internal();
+	}
 	void FadeIn_Internal() {
 		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {
-			Open(CanvasType.Fade);
+			activeCanvas |= CanvasType.Fade;
 			fadeState = 2;
 		}
 	}
@@ -776,7 +786,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	void FixedUpdate() {
 		if (fadeState != 0) {
 			Color color = fadeImage.color;
-			color.a = Mathf.MoveTowards(color.a, fadeState == 1 ? 1.0f : 0.0f, Time.deltaTime);
+			color.a = Mathf.MoveTowards(color.a, fadeState == 1 ? 1.0f : 0.0f, Time.fixedDeltaTime);
 			fadeImage.color = color;
 			if (color.a == 0.0f) {
 				activeCanvas &= ~CanvasType.Fade;

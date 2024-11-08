@@ -20,8 +20,8 @@ using TMPro;
 // ====================================================================================================
 
 #if UNITY_EDITOR
-	[CustomEditor(typeof(CustomSlider)), CanEditMultipleObjects]
-	public class CustomSliderEditor : SelectableEditor {
+	[CustomEditor(typeof(SettingsSlider)), CanEditMultipleObjects]
+	public class SettingsSliderEditor : SelectableEditor {
 
 		SerializedProperty m_BodyRect;
 		SerializedProperty m_HandleRect;
@@ -29,7 +29,7 @@ using TMPro;
 		SerializedProperty m_OnStateUpdated;
 		SerializedProperty m_OnValueChanged;
 
-		CustomSlider I => target as CustomSlider;
+		SettingsSlider I => target as SettingsSlider;
 
 		protected override void OnEnable() {
 			base.OnEnable();
@@ -69,9 +69,9 @@ using TMPro;
 // Custom Slider
 // ====================================================================================================
 
-public class CustomSlider : Selectable, IPointerClickHandler, IDragHandler {
+public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
-	[Serializable] public class SliderUpdatedEvent : UnityEvent<CustomSlider> {}
+	[Serializable] public class SliderUpdatedEvent : UnityEvent<SettingsSlider> {}
 	[Serializable] public class SliderChangedEvent : UnityEvent<float> {}
 
 
