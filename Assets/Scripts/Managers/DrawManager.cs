@@ -57,7 +57,7 @@ public class NativeList<T> : System.IDisposable where T : struct {
 
 
 
-	// Method
+	// Methods
 
 	public NativeArray<T> GetArray() => narray;
 
@@ -125,7 +125,7 @@ public class GPUBatcher<T> : System.IDisposable where T : unmanaged {
 
 
 
-	// Property
+	// Properties
 
 	public int Length => narrayStructured.Length;
 
@@ -176,7 +176,7 @@ public class GPUBatcher<T> : System.IDisposable where T : unmanaged {
 
 
 
-	// Method
+	// Methods
 
 	public void Add(T value) => Insert(Length, value);
 	
@@ -335,7 +335,7 @@ public class DrawManager : MonoBehaviour {
 	}
 
 	void Start() {
-		float PixelPerUnit = UIManager.Instance.pixelPerUnit;
+		float PixelPerUnit = UIManager.I.PixelPerUnit;
 
 		// CreatureType _ AnimationType _ Direction _ Index _ Duration
 		creatureSizeMap.Clear();

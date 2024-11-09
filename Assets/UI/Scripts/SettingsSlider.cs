@@ -1,9 +1,9 @@
+using System;
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
-
-using System;
 
 using TMPro;
 
@@ -47,13 +47,13 @@ using TMPro;
 			PropertyField(m_HandleRect);
 			PropertyField(m_TextTMP);
 			Space();
-			I.minValue = FloatField("Min Value", I.minValue);
-			I.maxValue = FloatField("Max Value", I.maxValue);
-			I.value    = Slider    ("Value",     I.value,    I.minValue, I.maxValue);
-			I.step     = Slider    ("Step",      I.step,     I.minValue, I.maxValue);
-			I.fineStep = Slider    ("Fine Step", I.fineStep, I.minValue, I.maxValue);
-			I.format   = TextField ("Format",    I.format);
-			TextField(I.text, "{0} = Value, {1} = Min Value, {2} = Max Value");
+			I.MinValue = FloatField("Min Value", I.MinValue);
+			I.MaxValue = FloatField("Max Value", I.MaxValue);
+			I.Value    = Slider    ("Value",     I.Value,    I.MinValue, I.MaxValue);
+			I.Step     = Slider    ("Step",      I.Step,     I.MinValue, I.MaxValue);
+			I.FineStep = Slider    ("Fine Step", I.FineStep, I.MinValue, I.MaxValue);
+			I.Format   = TextField ("Format",    I.Format);
+			TextField(I.Text, "{0} = Value, {1} = Min Value, {2} = Max Value");
 			Space();
 			PropertyField(m_OnStateUpdated);
 			PropertyField(m_OnValueChanged);
@@ -96,45 +96,45 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	// Properties
 
-	RectTransform rectTransform => transform as RectTransform;
+	RectTransform RectTransform => transform as RectTransform;
 
-	public float minValue {
+	public float MinValue {
 		get => m_MinValue;
 		set {
-			m_MinValue = Mathf.Min(value, maxValue);
-			this.value = this.value;
+			m_MinValue = Mathf.Min(value, MaxValue);
+			Value = Value;
 		}
 	}
 
-	public float maxValue {
+	public float MaxValue {
 		get => m_MaxValue;
 		set {
-			m_MaxValue = Mathf.Max(value, minValue);
-			this.value = this.value;
+			m_MaxValue = Mathf.Max(value, MinValue);
+			Value = Value;
 		}
 	}
 
-	public float value {
+	public float Value {
 		get => m_Value;
 		set {
 			if (m_Value == value) return;
-			m_Value = Mathf.Clamp(value, minValue, maxValue);
-			onValueChanged?.Invoke(m_Value);
+			m_Value = Mathf.Clamp(value, MinValue, MaxValue);
+			OnValueChanged?.Invoke(m_Value);
 			Refresh();
 		}
 	}
 
-	public float step {
+	public float Step {
 		get => m_Step;
-		set => m_Step = Mathf.Clamp(value, 0, maxValue - minValue);
+		set => m_Step = Mathf.Clamp(value, 0, MaxValue - MinValue);
 	}
 
-	public float fineStep {
+	public float FineStep {
 		get => m_FineStep;
-		set => m_FineStep = Mathf.Clamp(value, 0, step);
+		set => m_FineStep = Mathf.Clamp(value, 0, Step);
 	}
 
-	public string format {
+	public string Format {
 		get => m_Format;
 		set {
 			m_Format = value;
@@ -142,21 +142,28 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		}
 	}
 
-	public SliderUpdatedEvent onStateUpdated {
+	public SliderUpdatedEvent OnStateUpdated {
 		get => m_OnStateUpdated;
 		set => m_OnStateUpdated = value;
 	}
 
-	public SliderChangedEvent onValueChanged {
+	public SliderChangedEvent OnValueChanged {
 		get => m_OnValueChanged;
 		set => m_OnValueChanged = value;
 	}
 
-	public string text => string.Format(format, value, minValue, maxValue);
+	public string Text => string.Format(Format, Value, MinValue, MaxValue);
 	
-	float ratio => (value - minValue) / (maxValue - minValue);
-	int   width => Mathf.RoundToInt(ratio * (rectTransform.rect.width - m_HandleRect.rect.width));
-	bool  fine  => InputManager.GetKey(KeyAction.Control);
+	float Ratio => (Value - MinValue) / (MaxValue - MinValue);
+	int   Width => Mathf.RoundToInt(Ratio * (RectTransform.rect.width - m_HandleRect.rect.width));
+	bool  Fine  => InputManager.I.GetKey(KeyAction.Control);
+
+
+
+	// Cached Variables
+
+	Transform  parent;
+	ScrollRect scrollRect;
 
 
 
@@ -164,25 +171,25 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable && !eventData.dragging) {
-			Vector2 point = rectTransform.InverseTransformPoint(eventData.position);
-			if (point.x < width) value -= fine ? fineStep : step;
-			if (width < point.x) value += fine ? fineStep : step;
+			Vector2 point = RectTransform.InverseTransformPoint(eventData.position);
+			if (point.x < Width) Value -= Fine ? FineStep : Step;
+			if (Width < point.x) Value += Fine ? FineStep : Step;
 		}
 	}
 	
 	public void OnDrag(PointerEventData eventData) {
 		if (interactable) {
-			Vector2 point = rectTransform.InverseTransformPoint(eventData.position);
+			Vector2 point = RectTransform.InverseTransformPoint(eventData.position);
 			float a = m_HandleRect.rect.width / 2;
-			float b = rectTransform.rect.width - m_HandleRect.rect.width / 2;
-			value = Mathf.Lerp(minValue, maxValue, Mathf.InverseLerp(a, b, point.x));
+			float b = RectTransform.rect.width - m_HandleRect.rect.width / 2;
+			Value = Mathf.Lerp(MinValue, MaxValue, Mathf.InverseLerp(a, b, point.x));
 		}
 	}
 
 	public void OnSubmit() {
 		if (interactable) {
 			DoStateTransition(SelectionState.Pressed, false);
-			value += fine ? fineStep : step;
+			Value += Fine ? FineStep : Step;
 		}
 	}
 
@@ -190,20 +197,18 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		if (interactable) switch (eventData.moveDir) {
 			case MoveDirection.Left:
 				DoStateTransition(SelectionState.Pressed, false);
-				value -= fine ? fineStep : step;
+				Value -= Fine ? FineStep : Step;
 				return;
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				value += fine ? fineStep : step;
+				Value += Fine ? FineStep : Step;
 				return;
 		}
 		base.OnMove(eventData);
 	}
 
-	ScrollRect scrollRect;
-
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
-		Transform parent = transform.parent;
+		parent = transform.parent;
 		while (parent) {
 			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
@@ -217,7 +222,7 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		if (eventData is AxisEventData) {
 			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				float pivot = rectTransform.rect.height / 2 - rectTransform.anchoredPosition.y;
+				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
@@ -228,20 +233,20 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		if (m_HandleRect) {
 			if (m_BodyRect) {
 				Vector2 sizeDelta = m_BodyRect.sizeDelta;
-				sizeDelta.x = m_HandleRect.rect.width / 2 + width;
+				sizeDelta.x = m_HandleRect.rect.width / 2 + Width;
 				m_BodyRect.sizeDelta = sizeDelta;
 			}
 			Vector2 anchoredPosition = m_HandleRect.anchoredPosition;
-			anchoredPosition.x = width;
+			anchoredPosition.x = Width;
 			m_HandleRect.anchoredPosition = anchoredPosition;
 		}
-		if (m_TextTMP) m_TextTMP.text = text;
-		onStateUpdated?.Invoke(this);
+		if (m_TextTMP) m_TextTMP.text = Text;
+		OnStateUpdated?.Invoke(this);
 	}
 
 
 
-	// Cycle
+	// Lifecycle
 
 	protected override void OnEnable() {
 		base.OnEnable();

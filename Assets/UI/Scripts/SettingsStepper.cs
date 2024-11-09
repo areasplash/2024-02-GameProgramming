@@ -1,11 +1,10 @@
+using System;
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 
-using System;
-
-using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
 using TMPro;
 
@@ -28,6 +27,7 @@ using TMPro;
 		SerializedProperty m_PrevRect;
 		SerializedProperty m_NextRect;
 		SerializedProperty m_TextTMP;
+		SerializedProperty m_LocalizeStringEvent;
 		SerializedProperty m_OnStateUpdated;
 		SerializedProperty m_OnValueChanged;
 
@@ -35,11 +35,12 @@ using TMPro;
 
 		protected override void OnEnable() {
 			base.OnEnable();
-			m_PrevRect       = serializedObject.FindProperty("m_PrevRect");
-			m_NextRect       = serializedObject.FindProperty("m_NextRect");
-			m_TextTMP        = serializedObject.FindProperty("m_TextTMP");
-			m_OnStateUpdated = serializedObject.FindProperty("m_OnStateUpdated");
-			m_OnValueChanged = serializedObject.FindProperty("m_OnValueChanged");
+			m_PrevRect            = serializedObject.FindProperty("m_PrevRect");
+			m_NextRect            = serializedObject.FindProperty("m_NextRect");
+			m_TextTMP             = serializedObject.FindProperty("m_TextTMP");
+			m_LocalizeStringEvent = serializedObject.FindProperty("m_LocalizeStringEvent");
+			m_OnStateUpdated      = serializedObject.FindProperty("m_OnStateUpdated");
+			m_OnValueChanged      = serializedObject.FindProperty("m_OnValueChanged");
 		}
 
 		public override void OnInspectorGUI() {
@@ -48,9 +49,10 @@ using TMPro;
 			PropertyField(m_PrevRect);
 			PropertyField(m_NextRect);
 			PropertyField(m_TextTMP);
+			PropertyField(m_LocalizeStringEvent);
 			Space();
-			I.activatePrev = Toggle("Can Move Prev", I.activatePrev);
-			I.activateNext = Toggle("Can Move Next", I.activateNext);
+			I.ActivatePrev = Toggle("Can Move Prev", I.ActivatePrev);
+			I.ActivateNext = Toggle("Can Move Next", I.ActivateNext);
 			Space();
 			PropertyField(m_OnStateUpdated);
 			PropertyField(m_OnValueChanged);
@@ -75,9 +77,10 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 
 	// Fields
 
-	[SerializeField] RectTransform   m_PrevRect;
-	[SerializeField] RectTransform   m_NextRect;
-	[SerializeField] TextMeshProUGUI m_TextTMP;
+	[SerializeField] RectTransform       m_PrevRect;
+	[SerializeField] RectTransform       m_NextRect;
+	[SerializeField] TextMeshProUGUI     m_TextTMP;
+	[SerializeField] LocalizeStringEvent m_LocalizeStringEvent;
 
 	[SerializeField] StepperUpdatedEvent m_OnStateUpdated;
 	[SerializeField] StepperChangedEvent m_OnValueChanged;
@@ -86,50 +89,56 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 
 	// Properties
 
-	RectTransform rectTransform => transform as RectTransform;
+	RectTransform RectTransform => transform as RectTransform;
 	
-	public bool activatePrev {
+	LocalizeStringEvent LocalizeStringEvent => m_LocalizeStringEvent;
+
+	public bool ActivatePrev {
 		get => m_PrevRect && m_PrevRect.gameObject.activeSelf;
 		set {
 			if (m_PrevRect) m_PrevRect.gameObject.SetActive(value);
 		}
 	}
 
-	public bool activateNext {
+	public bool ActivateNext {
 		get => m_NextRect && m_NextRect.gameObject.activeSelf;
 		set {
 			if (m_NextRect) m_NextRect.gameObject.SetActive(value);
 		}
 	}
 
-	LocalizeStringEvent localizeStringEvent;
-
-	public string text {
+	public string Text {
 		get => m_TextTMP ? m_TextTMP.text : string.Empty;
 		set {
-			localizeStringEvent ??= GetComponent<LocalizeStringEvent>();
-			localizeStringEvent.StringReference = null;
+			if (LocalizeStringEvent) LocalizeStringEvent.StringReference = null;
 			if (m_TextTMP) m_TextTMP.text = value;
 		}
 	}
 
-	public int value {
+	public int Value {
 		get => 0;
 		set {
-			onValueChanged?.Invoke(value);
+			OnValueChanged?.Invoke(value);
 			Refresh();
 		}
 	}
 	
-	public StepperUpdatedEvent onStateUpdated {
+	public StepperUpdatedEvent OnStateUpdated {
 		get => m_OnStateUpdated;
 		set => m_OnStateUpdated = value;
 	}
 
-	public StepperChangedEvent onValueChanged {
+	public StepperChangedEvent OnValueChanged {
 		get => m_OnValueChanged;
 		set => m_OnValueChanged = value;
 	}
+
+
+
+	// Cached Variables
+
+	Transform  parent;
+	ScrollRect scrollRect;
 
 
 
@@ -137,15 +146,15 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable) {
-			Vector2 point = rectTransform.InverseTransformPoint(eventData.position);
-			value = (0 <= point.x) && (point.x < rectTransform.rect.width / 3) ? -1 : 1;
+			Vector2 point = RectTransform.InverseTransformPoint(eventData.position);
+			Value = (0 <= point.x) && (point.x < RectTransform.rect.width / 3) ? -1 : 1;
 		}
 	}
 
 	public void OnSubmit() {
 		if (interactable) {
 			DoStateTransition(SelectionState.Pressed, false);
-			value = 1;
+			Value = 1;
 		}
 	}
 
@@ -153,20 +162,18 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 		if (interactable) switch (eventData.moveDir) {
 			case MoveDirection.Left:
 				DoStateTransition(SelectionState.Pressed, false);
-				value = - 1;
+				Value = - 1;
 				return;
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				value = + 1;
+				Value = + 1;
 				return;
 		}
 		base.OnMove(eventData);
 	}
 
-	ScrollRect scrollRect;
-
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
-		Transform parent = transform.parent;
+		parent = transform.parent;
 		while (parent) {
 			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
@@ -180,7 +187,7 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 		if (eventData is AxisEventData) {
 			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				float pivot = rectTransform.rect.height / 2 - rectTransform.anchoredPosition.y;
+				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
@@ -188,22 +195,16 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 	}
 
 	public void SetLocalizeText(string table, string tableEntry) {
-		if (localizeStringEvent || TryGetComponent(out localizeStringEvent)) {
-			localizeStringEvent.StringReference = new LocalizedString {
-				TableReference      = table,
-				TableEntryReference = tableEntry
-			};
-			localizeStringEvent.RefreshString();
-		}
+		if (LocalizeStringEvent) LocalizeStringEvent.StringReference.SetReference(table, tableEntry);
 	}
 
 	public void Refresh() {
-		onStateUpdated?.Invoke(this);
+		OnStateUpdated?.Invoke(this);
 	}
 
 
 
-	// Cycle
+	// Lifecycle
 
 	protected override void OnEnable() {
 		base.OnEnable();

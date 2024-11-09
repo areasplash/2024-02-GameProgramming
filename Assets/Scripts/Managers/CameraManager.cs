@@ -3,7 +3,6 @@ using UnityEngine;
 #if UNITY_EDITOR
 	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
-	using static CameraManager;
 #endif
 
 
@@ -18,10 +17,14 @@ using UnityEngine;
 
 		SerializedProperty m_MainCamera;
 		SerializedProperty m_FadeCamera;
+		SerializedProperty m_Target;
+
+		CameraManager I => target as CameraManager;
 
 		void OnEnable() {
 			m_MainCamera = serializedObject.FindProperty("m_MainCamera");
 			m_FadeCamera = serializedObject.FindProperty("m_FadeCamera");
+			m_Target     = serializedObject.FindProperty("m_Target");
 		}
 
 		public override void OnInspectorGUI() {
@@ -33,10 +36,10 @@ using UnityEngine;
 			PropertyField(m_FadeCamera);
 			Space();
 			LabelField("Camera Properties", EditorStyles.boldLabel);
-			RenderTextureSize = Vector2IntField("Render Texture Size", RenderTextureSize);
-			FieldOfView       = FloatField     ("Field Of View",       FieldOfView);
-			OrthographicSize  = FloatField     ("Orthographic Size",   OrthographicSize);
-			Projection        = Slider         ("Projection",          Projection, 0, 1);
+			I.RenderTextureSize = Vector2IntField("Render Texture Size", I.RenderTextureSize);
+			I.FieldOfView       = FloatField     ("Field Of View",       I.FieldOfView);
+			I.OrthographicSize  = FloatField     ("Orthographic Size",   I.OrthographicSize);
+			I.Projection        = Slider         ("Projection",          I.Projection, 0, 1);
 			BeginHorizontal();
 			{
 				PrefixLabel(" ");
@@ -49,9 +52,9 @@ using UnityEngine;
 			}
 			EndHorizontal();
 			Space();
-			Target         = ObjectField ("Target", Target, typeof(GameObject), true) as GameObject;
-			TargetPosition = Vector3Field("Target Position", TargetPosition);
-			TargetDistance = Slider      ("Target Distance", TargetDistance, 0, 256);
+			PropertyField(m_Target);
+			I.TargetPosition = Vector3Field("Target Position", I.TargetPosition);
+			I.TargetDistance = Slider      ("Target Distance", I.TargetDistance, 0, 256);
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -66,7 +69,7 @@ using UnityEngine;
 
 public class CameraManager : MonoSingleton<CameraManager> {
 
-	// Fields
+	// Serialized Fields
 
 	[SerializeField] Camera     m_MainCamera;
 	[SerializeField] Camera     m_FadeCamera;
@@ -84,66 +87,58 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	// Properties
 
-	static Camera MainCamera => Instance? Instance.m_MainCamera : default;
-	static Camera FadeCamera => Instance? Instance.m_FadeCamera : default;
+	Camera MainCamera => m_MainCamera;
+	Camera FadeCamera => m_FadeCamera;
 
-	public static Vector3 Rotation {
-		get =>    Instance? Instance.transform.eulerAngles : default;
-		set { if (Instance) Instance.transform.eulerAngles = value; }
+	public Vector3 Rotation {
+		get => transform.eulerAngles;
+		set => transform.eulerAngles = value;
 	}
 
-	static RenderTexture texture;
-
-	public static Vector2Int RenderTextureSize {
-		get => Instance? Instance.m_RenderTextureSize : default;
+	public Vector2Int RenderTextureSize {
+		get => m_RenderTextureSize;
 		set {
-			if (!Instance) return;
-			Instance.m_RenderTextureSize = value;
-			texture = MainCamera? MainCamera.targetTexture : null;
-			if (texture) {
-				texture.Release();
-				texture.width  = value.x;
-				texture.height = value.y;
-				texture.Create();
+			m_RenderTextureSize = value;
+			if (MainCamera && MainCamera.targetTexture) {
+				MainCamera.targetTexture.Release();
+				MainCamera.targetTexture.width  = value.x;
+				MainCamera.targetTexture.height = value.y;
+				MainCamera.targetTexture.Create();
 			}
-			texture = FadeCamera? MainCamera.targetTexture : null;
-			if (texture) {
-				texture.Release();
-				texture.width  = value.x;
-				texture.height = value.y;
-				texture.Create();
+			if (FadeCamera && FadeCamera.targetTexture) {
+				FadeCamera.targetTexture.Release();
+				FadeCamera.targetTexture.width  = value.x;
+				FadeCamera.targetTexture.height = value.y;
+				FadeCamera.targetTexture.Create();
 			}
 			Projection = Projection;
 		}
 	}
 
-	public static float FieldOfView {
-		get => Instance? Instance.m_FieldOfView : default;
+	public float FieldOfView {
+		get => m_FieldOfView;
 		set {
-			if (!Instance) return;
-			Instance.m_FieldOfView = value;
+			m_FieldOfView = value;
 			if (MainCamera) MainCamera.fieldOfView = value;
 			if (FadeCamera) FadeCamera.fieldOfView = value;
 			Projection = Projection;
 		}
 	}
 
-	public static float OrthographicSize {
-		get => Instance? Instance.m_OrthographicSize : default;
+	public float OrthographicSize {
+		get => m_OrthographicSize;
 		set {
-			if (!Instance) return;
-			Instance.m_OrthographicSize = value;
+			m_OrthographicSize = value;
 			if (MainCamera) MainCamera.orthographicSize = value;
 			if (FadeCamera) FadeCamera.orthographicSize = value;
 			Projection = Projection;
 		}
 	}
 
-	public static float Projection {
-		get => Instance? Instance.m_Projection : default;
+	public float Projection {
+		get => m_Projection;
 		set {
-			if (!MainCamera) return;
-			Instance.m_Projection = value;
+			m_Projection = value;
 			float aspect =  (float)RenderTextureSize.x / RenderTextureSize.y;
 			float left   = -OrthographicSize * aspect;
 			float right  =  OrthographicSize * aspect;
@@ -154,70 +149,77 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 			Matrix4x4 a = Matrix4x4.Perspective(FieldOfView, aspect, nearClipPlane, farClipPlane);
 			Matrix4x4 b = Matrix4x4.Ortho( left, right, bottom, top, nearClipPlane, farClipPlane);
-			Matrix4x4 m = MainCamera.projectionMatrix;
-			for (int i = 0; i < 16; i++) m[i] = Mathf.Lerp(a[i], b[i], value);
-			if (MainCamera) MainCamera.projectionMatrix = m;
-			if (FadeCamera) FadeCamera.projectionMatrix = m;
+			Matrix4x4 projection = MainCamera.projectionMatrix;
+			for (int i = 0; i < 16; i++) projection[i] = Mathf.Lerp(a[i], b[i], value);
+			if (MainCamera) MainCamera.projectionMatrix = projection;
+			if (FadeCamera) FadeCamera.projectionMatrix = projection;
 		}
 	}
 
-	public static float TargetDistance {
-		get => Instance? Instance.m_TargetDistance : default;
+
+
+	public float TargetDistance {
+		get => m_TargetDistance;
 		set {
-			if (!Instance) return;
-			Instance.m_TargetDistance = value;
+			m_TargetDistance = value;
 			Vector3 position = Target ? Target.transform.position : TargetPosition;
-			position += Instance.transform.forward * -value;
+			position += transform.forward * -value;
 			if (MainCamera) MainCamera.transform.position = position;
 			if (FadeCamera) FadeCamera.transform.position = position;
 		}
 	}
 
-	public static GameObject Target {
-		get =>    Instance? Instance.m_Target : default;
-		set { if (Instance) Instance.m_Target = value; }
+	public GameObject Target {
+		get => m_Target;
+		set => m_Target = value;
 	}
 
-	public static Vector3 TargetPosition {
-		get =>    Instance? Instance.m_TargetPosition : default;
-		set { if (Instance) Instance.m_TargetPosition = value; }
+	public Vector3 TargetPosition {
+		get => m_TargetPosition;
+		set => m_TargetPosition = value;
 	}
+
+
+
+	// Cached Variables
+
+	static float   shakeStrength;
+	static float   shakeDuration;
+	static Vector3 shakeDirection;
 
 
 
 	// Methods
 
-	//static float   shakeStrength;
-	static float   shakeDuration;
-	//static Vector3 shakeDirection;
-
-	public static void ShakeCamera(float strength, float duration) {
-		if (!Instance) return;
-		//shakeStrength  = strength;
-		shakeDuration  = duration;
+	public void ShakeCamera(float strength, float duration) {
+			shakeStrength = strength;
+			shakeDuration = duration;
 	}
 
-	void FixedUpdate() {
+	void UpdateCamera() {
 		if (0 < shakeDuration) {
 			shakeDuration = Mathf.Max(0, shakeDuration - Time.fixedDeltaTime);
-			// shake
+			shakeDirection = Random.insideUnitSphere;
+			MainCamera.transform.position += shakeDirection * shakeStrength;
+			FadeCamera.transform.position += shakeDirection * shakeStrength;
 		}
 	}
 
-	
 
-	public static Ray ScreenPointToRay(Vector3 position) {
-		if (!MainCamera) return new Ray();
-		float multiplier = RenderTextureSize.x / Screen.width;
-		Vector3 viewport = MainCamera.ScreenToViewportPoint(position * multiplier);
-		return MainCamera.ViewportPointToRay(viewport);
+
+	public Ray ScreenPointToRay(Vector3 position) {
+		if (MainCamera) {
+			float multiplier = RenderTextureSize.x / Screen.width;
+			Vector3 viewport = MainCamera.ScreenToViewportPoint(position * multiplier);
+			return MainCamera.ViewportPointToRay(viewport);
+		}
+		return default;
 	}
 
 	
 
-	// Cycle
-
+	// Lifecycle
+	
 	void Start() => Projection = Projection;
-
-
+	void FixedUpdate() => UpdateCamera();
 }

@@ -2,15 +2,19 @@ using UnityEngine;
 
 
 
+// ====================================================================================================
+// Mono Singleton
+// ====================================================================================================
+
 public class MonoSingleton<T> : MonoBehaviour where T : Object {
 
-	static T instance;
+	static T i;
 
-	public static T Instance => instance? instance : instance = FindAnyObjectByType<T>();
-    
+	public static T I => i? i : i = FindAnyObjectByType<T>();
+
 	protected virtual void Awake() {
-		if (instance == null || instance == this) {
-			instance = this as T;
+		if (i == null || i == this) {
+			i = this as T;
 			DontDestroyOnLoad(gameObject);
 		}
 		else Destroy(gameObject);

@@ -37,39 +37,51 @@ using UnityEngine;
 
 public class GameManager : MonoSingleton<GameManager> {
 
-	// Fields
+	// Serialized Fields
 
 
 
 	// Properties
+
+
+
+	// Cached Variables
 	
+	Vector2 pointPosition;
+	Vector3 rotation;
+
 
 
 	// Methods
 
 
 
-	// Cycle
-
-	Vector2 pointPosition;
-	Vector3 rotation;
+	// Lifecycle
 
 	void Update() {
-		if (UIManager.GetActiveCanvas() == CanvasType.Game) {
-			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
-				Ray ray = CameraManager.ScreenPointToRay(InputManager.PointPosition);
+		if (UIManager.I.ActiveCanvas == CanvasType.Game) {
+			if (InputManager.I.GetKeyDown(KeyAction.LeftClick)) {
+				Ray ray = CameraManager.I.ScreenPointToRay(InputManager.I.PointPosition);
 				if (Physics.Raycast(ray, out RaycastHit hit)) {
 					Debug.Log(hit.point);
 				}
 			}
-			if (InputManager.GetKeyDown(KeyAction.RightClick)) {
-				pointPosition = InputManager.PointPosition;
-				rotation = CameraManager.Rotation;
+			if (InputManager.I.GetKeyDown(KeyAction.RightClick)) {
+				pointPosition = InputManager.I.PointPosition;
+				rotation = CameraManager.I.Rotation;
 			}
-			if (InputManager.GetKey(KeyAction.RightClick)) {
-				float delta = (InputManager.PointPosition.x - pointPosition.x) * 1f;
-				CameraManager.Rotation = rotation + new Vector3(0, delta, 0);
+			if (InputManager.I.GetKey(KeyAction.RightClick)) {
+				float delta = (InputManager.I.PointPosition.x - pointPosition.x) * 1f;
+				CameraManager.I.Rotation = rotation + new Vector3(0, delta, 0);
 			}
+		}
+		{
+			Vector3 direction = new();
+			direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
+			direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
+			direction.y = 0;
+			direction.Normalize();
+			CameraManager.I.transform.position += direction * Time.deltaTime;
 		}
 	}
 }

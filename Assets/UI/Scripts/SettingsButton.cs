@@ -1,11 +1,10 @@
+using System;
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 
-using System;
-
-using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
 using TMPro;
 
@@ -26,6 +25,7 @@ using TMPro;
 	public class SettingsButtonEditor : SelectableEditor {
 
 		SerializedProperty m_TextTMP;
+		SerializedProperty m_LocalizeStringEvent;
 		SerializedProperty m_OnStateUpdated;
 		SerializedProperty m_OnClick;
 
@@ -33,15 +33,17 @@ using TMPro;
 
 		protected override void OnEnable() {
 			base.OnEnable();
-			m_TextTMP        = serializedObject.FindProperty("m_TextTMP");
-			m_OnStateUpdated = serializedObject.FindProperty("m_OnStateUpdated");
-			m_OnClick        = serializedObject.FindProperty("m_OnClick");
+			m_TextTMP             = serializedObject.FindProperty("m_TextTMP");
+			m_LocalizeStringEvent = serializedObject.FindProperty("m_LocalizeStringEvent");
+			m_OnStateUpdated      = serializedObject.FindProperty("m_OnStateUpdated");
+			m_OnClick             = serializedObject.FindProperty("m_OnClick");
 		}
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
 			Space();
 			PropertyField(m_TextTMP);
+			PropertyField(m_LocalizeStringEvent);
 			Space();
 			PropertyField(m_OnStateUpdated);
 			PropertyField(m_OnClick);
@@ -64,9 +66,10 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 
 
-	// Fields
+	// Serialized Fields
 
-	[SerializeField] TextMeshProUGUI m_TextTMP;
+	[SerializeField] TextMeshProUGUI     m_TextTMP;
+	[SerializeField] LocalizeStringEvent m_LocalizeStringEvent;
 
 	[SerializeField] ButtonUpdatedEvent m_OnStateUpdated = new ButtonUpdatedEvent();
 	[SerializeField] ButtonClickedEvent m_OnClick        = new ButtonClickedEvent();
@@ -75,42 +78,47 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 	// Properties
 
-	RectTransform rectTransform => transform as RectTransform;
+	RectTransform RectTransform => transform as RectTransform;
 
-	LocalizeStringEvent localizeStringEvent;
+	LocalizeStringEvent LocalizeStringEvent => m_LocalizeStringEvent;
 
-	public string text {
+	public string Text {
 		get => m_TextTMP ? m_TextTMP.text : string.Empty;
 		set {
-			if (localizeStringEvent || TryGetComponent(out localizeStringEvent)) {
-				localizeStringEvent.StringReference = null;
-			}
+			if (LocalizeStringEvent) LocalizeStringEvent.StringReference = null;
 			if (m_TextTMP) m_TextTMP.text = value;
 		}
 	}
 
-	public ButtonUpdatedEvent onStateUpdated {
+	public ButtonUpdatedEvent OnStateUpdated {
 		get => m_OnStateUpdated;
 		set => m_OnStateUpdated = value;
 	}
 
-	public ButtonClickedEvent onClick {
+	public ButtonClickedEvent OnClick {
 		get => m_OnClick;
 		set => m_OnClick = value;
 	}
 
 
 
+	// Cached Variables
+
+	Transform  parent;
+	ScrollRect scrollRect;
+
+
+
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
-		if (interactable) onClick?.Invoke();
+		if (interactable) OnClick?.Invoke();
 	}
 
 	public void OnSubmit() {
 		if (interactable) {
 			DoStateTransition(SelectionState.Pressed, false);
-			onClick?.Invoke();
+			OnClick?.Invoke();
 		}
 	}
 
@@ -119,16 +127,14 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 			case MoveDirection.Left:
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				onClick?.Invoke();
+				OnClick?.Invoke();
 				return;
 		}
 		base.OnMove(eventData);
 	}
 
-	ScrollRect scrollRect;
-
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
-		Transform parent = transform.parent;
+		parent = transform.parent;
 		while (parent) {
 			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
@@ -142,7 +148,7 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 		if (eventData is AxisEventData) {
 			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				float pivot = rectTransform.rect.height / 2 - rectTransform.anchoredPosition.y;
+				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
@@ -150,22 +156,16 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 	}
 
 	public void SetLocalizeText(string table, string tableEntry) {
-		if (localizeStringEvent || TryGetComponent(out localizeStringEvent)) {
-			localizeStringEvent.StringReference = new LocalizedString {
-				TableReference      = table,
-				TableEntryReference = tableEntry
-			};
-			localizeStringEvent.RefreshString();
-		}
+		if (LocalizeStringEvent) LocalizeStringEvent.StringReference.SetReference(table, tableEntry);
 	}
 
 	public void Refresh() {
-		onStateUpdated?.Invoke(this);
+		OnStateUpdated?.Invoke(this);
 	}
 
 
 
-	// Cycle
+	// Lifecycle
 
 	protected override void OnEnable() {
 		base.OnEnable();

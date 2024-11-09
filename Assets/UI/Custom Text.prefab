@@ -81,6 +81,7 @@ MonoBehaviour:
   m_Interactable: 0
   m_TargetGraphic: {fileID: 0}
   m_TextTMP: {fileID: 4528147324644933759}
+  m_LocalizeStringEvent: {fileID: 4712632717877336707}
   m_OnStateUpdated:
     m_PersistentCalls:
       m_Calls: []

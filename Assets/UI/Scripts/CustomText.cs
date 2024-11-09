@@ -1,10 +1,9 @@
+using System;
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
-using System;
-
-using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
 using TMPro;
 
@@ -25,20 +24,23 @@ using TMPro;
 	public class CustomTextEditor : SelectableEditor {
 
 		SerializedProperty m_TextTMP;
+		SerializedProperty m_LocalizeStringEvent;
 		SerializedProperty m_OnStateUpdated;
 
 		CustomText I => target as CustomText;
 
 		protected override void OnEnable() {
 			base.OnEnable();
-			m_TextTMP        = serializedObject.FindProperty("m_TextTMP");
-			m_OnStateUpdated = serializedObject.FindProperty("m_OnStateUpdated");
+			m_TextTMP             = serializedObject.FindProperty("m_TextTMP");
+			m_LocalizeStringEvent = serializedObject.FindProperty("m_LocalizeStringEvent");
+			m_OnStateUpdated      = serializedObject.FindProperty("m_OnStateUpdated");
 		}
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
 			Space();
 			PropertyField(m_TextTMP);
+			PropertyField(m_LocalizeStringEvent);
 			Space();
 			PropertyField(m_OnStateUpdated);
 			serializedObject.ApplyModifiedProperties();
@@ -62,7 +64,8 @@ public class CustomText : Selectable {
 
 	// Fields
 
-	[SerializeField] TextMeshProUGUI m_TextTMP;
+	[SerializeField] TextMeshProUGUI     m_TextTMP;
+	[SerializeField] LocalizeStringEvent m_LocalizeStringEvent;
 
 	[SerializeField] TextUpdatedEvent m_OnStateUpdated = new TextUpdatedEvent();
 
@@ -70,21 +73,19 @@ public class CustomText : Selectable {
 
 	// Properties
 
-	RectTransform rectTransform => transform as RectTransform;
+	RectTransform RectTransform => transform as RectTransform;
 
-	LocalizeStringEvent localizeStringEvent;
+	LocalizeStringEvent LocalizeStringEvent => m_LocalizeStringEvent;
 
-	public string text {
+	public string Text {
 		get => m_TextTMP ? m_TextTMP.text : string.Empty;
 		set {
-			if (localizeStringEvent || TryGetComponent(out localizeStringEvent)) {
-				localizeStringEvent.StringReference = null;
-			}
+			if (LocalizeStringEvent) LocalizeStringEvent.StringReference = null;
 			if (m_TextTMP) m_TextTMP.text = value;
 		}
 	}
 
-	public TextUpdatedEvent onStateUpdated {
+	public TextUpdatedEvent OnStateUpdated {
 		get => m_OnStateUpdated;
 		set => m_OnStateUpdated = value;
 	}
@@ -94,22 +95,16 @@ public class CustomText : Selectable {
 	// Methods
 
 	public void SetLocalizeText(string table, string tableEntry) {
-		if (localizeStringEvent || TryGetComponent(out localizeStringEvent)) {
-			localizeStringEvent.StringReference = new LocalizedString {
-				TableReference      = table,
-				TableEntryReference = tableEntry
-			};
-			localizeStringEvent.RefreshString();
-		}
+		if (LocalizeStringEvent) LocalizeStringEvent.StringReference.SetReference(table, tableEntry);
 	}
 
 	public void Refresh() {
-		onStateUpdated?.Invoke(this);
+		OnStateUpdated?.Invoke(this);
 	}
 
 
 
-	// Cycle
+	// Lifecycle
 
 	protected override void OnEnable() {
 		base.OnEnable();

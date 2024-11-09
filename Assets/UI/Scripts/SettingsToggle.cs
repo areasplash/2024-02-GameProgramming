@@ -1,9 +1,9 @@
+using System;
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
-
-using System;
 
 using TMPro;
 
@@ -50,7 +50,7 @@ using TMPro;
 			PropertyField(m_PositiveTextTMP);
 			PropertyField(m_NegativeTextTMP);
 			Space();
-			I.value = Toggle("Value", I.value);
+			I.Value = Toggle("Value", I.Value);
 			Space();
 			PropertyField(m_OnStateUpdated);
 			PropertyField(m_OnValueChanged);
@@ -89,40 +89,47 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 
 	// Properties
 
-	RectTransform rectTransform => transform as RectTransform;
+	RectTransform RectTransform => transform as RectTransform;
 
-	public bool value {
+	public bool Value {
 		get => m_Value;
 		set {
 			if (m_Value == value) return;
 			m_Value = value;
-			onValueChanged?.Invoke(m_Value);
+			OnValueChanged?.Invoke(m_Value);
 			Refresh();
 		}
 	}
 
-	public ToggleUpdatedEvent onStateUpdated {
+	public ToggleUpdatedEvent OnStateUpdated {
 		get => m_OnStateUpdated;
 		set => m_OnStateUpdated = value;
 	}
 
-	public ToggleChangedEvent onValueChanged {
+	public ToggleChangedEvent OnValueChanged {
 		get => m_OnValueChanged;
 		set => m_OnValueChanged = value;
 	}
 
 
 
+	// Cached Variables
+
+	Transform  parent;
+	ScrollRect scrollRect;
+
+
+
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
-		if (interactable) value = !value;
+		if (interactable) Value = !Value;
 	}
 
 	public void OnSubmit() {
 		if (interactable) {
 			DoStateTransition(SelectionState.Pressed, false);
-			value = !value;
+			Value = !Value;
 		}
 	}
 
@@ -131,16 +138,14 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 			case MoveDirection.Left:
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				value = !value;
+				Value = !Value;
 				return;
 		}
 		base.OnMove(eventData);
 	}
 
-	ScrollRect scrollRect;
-
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
-		Transform parent = transform.parent;
+		parent = transform.parent;
 		while (parent) {
 			if (parent.TryGetComponent(out component)) return true;
 			else parent = parent.parent;
@@ -154,7 +159,7 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 		if (eventData is AxisEventData) {
 			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				float pivot = rectTransform.rect.height / 2 - rectTransform.anchoredPosition.y;
+				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
@@ -162,16 +167,16 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 	}
 
 	public void Refresh() {
-		if (m_PositiveRect) m_PositiveRect.gameObject.SetActive( value);
-		if (m_NegativeRect) m_NegativeRect.gameObject.SetActive(!value);
-		if (m_PositiveTextTMP) m_PositiveTextTMP.gameObject.SetActive( value);
-		if (m_NegativeTextTMP) m_NegativeTextTMP.gameObject.SetActive(!value);
-		onStateUpdated?.Invoke(this);
+		if (m_PositiveRect) m_PositiveRect.gameObject.SetActive( Value);
+		if (m_NegativeRect) m_NegativeRect.gameObject.SetActive(!Value);
+		if (m_PositiveTextTMP) m_PositiveTextTMP.gameObject.SetActive( Value);
+		if (m_NegativeTextTMP) m_NegativeTextTMP.gameObject.SetActive(!Value);
+		OnStateUpdated?.Invoke(this);
 	}
 
 
 
-	// Cycle
+	// Lifecycle
 
 	protected override void OnEnable() {
 		base.OnEnable();

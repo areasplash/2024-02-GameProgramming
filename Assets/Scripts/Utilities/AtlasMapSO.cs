@@ -1,15 +1,58 @@
-using UnityEngine;
-
 using System;
 using System.IO;
 using System.Collections.Generic;
 
+using UnityEngine;
 using UnityEngine.ProBuilder;
 
 #if UNITY_EDITOR
 	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
+
+
+
+// ====================================================================================================
+// Hash Map
+// ====================================================================================================
+
+[Serializable] public class HashMap<K, V> : Dictionary<K, V>, ISerializationCallbackReceiver {
+
+	// Serialized Fields
+
+	[SerializeField] List<K> m_Keys   = new List<K>();
+	[SerializeField] List<V> m_Values = new List<V>();
+
+
+
+	// Methods
+
+	public void OnBeforeSerialize() {
+		m_Keys  .Clear();
+		m_Values.Clear();
+		foreach (var pair in this) {
+			m_Keys  .Add(pair.Key  );
+			m_Values.Add(pair.Value);
+		}
+	}
+
+	public void OnAfterDeserialize() {
+		Clear();
+		for (int i = 0; i < m_Keys.Count; i++) Add(m_Keys[i], m_Values[i]);
+	}
+}
+
+
+
+// ====================================================================================================
+// Texture Data
+// ====================================================================================================
+
+[Serializable] public struct TextureData {
+	public Vector2 size;
+	public Vector2 tiling;
+	public Vector2 offset;
+}
 
 
 
@@ -78,13 +121,13 @@ public class AtlasMapSO : ScriptableObject {
 
 
 
-	// Fields
+	// Serialized Fields
 
 	[SerializeField] string    m_TextureDirectory = "Assets/Textures";
 	[SerializeField] string    m_PrefabDirectory  = "Assets/Prefabs";
 	[SerializeField] int       m_MaximumAtlasSize = 8192;
 	[SerializeField] int       m_Padding          = 0;
-	[SerializeField] Texture2D m_Atlas;
+	[SerializeField] Texture2D m_Atlas            = null;
 	[SerializeField] AtlasMap  m_AtlasMap         = new AtlasMap();
 
 
@@ -152,48 +195,4 @@ public class AtlasMapSO : ScriptableObject {
 			m_AtlasMap = nextMap;
 		}
 	#endif
-}
-
-
-
-// ====================================================================================================
-// Hash Map
-// ====================================================================================================
-
-[Serializable] public class HashMap<K, V> : Dictionary<K, V>, ISerializationCallbackReceiver {
-
-	// Fields
-
-	[SerializeField] List<K> m_Keys   = new List<K>();
-	[SerializeField] List<V> m_Values = new List<V>();
-
-
-
-	// Methods
-
-	public void OnBeforeSerialize() {
-		m_Keys  .Clear();
-		m_Values.Clear();
-		foreach (var pair in this) {
-			m_Keys  .Add(pair.Key  );
-			m_Values.Add(pair.Value);
-		}
-	}
-
-	public void OnAfterDeserialize() {
-		Clear();
-		for (int i = 0; i < m_Keys.Count; i++) Add(m_Keys[i], m_Values[i]);
-	}
-}
-
-
-
-// ====================================================================================================
-// Texture Data
-// ====================================================================================================
-
-[Serializable] public struct TextureData {
-	public Vector2 size;
-	public Vector2 tiling;
-	public Vector2 offset;
 }
