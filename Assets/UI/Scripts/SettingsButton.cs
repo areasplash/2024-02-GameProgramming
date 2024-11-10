@@ -17,7 +17,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Button Editor
+// Settings Button Editor
 // ====================================================================================================
 
 #if UNITY_EDITOR
@@ -41,6 +41,7 @@ using TMPro;
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
+			Undo.RecordObject(target, "Settings Button Properties");
 			Space();
 			PropertyField(m_TextTMP);
 			PropertyField(m_LocalizeStringEvent);
@@ -56,7 +57,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Button
+// Settings Button
 // ====================================================================================================
 
 public class SettingsButton : Selectable, IPointerClickHandler {

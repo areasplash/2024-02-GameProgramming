@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 #if UNITY_EDITOR
 	using UnityEditor;
@@ -17,14 +18,28 @@ using UnityEngine;
 
 		SerializedProperty m_MainCamera;
 		SerializedProperty m_FadeCamera;
+		SerializedProperty m_MainRawImage;
+		SerializedProperty m_FadeRawImage;
 		SerializedProperty m_Target;
+		SerializedProperty m_TargetPosition;
 
 		CameraManager I => target as CameraManager;
 
+		string[] layerNames;
+		string[] LayerNames => layerNames ??= GetLayerNames();
+		string[] GetLayerNames() {
+			string[] names = new string[32];
+			for (int i = 0; i < 32; i++) names[i] = LayerMask.LayerToName(i);
+			return names;
+		}
+
 		void OnEnable() {
-			m_MainCamera = serializedObject.FindProperty("m_MainCamera");
-			m_FadeCamera = serializedObject.FindProperty("m_FadeCamera");
-			m_Target     = serializedObject.FindProperty("m_Target");
+			m_MainCamera     = serializedObject.FindProperty("m_MainCamera");
+			m_FadeCamera     = serializedObject.FindProperty("m_FadeCamera");
+			m_MainRawImage   = serializedObject.FindProperty("m_MainRawImage");
+			m_FadeRawImage   = serializedObject.FindProperty("m_FadeRawImage");
+			m_Target         = serializedObject.FindProperty("m_Target");
+			m_TargetPosition = serializedObject.FindProperty("m_TargetPosition");
 		}
 
 		public override void OnInspectorGUI() {
@@ -52,9 +67,34 @@ using UnityEngine;
 			}
 			EndHorizontal();
 			Space();
+			LabelField("Camera Transition", EditorStyles.boldLabel);
+			I.CommonMask     = MaskField("Common Mask",     I.CommonMask,   LayerNames);
+			I.ExteriorMask   = MaskField("Exterior Mask",   I.ExteriorMask, LayerNames);
+			I.InteriorMask   = MaskField("Interior Mask",   I.InteriorMask, LayerNames);
+			I.TransitionTime = Slider   ("Transition Time", I.TransitionTime, 0, 3);
+			PropertyField(m_MainRawImage);
+			PropertyField(m_FadeRawImage);
+			Space();
+			LabelField("Camera Tracking Controls", EditorStyles.boldLabel);
 			PropertyField(m_Target);
-			I.TargetPosition = Vector3Field("Target Position", I.TargetPosition);
-			I.TargetDistance = Slider      ("Target Distance", I.TargetDistance, 0, 256);
+			PropertyField(m_TargetPosition);
+			I.TargetDistance = Slider("Target Distance", I.TargetDistance, 0, 256);
+			BeginHorizontal();
+			{
+				PrefixLabel("Freeze Position");
+				I.FreezePosition[0] = ToggleLeft("X", I.FreezePosition[0], GUILayout.Width(28));
+				I.FreezePosition[1] = ToggleLeft("Y", I.FreezePosition[1], GUILayout.Width(28));
+				I.FreezePosition[2] = ToggleLeft("Z", I.FreezePosition[2], GUILayout.Width(28));
+			}
+			EndHorizontal();
+			BeginHorizontal();
+			{
+				PrefixLabel("Freeze Rotation");
+				I.FreezeRotation[0] = ToggleLeft("X", I.FreezeRotation[0], GUILayout.Width(28));
+				I.FreezeRotation[1] = ToggleLeft("Y", I.FreezeRotation[1], GUILayout.Width(28));
+				I.FreezeRotation[2] = ToggleLeft("Z", I.FreezeRotation[2], GUILayout.Width(28));
+			}
+			EndHorizontal();
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -74,14 +114,23 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	[SerializeField] Camera     m_MainCamera;
 	[SerializeField] Camera     m_FadeCamera;
 
-	[SerializeField] Vector2Int m_RenderTextureSize = Vector2Int.zero;
+	[SerializeField] Vector2Int m_RenderTextureSize = Vector2Int.one;
 	[SerializeField] float      m_FieldOfView       = 60.00f;
 	[SerializeField] float      m_OrthographicSize  = 11.25f;
 	[SerializeField] float      m_Projection        = 01.00f;
 
-	[SerializeField] GameObject m_Target;
-	[SerializeField] Vector3    m_TargetPosition;
+	[SerializeField] int      m_CommonLayer    = 0;
+	[SerializeField] int      m_ExteriorLayer  = 0;
+	[SerializeField] int      m_InteriorLayer  = 0;
+	[SerializeField] float    m_TransitionTime = 0.5f;
+	[SerializeField] RawImage m_MainRawImage   = null;
+	[SerializeField] RawImage m_FadeRawImage   = null;
+
+	[SerializeField] GameObject m_Target         = null;
+	[SerializeField] Vector3    m_TargetPosition = Vector3.zero;
 	[SerializeField] float      m_TargetDistance = 36.0f;
+	[SerializeField] bool[]     m_FreezePosition = new bool[3];
+	[SerializeField] bool[]     m_FreezeRotation = new bool[3];
 
 
 
@@ -95,9 +144,13 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		set => transform.eulerAngles = value;
 	}
 
+	
+
 	public Vector2Int RenderTextureSize {
 		get => m_RenderTextureSize;
 		set {
+			value.x = Mathf.Max(1, value.x);
+			value.y = Mathf.Max(1, value.y);
 			m_RenderTextureSize = value;
 			if (MainCamera && MainCamera.targetTexture) {
 				MainCamera.targetTexture.Release();
@@ -156,18 +209,33 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		}
 	}
 
-
-
-	public float TargetDistance {
-		get => m_TargetDistance;
-		set {
-			m_TargetDistance = value;
-			Vector3 position = Target ? Target.transform.position : TargetPosition;
-			position += transform.forward * -value;
-			if (MainCamera) MainCamera.transform.position = position;
-			if (FadeCamera) FadeCamera.transform.position = position;
-		}
+	public int CommonMask {
+		get => m_CommonLayer;
+		set => m_CommonLayer = value;
 	}
+
+	public int ExteriorMask {
+		get => m_ExteriorLayer;
+		set => m_ExteriorLayer = value;
+	}
+
+	public int InteriorMask {
+		get => m_InteriorLayer;
+		set => m_InteriorLayer = value;
+	}
+
+	int CurrentMask { get; set; }
+
+	public float TransitionTime {
+		get => m_TransitionTime;
+		set => m_TransitionTime = value;
+	}
+
+	RawImage MainRawImage => m_MainRawImage;
+	RawImage FadeRawImage => m_FadeRawImage;
+
+
+
 
 	public GameObject Target {
 		get => m_Target;
@@ -179,6 +247,25 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		set => m_TargetPosition = value;
 	}
 
+	public float TargetDistance {
+		get => m_TargetDistance;
+		set {
+			m_TargetDistance = value;
+			if (MainCamera) MainCamera.transform.localPosition = new Vector3(0, 0, -value);
+			if (FadeCamera) FadeCamera.transform.localPosition = new Vector3(0, 0, -value);
+		}
+	}
+
+	public bool[] FreezePosition {
+		get => m_FreezePosition;
+		set => m_FreezePosition = value;
+	}
+
+	public bool[] FreezeRotation {
+		get => m_FreezeRotation;
+		set => m_FreezeRotation = value;
+	}
+
 
 
 	// Cached Variables
@@ -186,6 +273,8 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	static float   shakeStrength;
 	static float   shakeDuration;
 	static Vector3 shakeDirection;
+
+	Vector3 position;
 
 
 
@@ -196,7 +285,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 			shakeDuration = duration;
 	}
 
-	void UpdateCamera() {
+	void UpdateCameraShake() {
 		if (0 < shakeDuration) {
 			shakeDuration = Mathf.Max(0, shakeDuration - Time.fixedDeltaTime);
 			shakeDirection = Random.insideUnitSphere;
@@ -219,7 +308,62 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	
 
 	// Lifecycle
-	
+
 	void Start() => Projection = Projection;
-	void FixedUpdate() => UpdateCamera();
+
+	void LateUpdate() {
+		if (Target) TargetPosition = Target.transform.position;
+		if (!FreezePosition[0] || !FreezePosition[1] || !FreezePosition[2]) {
+			Vector3 a = transform.position;
+			Vector3 b = TargetPosition;
+			if (!FreezePosition[0]) a.x = b.x;
+			if (!FreezePosition[1]) a.y = b.y;
+			if (!FreezePosition[2]) a.z = b.z;
+			transform.position = a;
+		}
+		if (!FreezeRotation[0] || !FreezeRotation[1] || !FreezeRotation[2]) {
+			Vector3 direction = (TargetPosition - transform.position).normalized;
+			if (direction != Vector3.zero) {
+				Vector3 a = transform.eulerAngles;
+				Vector3 b = Quaternion.LookRotation(direction).eulerAngles;
+				if (!FreezeRotation[0]) a.x = b.x;
+				if (!FreezeRotation[1]) a.y = b.y;
+				if (!FreezeRotation[2]) a.z = b.z;
+				transform.eulerAngles = a;
+			}
+		}
+		if (transform.position != position) {
+			float pixelPerUnit = UIManager.I.PixelPerUnit;
+			Vector3 positionInversed = transform.InverseTransformDirection(transform.position);
+			positionInversed.x = Mathf.Round(positionInversed.x * pixelPerUnit) / pixelPerUnit;
+			positionInversed.y = Mathf.Round(positionInversed.y * pixelPerUnit) / pixelPerUnit;
+			positionInversed.z = Mathf.Round(positionInversed.z * pixelPerUnit) / pixelPerUnit;
+			transform.position = position = transform.TransformDirection(positionInversed);
+		}
+	}
+
+	
+
+	void OnTriggerStay(Collider collider) {
+		if (collider.isTrigger) CurrentMask |= 1 << collider.gameObject.layer;
+	}
+
+	void FixedUpdate() {
+		if ((CurrentMask & ExteriorMask) == 0 && (CurrentMask & InteriorMask) == 0) {
+			CurrentMask |= ExteriorMask;
+		}
+		if (FadeRawImage.color.a == 0) FadeCamera.cullingMask = CurrentMask;
+		{
+			float delta = Time.fixedDeltaTime / TransitionTime;
+			delta *= (MainCamera.cullingMask != FadeCamera.cullingMask) ? 1 : -1;
+			float alpha = Mathf.Clamp01(FadeRawImage.color.a + delta);
+			FadeRawImage.color = new Color(1, 1, 1, alpha);
+		}
+		if (FadeRawImage.color.a == 1) {
+			MainCamera.cullingMask = FadeCamera.cullingMask;
+			FadeRawImage.color = new Color(1, 1, 1, 0);
+		}
+		CurrentMask = CommonMask;
+		UpdateCameraShake();
+	}
 }

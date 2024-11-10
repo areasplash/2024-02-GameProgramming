@@ -41,6 +41,7 @@ using TMPro;
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
+			Undo.RecordObject(target, "Custom Button Properties");
 			Space();
 			PropertyField(m_TextTMP);
 			PropertyField(m_LocalizeStringEvent);

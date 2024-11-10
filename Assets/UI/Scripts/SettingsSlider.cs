@@ -16,7 +16,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Slider Editor
+// Settings Slider Editor
 // ====================================================================================================
 
 #if UNITY_EDITOR
@@ -42,6 +42,7 @@ using TMPro;
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
+			Undo.RecordObject(target, "Settings Slider Properties");
 			Space();
 			PropertyField(m_BodyRect);
 			PropertyField(m_HandleRect);
@@ -66,7 +67,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Slider
+// Settings Slider
 // ====================================================================================================
 
 public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {

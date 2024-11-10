@@ -38,6 +38,7 @@ using TMPro;
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
+			Undo.RecordObject(target, "Custom Text Properties");
 			Space();
 			PropertyField(m_TextTMP);
 			PropertyField(m_LocalizeStringEvent);

@@ -71,8 +71,9 @@ public class GameManager : MonoSingleton<GameManager> {
 				rotation = CameraManager.I.Rotation;
 			}
 			if (InputManager.I.GetKey(KeyAction.RightClick)) {
-				float delta = (InputManager.I.PointPosition.x - pointPosition.x) * 1f;
-				CameraManager.I.Rotation = rotation + new Vector3(0, delta, 0);
+				float mouseSensitivity = UIManager.I.MouseSensitivity;
+				float delta = InputManager.I.PointPosition.x - pointPosition.x;
+				CameraManager.I.Rotation = rotation + new Vector3(0, delta * mouseSensitivity, 0);
 			}
 		}
 		{
@@ -81,7 +82,7 @@ public class GameManager : MonoSingleton<GameManager> {
 			direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
 			direction.y = 0;
 			direction.Normalize();
-			CameraManager.I.transform.position += direction * Time.deltaTime;
+			transform.position += direction * 4 * Time.deltaTime;
 		}
 	}
 }

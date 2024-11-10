@@ -13,6 +13,14 @@ TagManager:
   - UI
   - 
   - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
   - F12
   - F11
   - F10
@@ -29,14 +37,6 @@ TagManager:
   - B02
   - B03
   - B04
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
   m_SortingLayers:
   - name: Default
     uniqueID: 0

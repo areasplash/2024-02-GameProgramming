@@ -17,7 +17,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Stepper Editor
+// Settings Stepper Editor
 // ====================================================================================================
 
 #if UNITY_EDITOR
@@ -45,6 +45,7 @@ using TMPro;
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
+			Undo.RecordObject(target, "Settings Stepper Properties");
 			Space();
 			PropertyField(m_PrevRect);
 			PropertyField(m_NextRect);
@@ -65,7 +66,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Stepper
+// Settings Stepper
 // ====================================================================================================
 
 public class SettingsStepper : Selectable, IPointerClickHandler {

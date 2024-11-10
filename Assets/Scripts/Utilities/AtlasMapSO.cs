@@ -84,6 +84,7 @@ using UnityEngine.ProBuilder;
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
+			Undo.RecordObject(target, "Change Atlas Map SO Properties");
 			Space();
 			PropertyField(m_TextureDirectory);
 			PropertyField(m_PrefabDirectory);

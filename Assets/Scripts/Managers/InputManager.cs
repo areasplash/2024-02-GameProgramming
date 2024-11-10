@@ -123,7 +123,7 @@ public class InputManager : MonoSingleton<InputManager> {
 	}
 
 	void PeekKeys() {
-		Vector2 md = moveDirection;
+		Vector2 md = MoveDirection;
 		Vector2 dir = Vector2.zero;
 		if (GetKey(KeyAction.MoveUp   ) && (0 < md.y || GetKeyUp(KeyAction.MoveDown ))) dir.y = +1;
 		if (GetKey(KeyAction.MoveLeft ) && (md.x < 0 || GetKeyUp(KeyAction.MoveRight))) dir.x = -1;

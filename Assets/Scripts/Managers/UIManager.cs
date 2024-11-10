@@ -313,9 +313,9 @@ public class UIManager : MonoSingleton<UIManager> {
 		set => m_SoundFX = value;
 	}
 
-	float MouseSensitivity {
-		get => m_MouseSensitivity;
-		set => m_MouseSensitivity = value;
+	public float MouseSensitivity {
+		get         => m_MouseSensitivity;
+		private set => m_MouseSensitivity = value;
 	}
 
 

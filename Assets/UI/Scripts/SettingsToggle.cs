@@ -16,7 +16,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Toggle Editor
+// Settings Toggle Editor
 // ====================================================================================================
 
 #if UNITY_EDITOR
@@ -44,6 +44,7 @@ using TMPro;
 
 		public override void OnInspectorGUI() {
 			base.OnInspectorGUI();
+			Undo.RecordObject(target, "Settings Toggle Properties");
 			Space();
 			PropertyField(m_PositiveRect);
 			PropertyField(m_NegativeRect);
@@ -63,7 +64,7 @@ using TMPro;
 
 
 // ====================================================================================================
-// Custom Toggle
+// Settings Toggle
 // ====================================================================================================
 
 public class SettingsToggle : Selectable, IPointerClickHandler {
