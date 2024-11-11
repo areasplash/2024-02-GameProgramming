@@ -1,8 +1,8 @@
-using System;
-
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+
+using System;
 
 using UnityEngine.Localization.Components;
 using TMPro;

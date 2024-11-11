@@ -45,18 +45,14 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 
-	// Cached Variables
-	
-	Vector2 pointPosition;
-	Vector3 rotation;
-
-
-
 	// Methods
 
 
 
 	// Lifecycle
+
+	Vector2 pointPosition;
+	Vector3 rotation;
 
 	void Update() {
 		if (UIManager.I.ActiveCanvas == CanvasType.Game) {

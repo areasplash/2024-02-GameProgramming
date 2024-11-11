@@ -1,9 +1,9 @@
-using System;
-
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+
+using System;
 
 using UnityEngine.Localization.Components;
 using TMPro;
@@ -67,7 +67,7 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 
 
-	// Serialized Fields
+	// Fields
 
 	[SerializeField] TextMeshProUGUI     m_TextTMP;
 	[SerializeField] LocalizeStringEvent m_LocalizeStringEvent;
@@ -103,13 +103,6 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 
 
-	// Cached Variables
-
-	Transform  parent;
-	ScrollRect scrollRect;
-
-
-
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
@@ -134,6 +127,11 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 		base.OnMove(eventData);
 	}
 
+
+
+	Transform  parent;
+	ScrollRect scrollRect;
+
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		parent = transform.parent;
 		while (parent) {
@@ -155,6 +153,8 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 			}
 		}
 	}
+
+	
 
 	public void SetLocalizeText(string table, string tableEntry) {
 		if (LocalizeStringEvent) LocalizeStringEvent.StringReference.SetReference(table, tableEntry);

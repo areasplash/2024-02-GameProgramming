@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
+
+using System;
+using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
@@ -67,7 +67,7 @@ using UnityEngine.InputSystem.Utilities;
 
 public class InputManager : MonoSingleton<InputManager> {
 
-	// Serialized Fields
+	// Fields
 
 	[SerializeField] InputActionAsset m_InputActionAsset;
 
@@ -85,19 +85,12 @@ public class InputManager : MonoSingleton<InputManager> {
 
 
 
-	// Cached Variables
+	// Methods
 
 	readonly bool[] keyPrev = new bool[Enum.GetValues(typeof(KeyAction)).Length];
 	readonly bool[] keyNext = new bool[Enum.GetValues(typeof(KeyAction)).Length];
-
 	Vector2 moveDirection;
 	Vector2 pointPosition;
-
-	InputAction inputAction;
-
-
-
-	// Methods
 
 	public bool GetKey    (KeyAction key) =>  keyNext[(int)key];
 	public bool GetKeyDown(KeyAction key) =>  keyNext[(int)key] && !keyPrev[(int)key];
@@ -140,6 +133,8 @@ public class InputManager : MonoSingleton<InputManager> {
 	}
 
 
+
+	InputAction inputAction;
 
 	public List<string> GetKeysBinding(KeyAction keyAction) {
 		List<string> keys = new List<string>();

@@ -1,9 +1,9 @@
-using System;
-
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+
+using System;
 
 using UnityEngine.Localization.Components;
 using TMPro;
@@ -136,13 +136,6 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 
 
 
-	// Cached Variables
-
-	Transform  parent;
-	ScrollRect scrollRect;
-
-
-
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
@@ -173,6 +166,11 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 		base.OnMove(eventData);
 	}
 
+
+
+	Transform  parent;
+	ScrollRect scrollRect;
+
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		parent = transform.parent;
 		while (parent) {
@@ -194,6 +192,8 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 			}
 		}
 	}
+
+
 
 	public void SetLocalizeText(string table, string tableEntry) {
 		if (LocalizeStringEvent) LocalizeStringEvent.StringReference.SetReference(table, tableEntry);

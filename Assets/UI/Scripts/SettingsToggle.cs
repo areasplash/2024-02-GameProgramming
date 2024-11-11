@@ -1,9 +1,9 @@
-using System;
-
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+
+using System;
 
 using TMPro;
 
@@ -114,13 +114,6 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 
 
 
-	// Cached Variables
-
-	Transform  parent;
-	ScrollRect scrollRect;
-
-
-
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
@@ -145,6 +138,11 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 		base.OnMove(eventData);
 	}
 
+
+
+	Transform  parent;
+	ScrollRect scrollRect;
+
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		parent = transform.parent;
 		while (parent) {
@@ -166,6 +164,8 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 			}
 		}
 	}
+
+	
 
 	public void Refresh() {
 		if (m_PositiveRect) m_PositiveRect.gameObject.SetActive( Value);

@@ -1,9 +1,9 @@
-using System;
-
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+
+using System;
 
 using UnityEngine.Localization.Components;
 using TMPro;
@@ -103,13 +103,6 @@ public class CustomButton : Selectable, IPointerClickHandler {
 
 
 
-	// Cached Variables
-
-	Transform  parent;
-	ScrollRect scrollRect;
-
-
-
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
@@ -122,6 +115,11 @@ public class CustomButton : Selectable, IPointerClickHandler {
 			OnClick?.Invoke();
 		}
 	}
+
+
+
+	Transform  parent;
+	ScrollRect scrollRect;
 
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		parent = transform.parent;
@@ -144,6 +142,8 @@ public class CustomButton : Selectable, IPointerClickHandler {
 			}
 		}
 	}
+
+
 
 	public void SetLocalizeText(string table, string tableEntry) {
 		if (LocalizeStringEvent) LocalizeStringEvent.StringReference.SetReference(table, tableEntry);

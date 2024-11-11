@@ -98,6 +98,9 @@
         },
         {
             "m_Id": "7b228677fbb4434f9529a2acd8912840"
+        },
+        {
+            "m_Id": "2ae45d42fa3f4b1e9e2542a0e496945c"
         }
     ],
     "m_GroupDatas": [],
@@ -623,6 +626,9 @@
             },
             {
                 "m_Id": "dc1667799aac423fa1d789e58f51a32a"
+            },
+            {
+                "m_Id": "2ae45d42fa3f4b1e9e2542a0e496945c"
             }
         ]
     },
@@ -942,7 +948,7 @@
     "m_ZWriteControl": 1,
     "m_AlphaMode": 0,
     "m_RenderFace": 2,
-    "m_AlphaClip": false,
+    "m_AlphaClip": true,
     "m_CastShadows": true,
     "m_ReceiveShadows": true,
     "m_DisableTint": false,
@@ -1167,6 +1173,40 @@
         "e32": 0.0,
         "e33": 1.0
     }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
+    "m_ObjectId": "2ae45d42fa3f4b1e9e2542a0e496945c",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "SurfaceDescription.AlphaClipThreshold",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.0,
+            "height": 0.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "62972999279d4c85aa19c83c15e01098"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_SerializedDescriptor": "SurfaceDescription.AlphaClipThreshold"
 }
 
 {
@@ -1781,6 +1821,21 @@
 {
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "62972999279d4c85aa19c83c15e01098",
+    "m_Id": 0,
+    "m_DisplayName": "Alpha Clip Threshold",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "AlphaClipThreshold",
+    "m_StageCapability": 2,
+    "m_Value": 0.009999999776482582,
+    "m_DefaultValue": 0.5,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "68f95cf8a96c4baf8c649f54a2162504",
     "m_Id": 1,
     "m_DisplayName": "R",
@@ -1897,6 +1952,7 @@
     "m_SourceType": 1,
     "m_FunctionName": "ProceduralSetup",
     "m_FunctionSource": "",
+    "m_FunctionSourceUsePragmas": true,
     "m_FunctionBody": "#pragma instancing_options procedural:Setup\n\nOut = In;\nOut_Tiling = In_Tiling;\nOut_Offset = In_Offset;\nOut_Color = In_Color;\nOut_Emission = In_Emission;\nOut_Alpha = In_Alpha;"
 }
 
@@ -3091,9 +3147,9 @@
     "m_ShaderOutputName": "Specular",
     "m_StageCapability": 2,
     "m_Value": {
-        "x": 0.5,
-        "y": 0.5,
-        "z": 0.5
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
     },
     "m_DefaultValue": {
         "x": 0.5,
@@ -3165,6 +3221,7 @@
     "m_SourceType": 0,
     "m_FunctionName": "Passthrough",
     "m_FunctionSource": "54e23d76f2de1774b817a4a5dec72bf9",
+    "m_FunctionSourceUsePragmas": true,
     "m_FunctionBody": "Enter function body here..."
 }
 

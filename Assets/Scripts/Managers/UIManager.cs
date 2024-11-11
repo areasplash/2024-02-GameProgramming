@@ -1,12 +1,12 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
@@ -124,7 +124,7 @@ using UnityEngine.Localization.Settings;
 
 public class UIManager : MonoSingleton<UIManager> {
 	
-	// Serialized Fields
+	// Fields
 
 	[SerializeField] Canvas m_MainMenuCanvas;
 	[SerializeField] Canvas m_GameCanvas;
@@ -320,22 +320,9 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
-	// Cached Variables
+	// Methods
 
 	readonly Stack<CanvasType> stack = new();
-
-	string defaultMoveUp;
-	string defaultMoveLeft;
-	string defaultMoveDown;
-	string defaultMoveRight;
-	string defaultInteract;
-	string defaultCancel;
-
-	Selectable selectable;
-
-
-
-	// Methods
 
 	void SaveSelected() => LastSelected = FirstSelected? Selected : null;
 	void LoadSelected() => Selected = LastSelected? LastSelected : FirstSelected;
@@ -387,10 +374,10 @@ public class UIManager : MonoSingleton<UIManager> {
 		SaveSelected();
 		switch (HighestCanvas) {
 			case CanvasType.MainMenu:
-				OpenDialog("Quit", "Quit Message", "Quit", "Cancel");
-				if (dialogPositive) {
-					dialogPositive.OnClick.RemoveAllListeners();
-					dialogPositive.OnClick.AddListener(() => Quit());
+				OpenConfirmation("Quit", "Quit Message", "Quit", "Cancel");
+				if (confirmationPositive) {
+					confirmationPositive.OnClick.RemoveAllListeners();
+					confirmationPositive.OnClick.AddListener(() => Quit());
 				}
 				break;
 			
@@ -441,6 +428,13 @@ public class UIManager : MonoSingleton<UIManager> {
 	}
 
 
+
+	string defaultMoveUp;
+	string defaultMoveLeft;
+	string defaultMoveDown;
+	string defaultMoveRight;
+	string defaultInteract;
+	string defaultCancel;
 
 	List<string> ToKeys(string str) {
 		List<string> keys = new();
@@ -518,6 +512,8 @@ public class UIManager : MonoSingleton<UIManager> {
 		OpenMainMenu();
 	}
 
+	Selectable selectable;
+
 	void Update() {
 		if (InputManager.I.GetKeyDown(KeyAction.Move)) {
 			if (!Selected) Selected = FirstSelected;
@@ -545,8 +541,6 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Main Menu Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	// Methods
-
 	public void OpenMainMenu() {
 		// Fade Out
 		Open(CanvasType.MainMenu);
@@ -558,8 +552,6 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ------------------------------------------------------------------------------------------------
 	// Game Canvas
 	// ------------------------------------------------------------------------------------------------
-
-	// Methods
 
 	public void OpenGame() {
 		// Fade Out
@@ -573,8 +565,6 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Dialogue Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	// Methods
-
 	public void OpenDialogue() {
 		Open(CanvasType.Dialogue);
 	}
@@ -584,8 +574,6 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ------------------------------------------------------------------------------------------------
 	// Menu Canvas
 	// ------------------------------------------------------------------------------------------------
-
-	// Methods
 
 	public void OpenMenu() {
 		Open(CanvasType.Menu);
@@ -597,26 +585,13 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Settings Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	// Cached Variables
-
-	SettingsStepper language;
-	SettingsStepper screenResolution;
-	
-	int fullScreen;
-	Vector2Int windowResolutionSize;
-	Vector2Int screenResolutionSize;
-
-	readonly SettingsButton[] action = new SettingsButton[Enum.GetValues(typeof(KeyAction)).Length];
-
-
-
-	// Methods
-
 	public void OpenSettings() {
 		Open(CanvasType.Settings);
 	}
 
 
+
+	SettingsStepper language;
 
 	public void UpdateLanguage(SettingsStepper stepper = null) {
 		if (stepper) language = stepper;
@@ -640,19 +615,22 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
+	int        fullScreen;
+	Vector2Int windowedResolutionSize;
+
 	public void UpdateFullScreen(SettingsToggle toggle = null) {
 		if (fullScreen == default) fullScreen = Screen.fullScreen ? 4 : 3;
 		if (toggle) switch (fullScreen) {
 			case  4: toggle.Value = true;  break;
 			case  3: toggle.Value = false; break;
 			default:
-				Vector2Int resolution = windowResolutionSize;
+				Vector2Int resolution = windowedResolutionSize;
 				if (toggle.Value) {
 					resolution.x = Screen.currentResolution.width;
 					resolution.y = Screen.currentResolution.height;
-					windowResolutionSize = new Vector2Int(Screen.width, Screen.height);
+					windowedResolutionSize = new Vector2Int(Screen.width, Screen.height);
 				}
-				else resolution = windowResolutionSize;
+				else resolution = windowedResolutionSize;
 				Screen.SetResolution(resolution.x, resolution.y, toggle.Value);
 				break;
 		}
@@ -664,6 +642,8 @@ public class UIManager : MonoSingleton<UIManager> {
 	}
 
 
+
+	SettingsStepper screenResolution;
 
 	public void UpdateScreenResolution(SettingsStepper stepper = null) {
 		if (stepper) screenResolution = stepper;
@@ -689,8 +669,10 @@ public class UIManager : MonoSingleton<UIManager> {
 				size.x = (int)Mathf.Ceil(Screen.width  / multiplier);
 				size.y = (int)Mathf.Ceil(Screen.height / multiplier);
 			}
-			CameraManager.I.RenderTextureSize = size;
-			CameraManager.I. OrthographicSize = size.y / 2 / PixelPerUnit;
+			if (size != Vector2Int.zero) {
+				CameraManager.I.RenderTextureSize = size;
+				CameraManager.I. OrthographicSize = size.y / 2 / PixelPerUnit;
+			}
 		}
 		if (screenResolution) {
 			string text       = $"{Screen.width} x {Screen.height}";
@@ -722,6 +704,8 @@ public class UIManager : MonoSingleton<UIManager> {
 		Screen.SetResolution(resolution.x, resolution.y, Screen.fullScreen);
 	}
 
+	Vector2Int screenResolutionSize;
+
 	void PeekScreenResolution() {
 		if (screenResolutionSize.x != Screen.width || screenResolutionSize.y != Screen.height) {
 			screenResolutionSize = new Vector2Int(Screen.width, Screen.height);
@@ -740,6 +724,8 @@ public class UIManager : MonoSingleton<UIManager> {
 	public void SetMouseSensitivity(float value) => MouseSensitivity = value;
 
 
+
+	readonly SettingsButton[] action = new SettingsButton[Enum.GetValues(typeof(KeyAction)).Length];
 
 	public void UpdateMoveUp   (SettingsButton button) => UpdateKeys(button, KeyAction.MoveUp);
 	public void UpdateMoveLeft (SettingsButton button) => UpdateKeys(button, KeyAction.MoveLeft);
@@ -769,9 +755,9 @@ public class UIManager : MonoSingleton<UIManager> {
 		StartCoroutine(SetKeysCoroutine(keyAction));
 	}
 	IEnumerator SetKeysCoroutine(KeyAction keyAction) {
-		OpenDialog("Binding", "Binding Message", "Apply Binding", "Cancel Binding");
+		OpenConfirmation("Binding", "Binding Message", "Apply Binding", "Cancel Binding");
 		List<string> keys = new();
-		if (dialogPositive) dialogPositive.OnClick.AddListener(() => {
+		if (confirmationPositive) confirmationPositive.OnClick.AddListener(() => {
 			InputManager.I.SetKeysBinding(keyAction, keys);
 		});
 		InputManager.I.RecordKeys();
@@ -782,7 +768,7 @@ public class UIManager : MonoSingleton<UIManager> {
 					break;
 				case "enter":
 					if (!Selected || !Selected.TryGetComponent(out selectable)) {
-						if (dialogPositive) dialogPositive.OnClick.Invoke();
+						if (confirmationPositive) confirmationPositive.OnClick.Invoke();
 					}
 					break;
 				case "escape":
@@ -795,7 +781,7 @@ public class UIManager : MonoSingleton<UIManager> {
 						str = str.Replace("leftArrow",  "←");
 						str = str.Replace("downArrow",  "↓");
 						str = str.Replace("rightArrow", "→");
-						if (dialogMessage) dialogMessage.Text = str;
+						if (confirmationMessage) confirmationMessage.Text = str;
 					}
 					break;
 			}
@@ -807,8 +793,8 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 	public void SetDeleteAllData() {
-		OpenDialog("Delete All Data", "Delete All Data Message", "Delete", "Cancel");
-		if (dialogPositive) dialogPositive.OnClick.AddListener(() => {
+		OpenConfirmation("Delete All Data", "Delete All Data Message", "Delete", "Cancel");
+		if (confirmationPositive) confirmationPositive.OnClick.AddListener(() => {
 			PlayerPrefs.DeleteAll();
 			Start();
 		});
@@ -820,35 +806,29 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Dialog Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	// Cached Variables
+	CustomText   confirmationTitle;
+	CustomText   confirmationMessage;
+	CustomButton confirmationPositive;
+	CustomButton confirmationNegative;
 
-	CustomText   dialogTitle;
-	CustomText   dialogMessage;
-	CustomButton dialogPositive;
-	CustomButton dialogNegative;
+	public void UpdateConfirmationTitle   (CustomText   text  ) => confirmationTitle    = text;
+	public void UpdateConfirmationMessage (CustomText   text  ) => confirmationMessage  = text;
+	public void UpdateConfirmationPositive(CustomButton button) => confirmationPositive = button;
+	public void UpdateConfirmationNegative(CustomButton button) => confirmationNegative = button;
 
-
-
-	// Methods
-
-	public void UpdateDialogTitle   (CustomText   text  ) => dialogTitle    = text;
-	public void UpdateDialogMessage (CustomText   text  ) => dialogMessage  = text;
-	public void UpdateDialogPositive(CustomButton button) => dialogPositive = button;
-	public void UpdateDialogNegative(CustomButton button) => dialogNegative = button;
-
-	public void OpenDialog(string arg0, string arg1, string arg2, string arg3) {
+	public void OpenConfirmation(string arg0, string arg1, string arg2, string arg3) {
 		Open(CanvasType.Confirmation);
-		if (dialogTitle   ) dialogTitle  .SetLocalizeText("UI Table", arg0);
-		if (dialogMessage ) dialogMessage.SetLocalizeText("UI Table", arg1);
-		if (dialogPositive) {
-			dialogPositive.SetLocalizeText("UI Table", arg2);
-			dialogPositive.OnClick.RemoveAllListeners();
-			dialogPositive.OnClick.AddListener(() => Back());
+		if (confirmationTitle   ) confirmationTitle  .SetLocalizeText("UI Table", arg0);
+		if (confirmationMessage ) confirmationMessage.SetLocalizeText("UI Table", arg1);
+		if (confirmationPositive) {
+			confirmationPositive.SetLocalizeText("UI Table", arg2);
+			confirmationPositive.OnClick.RemoveAllListeners();
+			confirmationPositive.OnClick.AddListener(() => Back());
 		}
-		if (dialogNegative) {
-			dialogNegative.SetLocalizeText("UI Table", arg3);
-			dialogNegative.OnClick.RemoveAllListeners();
-			dialogNegative.OnClick.AddListener(() => Back());
+		if (confirmationNegative) {
+			confirmationNegative.SetLocalizeText("UI Table", arg3);
+			confirmationNegative.OnClick.RemoveAllListeners();
+			confirmationNegative.OnClick.AddListener(() => Back());
 		}
 	}
 
@@ -858,14 +838,8 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Fade Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	// Cached Variables
-
 	int   fadeState;
 	Image fadeImage;
-
-
-
-	// Methods
 
 	public void FadeOut() {
 		if (fadeImage || m_FadeCanvas.TryGetComponent(out fadeImage)) {

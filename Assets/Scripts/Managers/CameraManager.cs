@@ -68,7 +68,7 @@ using UnityEngine.UI;
 			EndHorizontal();
 			Space();
 			LabelField("Camera Transition", EditorStyles.boldLabel);
-			I.CommonMask     = MaskField("Common Mask",     I.CommonMask,   LayerNames);
+			I.DefaultMask    = MaskField("Default Mask",    I.DefaultMask,  LayerNames);
 			I.ExteriorMask   = MaskField("Exterior Mask",   I.ExteriorMask, LayerNames);
 			I.InteriorMask   = MaskField("Interior Mask",   I.InteriorMask, LayerNames);
 			I.TransitionTime = Slider   ("Transition Time", I.TransitionTime, 0, 3);
@@ -109,7 +109,7 @@ using UnityEngine.UI;
 
 public class CameraManager : MonoSingleton<CameraManager> {
 
-	// Serialized Fields
+	// Fields
 
 	[SerializeField] Camera     m_MainCamera;
 	[SerializeField] Camera     m_FadeCamera;
@@ -209,7 +209,9 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		}
 	}
 
-	public int CommonMask {
+	
+
+	public int DefaultMask {
 		get => m_CommonLayer;
 		set => m_CommonLayer = value;
 	}
@@ -268,17 +270,22 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 
 
-	// Cached Variables
+	// Methods
+
+	public Ray ScreenPointToRay(Vector3 position) {
+		if (MainCamera) {
+			float multiplier = RenderTextureSize.x / Screen.width;
+			Vector3 viewport = MainCamera.ScreenToViewportPoint(position * multiplier);
+			return MainCamera.ViewportPointToRay(viewport);
+		}
+		return default;
+	}
+
+	
 
 	static float   shakeStrength;
 	static float   shakeDuration;
 	static Vector3 shakeDirection;
-
-	Vector3 position;
-
-
-
-	// Methods
 
 	public void ShakeCamera(float strength, float duration) {
 			shakeStrength = strength;
@@ -296,22 +303,11 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 
 
-	public Ray ScreenPointToRay(Vector3 position) {
-		if (MainCamera) {
-			float multiplier = RenderTextureSize.x / Screen.width;
-			Vector3 viewport = MainCamera.ScreenToViewportPoint(position * multiplier);
-			return MainCamera.ViewportPointToRay(viewport);
-		}
-		return default;
-	}
-
-	
-
 	// Lifecycle
 
-	void Start() => Projection = Projection;
+	Vector3 position;
 
-	void LateUpdate() {
+	void UpdateTransform() {
 		if (Target) TargetPosition = Target.transform.position;
 		if (!FreezePosition[0] || !FreezePosition[1] || !FreezePosition[2]) {
 			Vector3 a = transform.position;
@@ -338,32 +334,59 @@ public class CameraManager : MonoSingleton<CameraManager> {
 			positionInversed.x = Mathf.Round(positionInversed.x * pixelPerUnit) / pixelPerUnit;
 			positionInversed.y = Mathf.Round(positionInversed.y * pixelPerUnit) / pixelPerUnit;
 			positionInversed.z = Mathf.Round(positionInversed.z * pixelPerUnit) / pixelPerUnit;
-			transform.position = position = transform.TransformDirection(positionInversed);
+			//transform.position = position = transform.TransformDirection(positionInversed);
 		}
 	}
 
-	
 
-	void OnTriggerStay(Collider collider) {
+
+	void BeginDetectLayer() {
+		CurrentMask = DefaultMask;
+	}
+
+	void DetectLayer(Collider collider) {
 		if (collider.isTrigger) CurrentMask |= 1 << collider.gameObject.layer;
 	}
 
-	void FixedUpdate() {
+	void EndDetectLayer() {
 		if ((CurrentMask & ExteriorMask) == 0 && (CurrentMask & InteriorMask) == 0) {
 			CurrentMask |= ExteriorMask;
 		}
-		if (FadeRawImage.color.a == 0) FadeCamera.cullingMask = CurrentMask;
-		{
+	}
+
+	void UpdateLayer() {
+		if (FadeRawImage.color.a == 0) {
+			if (MainCamera.cullingMask != CurrentMask) FadeCamera.cullingMask = CurrentMask;
+		}
+		if (FadeCamera.cullingMask != 0) {
 			float delta = Time.fixedDeltaTime / TransitionTime;
-			delta *= (MainCamera.cullingMask != FadeCamera.cullingMask) ? 1 : -1;
 			float alpha = Mathf.Clamp01(FadeRawImage.color.a + delta);
 			FadeRawImage.color = new Color(1, 1, 1, alpha);
 		}
 		if (FadeRawImage.color.a == 1) {
 			MainCamera.cullingMask = FadeCamera.cullingMask;
+			FadeCamera.cullingMask = 0;
 			FadeRawImage.color = new Color(1, 1, 1, 0);
 		}
-		CurrentMask = CommonMask;
+	}
+
+
+
+	void Start() => Projection = Projection;
+
+	void LateUpdate() {
+		UpdateTransform();
+	}
+
+	void FixedUpdate() {
 		UpdateCameraShake();
+
+		EndDetectLayer();
+		UpdateLayer();
+		BeginDetectLayer();
+	}
+
+	void OnTriggerStay(Collider collider) {
+		DetectLayer(collider);
 	}
 }

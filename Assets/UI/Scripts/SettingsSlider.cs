@@ -1,9 +1,9 @@
-using System;
-
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+
+using System;
 
 using TMPro;
 
@@ -161,13 +161,6 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 
 
-	// Cached Variables
-
-	Transform  parent;
-	ScrollRect scrollRect;
-
-
-
 	// Methods
 
 	public void OnPointerClick(PointerEventData eventData) {
@@ -208,6 +201,11 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		base.OnMove(eventData);
 	}
 
+
+
+	Transform  parent;
+	ScrollRect scrollRect;
+
 	bool TryGetComponentInParent<T>(out T component) where T : Component {
 		parent = transform.parent;
 		while (parent) {
@@ -229,6 +227,8 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 			}
 		}
 	}
+
+	
 
 	public void Refresh() {
 		if (m_HandleRect) {
