@@ -2,7 +2,6 @@ using UnityEngine;
 using Unity.Collections;
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 #if UNITY_EDITOR
@@ -67,9 +66,9 @@ using System.Runtime.InteropServices;
 // ====================================================================================================
 
 struct CreatureData {
-	public Vector3 position;
-	public Vector4 rotation;
-	public Vector3 scale;
+	public Vector3    position;
+	public Quaternion rotation;
+	public Vector3    scale;
 
 	public Vector2 tiling;
 	public Vector2 offset;
@@ -89,20 +88,26 @@ struct ParticleData {
 	public float   alpha;
 }
 
+struct ShadowData {
+	public Vector3    position;
+	public Quaternion rotation;
+	public Vector3    scale;
+}
+
 
 
 public class DrawManager : MonoBehaviour {
 
 	// Fields
 
-	[SerializeField] Mesh     m_SphereMesh;
-	[SerializeField] Material m_ShadowMaterial;
-
 	[SerializeField] Mesh       m_QuadMesh;
 	[SerializeField] Material   m_CreatureMaterial;
 	[SerializeField] Material   m_ParticleMaterial;
 	[SerializeField] AtlasMapSO m_CreatureAtlasMap;
 	[SerializeField] AtlasMapSO m_ParticleAtlasMap;
+
+	[SerializeField] Mesh     m_SphereMesh;
+	[SerializeField] Material m_ShadowMaterial;
 
 
 
@@ -111,90 +116,76 @@ public class DrawManager : MonoBehaviour {
 	GPUBatcher<CreatureData> creatureBatcher;
 	GPUBatcher<ParticleData> particleBatcher;
 
+	GPUBatcher<ShadowData> shadowBatcher;
+
 	void ConstructGPUBatcher() {
 		creatureBatcher = new GPUBatcher<CreatureData>(m_CreatureMaterial, m_QuadMesh, 0);
 		particleBatcher = new GPUBatcher<ParticleData>(m_ParticleMaterial, m_QuadMesh, 0);
 		creatureBatcher.param.layer = LayerMask.NameToLayer("Entity");
 		particleBatcher.param.layer = LayerMask.NameToLayer("Entity");
+		creatureBatcher.param.receiveShadows = false;
+		particleBatcher.param.receiveShadows = false;
+		creatureBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		particleBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+		shadowBatcher = new GPUBatcher<ShadowData>(m_ShadowMaterial, m_SphereMesh, 0);
+		shadowBatcher.param.layer = LayerMask.NameToLayer("Entity");
+		shadowBatcher.param.receiveShadows = false;
+		shadowBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
 	}
 
 	void DestructGPUBatcher() {
 		creatureBatcher?.Dispose();
 		particleBatcher?.Dispose();
+
+		shadowBatcher?.Dispose();
 	}
 
-	void Draw() {
-		Creature[] creatures = FindObjectsByType<Creature>(FindObjectsSortMode.None);
-		float[] alpha = new float[creatures.Length];
 
-		Vector3 cameraRotation = CameraManager.I.Rotation;
-		foreach (var creature in creatures) {
-			int direction = 0;
-			//Quaternion rotation = creature.transform.rotation;
-			//float y = 0.0f + 2.0f * (rotation.y * rotation.w + rotation.x * rotation.z);
-			//float x = 1.0f - 2.0f * (rotation.y * rotation.y + rotation.x * rotation.x);
-			//int yaw = (int)Mathf.Repeat(Mathf.Atan2(y, x) * 180f / Mathf.PI - cameraRotation.y + 540f, 256);
-			int yaw = (int)(creature.transform.eulerAngles.y - cameraRotation.y / 360f * 256f);
-			int i;
-			bool xflip = false;
-			switch (GetCreatureSize(creature.CreatureType, creature.AnimationType)) {
-				case  1: i = (yaw +  0) / 128 %  2; direction = 0 < i ?  2 - i : i; xflip = 0 < i; break;
-				case  2: i = (yaw +  0) / 128 %  2; direction = i;                  xflip = false; break;
-				case  3: i = (yaw + 32) /  64 %  4; direction = 2 < i ?  4 - i : i; xflip = 2 < i; break;
-				case  4: i = (yaw + 32) /  64 %  4; direction = i;                  xflip = false; break;
-				case  5:
-				case  6: 
-				case  7: i = (yaw + 16) /  32 %  8; direction = 4 < i ?  8 - i : i; xflip = 4 < i; break;
-				case  8: i = (yaw + 16) /  32 %  8; direction = i;                  xflip = false; break;
-				case  9:
-				case 10:
-				case 11:
-				case 12:
-				case 13:
-				case 14:
-				case 15: i = (yaw +  8) /  16 % 16; direction = 8 < i ? 16 - i : i; xflip = 4 < i; break;
-				case 16: i = (yaw +  8) /  16 % 16; direction = i;                  xflip = false; break;
-			}
-			int count = GetCreatureSize(creature.CreatureType, creature.AnimationType, direction);
-			int total = GetCreatureSize(creature.CreatureType, creature.AnimationType, direction, count - 1);
-			int m = 0;
-			int l = 0;
-			int r = count - 1;
-			int iValue = (int)(creature.Offset * 1000) % (total == 0 ? 1 : total);
-			int lValue;
-			int rValue;
-			while (l <= r) {
-				m = (l + r) / 2;
-				lValue = GetCreatureSize(creature.CreatureType, creature.AnimationType, direction, m - 1);
-				rValue = GetCreatureSize(creature.CreatureType, creature.AnimationType, direction, m + 0);
-				if      (iValue < lValue) r = m - 1;
-				else if (rValue < iValue) l = m + 1;
-				else break;
-			}
-			//Debug.Log("yaw: " + yaw + " direction: " + direction + " xflip: " + xflip);
-			//Debug.Log($"{creature.CreatureType}_{creature.AnimationType}_{direction}_{m}");
-			CreatureData drawData = GetCreatureData(creature.CreatureType, creature.AnimationType, direction, m);
-			drawData.position = creature.transform.position;
-			drawData.rotation = ToVector4(cameraRotation);
-			if (xflip) drawData.scale.y *= -1;
-			creatureBatcher.Add(drawData);
+
+
+	float GetYaw(Quaternion quaternion) {
+		float y = 0.0f + 2.0f * (quaternion.y * quaternion.w + quaternion.x * quaternion.z);
+		float x = 1.0f - 2.0f * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
+		return Mathf.Atan2(y, x) * Mathf.Rad2Deg;
+	}
+
+	void GetDirection(float relativeYaw, int numDirections, out int direction, out bool xFlip) {
+		xFlip = false;
+		int i = 0;
+		int yaw = (int)Mathf.Repeat(relativeYaw / 360f * 256f, 256);
+		switch (numDirections) {
+			case  1: i = (yaw +  0) / 128; if (0 < i) { i =  1 - i; xFlip = true; } break;
+			case  2: i = (yaw +  0) / 128;                                          break;
+			case  3: i = (yaw + 32) /  64; if (2 < i) { i =  4 - i; xFlip = true; } break;
+			case  4: i = (yaw + 32) /  64;                                          break;
+			case  5:
+			case  6:
+			case  7: i = (yaw + 16) /  32; if (4 < i) { i =  8 - i; xFlip = true; } break;
+			case  8: i = (yaw + 16) /  32;                                          break;
+			case  9:
+			case 10:
+			case 11:
+			case 12:
+			case 13:
+			case 14:
+			case 15: i = (yaw +  8) /  16; if (8 < i) { i = 16 - i; xFlip = true; } break;
+			case 16: i = (yaw +  8) /  16;                                          break;
 		}
-
-		creatureBatcher.Draw();
-		particleBatcher.Draw();
-
-		creatureBatcher.Clear();
-		particleBatcher.Clear();
+		direction = i;
 	}
 
-	Vector4 ToVector4(Vector3 eulerAngle) {
-		Quaternion quaternion = Quaternion.Euler(eulerAngle);
-		return new Vector4(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-	}
-
-	Vector4 ToVector4(Quaternion quaternion) {
-		return new Vector4(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+	int GetIndex(int count, float value, Func<int, int> func) {
+		int m = 0;
+		int l = 0;
+		int r = count - 1;
+		while (l <= r) {
+			m = (l + r) / 2;
+			if      (value < func(m - 1)) r = m - 1;
+			else if (func(m + 0) < value) l = m + 1;
+			else break;
+		}
+		return m;
 	}
 
 
@@ -204,6 +195,8 @@ public class DrawManager : MonoBehaviour {
 	readonly HashMap<int, CreatureData> creatureDataMap = new HashMap<int, CreatureData>();
 	readonly HashMap<int, ParticleData> particleDataMap = new HashMap<int, ParticleData>();
 
+
+
 	int GetCreatureSize(
 		CreatureType  creatureType  = (CreatureType )(-1),
 		AnimationType animationType = (AnimationType)(-1),
@@ -212,8 +205,8 @@ public class DrawManager : MonoBehaviour {
 	) => creatureSizeMap.TryGetValue(
 		((((int)creatureType  + 1) & 0xff) << 24) |
 		((((int)animationType + 1) & 0xff) << 16) |
-		(((direction          + 1) & 0xff) <<  8) |
-		(((index              + 1) & 0xff) <<  0),
+		(((     direction     + 1) & 0xff) <<  8) |
+		(((     index         + 1) & 0xff) <<  0),
 		out int count) ? count : 0;
 	
 	CreatureData GetCreatureData(
@@ -224,26 +217,34 @@ public class DrawManager : MonoBehaviour {
 	) => creatureDataMap.TryGetValue(
 		((((int)creatureType  + 1) & 0xff) << 24) |
 		((((int)animationType + 1) & 0xff) << 16) |
-		(((direction          + 1) & 0xff) <<  8) |
-		(((index              + 1) & 0xff) <<  0),
-		out CreatureData data) ? data : new CreatureData {
-			position = new Vector3(0, 0, 0),
-			rotation = new Vector4(0, 0, 0, 1),
-			scale    = new Vector3(1, 1, 1),
-			tiling   = new Vector2(1, 1),
-			offset   = new Vector2(0, 0),
-			color    = new Vector3(1, 1, 1),
-			emission = 0,
-			alpha    = 1
-		};
+		(((     direction     + 1) & 0xff) <<  8) |
+		(((     index         + 1) & 0xff) <<  0),
+		out CreatureData data) ? data : new CreatureData();
 
-	void LoadMap() {
-		float PixelPerUnit = UIManager.I.PixelPerUnit;
+	int GetParticleSize(
+		ParticleType particleType = (ParticleType)(-1),
+		int          index        = -1
+	) => particleSizeMap.TryGetValue(
+		((((int)particleType + 1) & 0xff) << 24) |
+		(((     index        + 1) & 0xff) << 16),
+		out int count) ? count : 0;
+	
+	ParticleData GetParticleData(
+		ParticleType particleType,
+		int          index
+	) => particleDataMap.TryGetValue(
+		((((int)particleType + 1) & 0xff) << 24) |
+		(((     index        + 1) & 0xff) << 16),
+		out ParticleData data) ? data : new ParticleData();
 
-		// CreatureType _ AnimationType _ Direction _ Index _ Duration
+
+
+	void LoadCreatureMap() {
+		float pixelPerUnit = UIManager.I.PixelPerUnit;
 		creatureSizeMap.Clear();
 		creatureDataMap.Clear();
 		if (m_CreatureAtlasMap) foreach (var pair in m_CreatureAtlasMap.atlasMap) {
+			// CreatureType_AnimationType_Direction_Index_Duration
 			string[] split = pair.Key.Split('_');
 			if (split.Length != 5) continue;
 
@@ -271,8 +272,8 @@ public class DrawManager : MonoBehaviour {
 
 			creatureDataMap.Add(key[4], new CreatureData() {
 				position = new Vector3(0, 0, 0),
-				rotation = new Vector4(0, 0, 0, 1),
-				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / PixelPerUnit,
+				rotation = new Quaternion(0, 0, 0, 1),
+				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / pixelPerUnit,
 
 				tiling   = new Vector2(pair.Value.tiling.x, pair.Value.tiling.y),
 				offset   = new Vector2(pair.Value.offset.x, pair.Value.offset.y),
@@ -281,11 +282,14 @@ public class DrawManager : MonoBehaviour {
 				alpha    = 1,
 			});
 		}
+	}
 
-		// ParticleType _ Index _ Duration
+	void LoadParticleMap() {
+		float pixelPerUnit = UIManager.I.PixelPerUnit;
 		particleSizeMap.Clear();
 		particleDataMap.Clear();
 		if (m_ParticleAtlasMap) foreach (var pair in m_ParticleAtlasMap.atlasMap) {
+			// ParticleType_Index_Duration
 			string[] split = pair.Key.Split('_');
 			if (split.Length != 3) continue;
 
@@ -308,7 +312,7 @@ public class DrawManager : MonoBehaviour {
 
 			particleDataMap.Add(key[2], new ParticleData() {
 				position = new Vector3(0, 0, 0),
-				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / PixelPerUnit,
+				scale    = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / pixelPerUnit,
 
 				tiling   = new Vector2(pair.Value.tiling.x, pair.Value.tiling.y),
 				offset   = new Vector2(pair.Value.offset.x, pair.Value.offset.y),
@@ -321,13 +325,66 @@ public class DrawManager : MonoBehaviour {
 
 
 
+	Func<int, int> func;
+
+	CreatureData GetCreatureData(Creature creature, float cameraYaw = 0) {
+		CreatureType  creatureType  = creature.CreatureType;
+		AnimationType animationType = creature.AnimationType;
+
+		float relativeYaw   = GetYaw(creature.transform.rotation) - cameraYaw;
+		int   numDirections = GetCreatureSize(creatureType, animationType);
+		GetDirection(relativeYaw, numDirections, out int direction, out bool xflip);
+
+		int count = GetCreatureSize(creatureType, animationType, direction);
+		int total = GetCreatureSize(creatureType, animationType, direction, count - 1);
+		int value = (int)(creature.Offset * 1000) % total;
+		func = i => GetCreatureSize(creatureType, animationType, direction, i);
+		int index = GetIndex(count, value, func);
+
+		CreatureData data = GetCreatureData(creatureType, animationType, direction, index);
+		data.position = creature.transform.position;
+		data.rotation = CameraManager.I.transform.rotation;
+		if (xflip) {
+			data.offset.x += data.tiling.x;
+			data.tiling.x *= -1;
+		}
+		return data;
+	}
+
+	void DrawCreature() {
+		Quaternion cameraRotation = CameraManager.I.transform.rotation;
+		float cameraYaw = GetYaw(cameraRotation);
+
+		Creature[] creatures = FindObjectsByType<Creature>(FindObjectsSortMode.None);
+		foreach (Creature creature in creatures) {
+			creatureBatcher.Add(GetCreatureData(creature, cameraYaw));
+			shadowBatcher  .Add(new ShadowData() {
+				position = creature.transform.position,
+				rotation = cameraRotation,
+				scale    = creature.transform.localScale,
+			});
+		}
+		creatureBatcher.Draw();
+		shadowBatcher  .Draw();
+		creatureBatcher.Clear();
+		shadowBatcher  .Clear();
+	}
+
+
+
 	// Lifecycle
 
 	void OnEnable() => ConstructGPUBatcher();
 	void OnDisable() => DestructGPUBatcher();
 
-	void Start() => LoadMap();
-	void LateUpdate() => Draw();
+	void Start() {
+		LoadCreatureMap();
+		LoadParticleMap();
+	}
+
+	void LateUpdate() {
+		DrawCreature();
+	}
 }
 
 
