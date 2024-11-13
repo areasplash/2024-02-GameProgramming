@@ -89,14 +89,14 @@ struct ParticleData {
 }
 
 struct ShadowData {
-	public Vector3    position;
-	public Quaternion rotation;
-	public Vector3    scale;
+	public Vector3 position;
+	public Vector4 rotation;
+	public Vector3 scale;
 }
 
 
 
-public class DrawManager : MonoBehaviour {
+public class DrawManager : MonoSingleton<DrawManager> {
 
 	// Fields
 
@@ -112,37 +112,6 @@ public class DrawManager : MonoBehaviour {
 
 
 	// Methods
-	
-	GPUBatcher<CreatureData> creatureBatcher;
-	GPUBatcher<ParticleData> particleBatcher;
-
-	GPUBatcher<ShadowData> shadowBatcher;
-
-	void ConstructGPUBatcher() {
-		creatureBatcher = new GPUBatcher<CreatureData>(m_CreatureMaterial, m_QuadMesh, 0);
-		particleBatcher = new GPUBatcher<ParticleData>(m_ParticleMaterial, m_QuadMesh, 0);
-		creatureBatcher.param.layer = LayerMask.NameToLayer("Entity");
-		particleBatcher.param.layer = LayerMask.NameToLayer("Entity");
-		creatureBatcher.param.receiveShadows = false;
-		particleBatcher.param.receiveShadows = false;
-		creatureBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		particleBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-		shadowBatcher = new GPUBatcher<ShadowData>(m_ShadowMaterial, m_SphereMesh, 0);
-		shadowBatcher.param.layer = LayerMask.NameToLayer("Entity");
-		shadowBatcher.param.receiveShadows = false;
-		shadowBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-	}
-
-	void DestructGPUBatcher() {
-		creatureBatcher?.Dispose();
-		particleBatcher?.Dispose();
-
-		shadowBatcher?.Dispose();
-	}
-
-
-
 
 	float GetYaw(Quaternion quaternion) {
 		float y = 0.0f + 2.0f * (quaternion.y * quaternion.w + quaternion.x * quaternion.z);
@@ -194,8 +163,6 @@ public class DrawManager : MonoBehaviour {
 	readonly HashMap<int, int>          particleSizeMap = new HashMap<int, int>();
 	readonly HashMap<int, CreatureData> creatureDataMap = new HashMap<int, CreatureData>();
 	readonly HashMap<int, ParticleData> particleDataMap = new HashMap<int, ParticleData>();
-
-
 
 	int GetCreatureSize(
 		CreatureType  creatureType  = (CreatureType )(-1),
@@ -348,24 +315,60 @@ public class DrawManager : MonoBehaviour {
 			data.offset.x += data.tiling.x;
 			data.tiling.x *= -1;
 		}
+		data.alpha = creature.LayerOpacity;
 		return data;
+	}
+
+
+
+	GPUBatcher<ShadowData>   shadowBatcher;
+	GPUBatcher<CreatureData> creatureBatcher;
+	GPUBatcher<ParticleData> particleBatcher;
+
+	void ConstructGPUBatcher() {
+		shadowBatcher   = new GPUBatcher<ShadowData>  (m_ShadowMaterial,   m_SphereMesh, 0);
+		creatureBatcher = new GPUBatcher<CreatureData>(m_CreatureMaterial, m_QuadMesh,   0);
+		particleBatcher = new GPUBatcher<ParticleData>(m_ParticleMaterial, m_QuadMesh,   0);
+		shadowBatcher  .param.layer = LayerMask.NameToLayer("Entity");
+		creatureBatcher.param.layer = LayerMask.NameToLayer("Entity");
+		particleBatcher.param.layer = LayerMask.NameToLayer("Entity");
+		shadowBatcher  .param.receiveShadows = false;
+		creatureBatcher.param.receiveShadows = false;
+		particleBatcher.param.receiveShadows = false;
+		shadowBatcher  .param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+		creatureBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		particleBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+	}
+
+	void DestructGPUBatcher() {
+		shadowBatcher  ?.Dispose();
+		creatureBatcher?.Dispose();
+		particleBatcher?.Dispose();
 	}
 
 	void DrawCreature() {
 		Quaternion cameraRotation = CameraManager.I.transform.rotation;
-		float cameraYaw = GetYaw(cameraRotation);
+		float cameraYaw    = GetYaw(cameraRotation);
+		int   cameraMask   = CameraManager.I.CurrentMask;
+		int   exteriorMask = CameraManager.I.ExteriorMask;
+		float delta        = Time.deltaTime / CameraManager.I.TransitionTime;
 
 		Creature[] creatures = FindObjectsByType<Creature>(FindObjectsSortMode.None);
 		foreach (Creature creature in creatures) {
+			int mask = creature.CurrentMask;
+			if (mask == 0) mask |= exteriorMask;
+			bool match = (mask & cameraMask) != 0;
+			creature.LayerOpacity = Mathf.Clamp01(creature.LayerOpacity + (match? +delta : -delta));
+
 			creatureBatcher.Add(GetCreatureData(creature, cameraYaw));
 			shadowBatcher  .Add(new ShadowData() {
 				position = creature.transform.position,
-				rotation = cameraRotation,
+				rotation = new Vector4(0, 0, 0, 1),
 				scale    = creature.transform.localScale,
 			});
 		}
-		creatureBatcher.Draw();
-		shadowBatcher  .Draw();
+		creatureBatcher.Draw ();
+		shadowBatcher  .Draw ();
 		creatureBatcher.Clear();
 		shadowBatcher  .Clear();
 	}
@@ -373,9 +376,6 @@ public class DrawManager : MonoBehaviour {
 
 
 	// Lifecycle
-
-	void OnEnable() => ConstructGPUBatcher();
-	void OnDisable() => DestructGPUBatcher();
 
 	void Start() {
 		LoadCreatureMap();
@@ -385,6 +385,11 @@ public class DrawManager : MonoBehaviour {
 	void LateUpdate() {
 		DrawCreature();
 	}
+
+
+
+	void OnEnable() => ConstructGPUBatcher();
+	void OnDisable() => DestructGPUBatcher();
 }
 
 

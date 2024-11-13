@@ -478,6 +478,16 @@ public class UIManager : MonoSingleton<UIManager> {
 		UpdateLanguage();
 		UpdateFullScreen();
 		UpdateScreenResolution();
+		UpdateMusic();
+		UpdateSoundFX();
+
+		UpdateMouseSensitivity();
+		UpdateMoveUp();
+		UpdateMoveLeft();
+		UpdateMoveDown();
+		UpdateMoveRight();
+		UpdateInteract();
+		UpdateCancel();
 	}
 
 	public void SaveSettings() {
@@ -715,24 +725,49 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
-	public void UpdateMusic           (SettingsSlider slider) => slider.Value = m_Music;
-	public void UpdateSoundFX         (SettingsSlider slider) => slider.Value = m_SoundFX;
-	public void UpdateMouseSensitivity(SettingsSlider slider) => slider.Value = MouseSensitivity;
+	SettingsSlider music;
 
-	public void SetMusic           (float value) => m_Music          = value;
-	public void SetSoundFX         (float value) => m_SoundFX        = value;
-	public void SetMouseSensitivity(float value) => MouseSensitivity = value;
+	public void UpdateMusic(SettingsSlider slider = null) {
+		if (slider) music = slider;
+		if (music) music.Value = m_Music;
+	}
+
+	public void SetMusic(float value) {
+		m_Music = value;
+	}
+
+	SettingsSlider soundFX;
+
+	public void UpdateSoundFX(SettingsSlider slider = null) {
+		if (slider) soundFX = slider;
+		if (soundFX) soundFX.Value = m_SoundFX;
+	}
+
+	public void SetSoundFX(float value) {
+		m_SoundFX = value;
+	}
+
+	SettingsSlider mouseSensitivity;
+
+	public void UpdateMouseSensitivity(SettingsSlider slider = null) {
+		if (slider) mouseSensitivity = slider;
+		if (mouseSensitivity) mouseSensitivity.Value = MouseSensitivity;
+	}
+
+	public void SetMouseSensitivity(float value) {
+		MouseSensitivity = value;
+	}
 
 
 
 	readonly SettingsButton[] action = new SettingsButton[Enum.GetValues(typeof(KeyAction)).Length];
 
-	public void UpdateMoveUp   (SettingsButton button) => UpdateKeys(button, KeyAction.MoveUp);
-	public void UpdateMoveLeft (SettingsButton button) => UpdateKeys(button, KeyAction.MoveLeft);
-	public void UpdateMoveDown (SettingsButton button) => UpdateKeys(button, KeyAction.MoveDown);
-	public void UpdateMoveRight(SettingsButton button) => UpdateKeys(button, KeyAction.MoveRight);
-	public void UpdateInteract (SettingsButton button) => UpdateKeys(button, KeyAction.Interact);
-	public void UpdateCancel   (SettingsButton button) => UpdateKeys(button, KeyAction.Cancel);
+	public void UpdateMoveUp   (SettingsButton button = null) => UpdateKeys(button, KeyAction.MoveUp);
+	public void UpdateMoveLeft (SettingsButton button = null) => UpdateKeys(button, KeyAction.MoveLeft);
+	public void UpdateMoveDown (SettingsButton button = null) => UpdateKeys(button, KeyAction.MoveDown);
+	public void UpdateMoveRight(SettingsButton button = null) => UpdateKeys(button, KeyAction.MoveRight);
+	public void UpdateInteract (SettingsButton button = null) => UpdateKeys(button, KeyAction.Interact);
+	public void UpdateCancel   (SettingsButton button = null) => UpdateKeys(button, KeyAction.Cancel);
 
 	void UpdateKeys(SettingsButton button, KeyAction keyAction) {
 		if (button) action[(int)keyAction] = button;
@@ -796,7 +831,8 @@ public class UIManager : MonoSingleton<UIManager> {
 		OpenConfirmation("Delete All Data", "Delete All Data Message", "Delete", "Cancel");
 		if (confirmationPositive) confirmationPositive.OnClick.AddListener(() => {
 			PlayerPrefs.DeleteAll();
-			Start();
+			LoadSettings();
+			OpenMainMenu();
 		});
 	}
 

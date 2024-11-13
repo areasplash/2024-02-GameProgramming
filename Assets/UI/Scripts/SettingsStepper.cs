@@ -111,7 +111,7 @@ public class SettingsStepper : Selectable, IPointerClickHandler {
 	public string Text {
 		get => m_TextTMP ? m_TextTMP.text : string.Empty;
 		set {
-			if (LocalizeStringEvent) LocalizeStringEvent.StringReference = null;
+			if (LocalizeStringEvent) LocalizeStringEvent.StringReference.Clear();
 			if (m_TextTMP) m_TextTMP.text = value;
 		}
 	}

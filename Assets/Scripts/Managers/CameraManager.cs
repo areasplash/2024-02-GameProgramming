@@ -171,6 +171,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	public float FieldOfView {
 		get => m_FieldOfView;
 		set {
+			value = Mathf.Clamp(value, 1, 179);
 			m_FieldOfView = value;
 			if (MainCamera) MainCamera.fieldOfView = value;
 			if (FadeCamera) FadeCamera.fieldOfView = value;
@@ -181,6 +182,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	public float OrthographicSize {
 		get => m_OrthographicSize;
 		set {
+			value = Mathf.Max(0.01f, value);
 			m_OrthographicSize = value;
 			if (MainCamera) MainCamera.orthographicSize = value;
 			if (FadeCamera) FadeCamera.orthographicSize = value;
@@ -226,7 +228,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		set => m_InteriorLayer = value;
 	}
 
-	int CurrentMask { get; set; }
+	public int CurrentMask { get; private set; }
 
 	public float TransitionTime {
 		get => m_TransitionTime;
@@ -340,23 +342,26 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 
 
+	int currentMask;
+
 	void BeginDetectLayer() {
-		CurrentMask = DefaultMask;
+		currentMask = DefaultMask;
 	}
 
 	void DetectLayer(Collider collider) {
-		if (collider.isTrigger) CurrentMask |= 1 << collider.gameObject.layer;
+		if (collider.isTrigger) currentMask |= 1 << collider.gameObject.layer;
 	}
 
 	void EndDetectLayer() {
-		if ((CurrentMask & ExteriorMask) == 0 && (CurrentMask & InteriorMask) == 0) {
-			CurrentMask |= ExteriorMask;
+		if ((currentMask & ExteriorMask) == 0 && (currentMask & InteriorMask) == 0) {
+			currentMask |= ExteriorMask;
 		}
+		CurrentMask = currentMask;
 	}
 
 	void UpdateLayer() {
 		if (FadeRawImage.color.a == 0) {
-			if (MainCamera.cullingMask != CurrentMask) FadeCamera.cullingMask = CurrentMask;
+			if (MainCamera.cullingMask != currentMask) FadeCamera.cullingMask = currentMask;
 		}
 		if (FadeCamera.cullingMask != 0) {
 			float delta = Time.fixedDeltaTime / TransitionTime;

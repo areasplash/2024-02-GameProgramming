@@ -86,7 +86,9 @@ public class Creature : MonoBehaviour {
 	void Update() => Offset += Time.deltaTime;
 
 
-	public int CurrentMask { get; private set; }
+
+	public int   CurrentMask  { get; private set; }
+	public float LayerOpacity { get; set; }
 
 
 
