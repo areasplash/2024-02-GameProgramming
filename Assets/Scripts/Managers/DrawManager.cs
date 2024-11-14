@@ -309,7 +309,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		int index = GetIndex(count, value, func);
 
 		CreatureData data = GetCreatureData(creatureType, animationType, direction, index);
-		data.position = creature.transform.position;
+		data.position = CameraManager.I.GetPixelated(creature.transform.position);
 		data.rotation = CameraManager.I.transform.rotation;
 		if (xflip) {
 			data.offset.x += data.tiling.x;
@@ -346,7 +346,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		particleBatcher?.Dispose();
 	}
 
-	void DrawCreature() {
+	public void DrawCreature() {
 		Quaternion cameraRotation = CameraManager.I.transform.rotation;
 		float cameraYaw    = GetYaw(cameraRotation);
 		int   cameraMask   = CameraManager.I.CurrentMask;
@@ -362,7 +362,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 			creatureBatcher.Add(GetCreatureData(creature, cameraYaw));
 			shadowBatcher  .Add(new ShadowData() {
-				position = creature.transform.position,
+				position = CameraManager.I.GetPixelated(creature.transform.position),
 				rotation = new Vector4(0, 0, 0, 1),
 				scale    = creature.transform.localScale,
 			});
@@ -382,9 +382,9 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		LoadParticleMap();
 	}
 
-	void LateUpdate() {
-		DrawCreature();
-	}
+	//void LateUpdate() {
+	//	DrawCreature();
+	//}
 
 
 

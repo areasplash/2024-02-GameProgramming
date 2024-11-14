@@ -1135,7 +1135,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1478986948763224336, guid: c06a5707b56ab9644bfef23c2fe98290, type: 3}
       propertyPath: m_Name
-      value: WoodTile (4)
+      value: WoodTile
       objectReference: {fileID: 0}
     - target: {fileID: 1478986948763224336, guid: c06a5707b56ab9644bfef23c2fe98290, type: 3}
       propertyPath: m_Layer
@@ -3935,7 +3935,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-2008
+  m_Name: pb_Mesh-1462
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
@@ -4769,7 +4769,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1478986948763224336, guid: c06a5707b56ab9644bfef23c2fe98290, type: 3}
       propertyPath: m_Name
-      value: WoodTile (3)
+      value: WoodTile
       objectReference: {fileID: 0}
     - target: {fileID: 1478986948763224336, guid: c06a5707b56ab9644bfef23c2fe98290, type: 3}
       propertyPath: m_Layer
@@ -6332,7 +6332,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-2346
+  m_Name: pb_Mesh-2000
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
@@ -6509,7 +6509,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1478986948763224336, guid: c06a5707b56ab9644bfef23c2fe98290, type: 3}
       propertyPath: m_Name
-      value: WoodTile (1)
+      value: WoodTile
       objectReference: {fileID: 0}
     - target: {fileID: 2348997209255117415, guid: c06a5707b56ab9644bfef23c2fe98290, type: 3}
       propertyPath: m_LocalPosition.x
@@ -7872,6 +7872,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1796962169}
   m_CullTransparentMesh: 1
+--- !u!1 &1823730182
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1823730183}
+  m_Layer: 0
+  m_Name: '[Exterior]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &1823730183
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1823730182}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1827512807 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6139548571659768472, guid: fb2b4ef3ecbee65428ffc737b8532035, type: 3}
@@ -8629,7 +8660,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-2068
+  m_Name: pb_Mesh-1986
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
@@ -9609,6 +9640,7 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 1107903476}
   - {fileID: 158072559}
+  - {fileID: 1823730183}
   - {fileID: 2260916658158242474}
   - {fileID: 1503671397}
   - {fileID: 1432197698}

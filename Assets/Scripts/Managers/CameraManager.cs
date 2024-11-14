@@ -307,7 +307,8 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	// Lifecycle
 
-	Vector3 position;
+	Vector3    position;
+	Quaternion rotation;
 
 	void UpdateTransform() {
 		if (Target) TargetPosition = Target.transform.position;
@@ -331,13 +332,28 @@ public class CameraManager : MonoSingleton<CameraManager> {
 			}
 		}
 		if (transform.position != position) {
-			float pixelPerUnit = UIManager.I.PixelPerUnit;
-			Vector3 positionInversed = transform.InverseTransformDirection(transform.position);
-			positionInversed.x = Mathf.Round(positionInversed.x * pixelPerUnit) / pixelPerUnit;
-			positionInversed.y = Mathf.Round(positionInversed.y * pixelPerUnit) / pixelPerUnit;
-			positionInversed.z = Mathf.Round(positionInversed.z * pixelPerUnit) / pixelPerUnit;
-			//transform.position = position = transform.TransformDirection(positionInversed);
+			if (transform.rotation != rotation) {
+				position = transform.position;
+				rotation = transform.rotation;
+			}
+			else {
+				position = GetPixelated(transform.position);
+				transform.position = position;
+			}
 		}
+		DrawManager.I.DrawCreature();
+	}
+	
+	float pixelPerUnit;
+
+	void UpdatePixelPerUnit() => pixelPerUnit = UIManager.I.PixelPerUnit;
+
+	public Vector3 GetPixelated(Vector3 position) {
+		Vector3 positionInversed = transform.InverseTransformPoint(position);
+		positionInversed.x = Mathf.Round(positionInversed.x * pixelPerUnit) / pixelPerUnit;
+		positionInversed.y = Mathf.Round(positionInversed.y * pixelPerUnit) / pixelPerUnit;
+		positionInversed.z = Mathf.Round(positionInversed.z * pixelPerUnit) / pixelPerUnit;
+		return transform.TransformPoint(positionInversed);
 	}
 
 
@@ -378,6 +394,10 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 
 	void Start() => Projection = Projection;
+
+	void Update() {
+		UpdatePixelPerUnit();
+	}
 
 	void LateUpdate() {
 		UpdateTransform();

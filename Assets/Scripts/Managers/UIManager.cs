@@ -418,17 +418,6 @@ public class UIManager : MonoSingleton<UIManager> {
 
 
 
-	public Vector3 GetPixelated(Vector3 position) {
-		if (!CameraManager.I) return position;
-		position = CameraManager.I.transform.InverseTransformDirection(position);
-		position.x = Mathf.Round(position.x * PixelPerUnit) / PixelPerUnit;
-		position.y = Mathf.Round(position.y * PixelPerUnit) / PixelPerUnit;
-		position.z = Mathf.Round(position.z * PixelPerUnit) / PixelPerUnit;
-		return CameraManager.I.transform.TransformDirection(position);
-	}
-
-
-
 	string defaultMoveUp;
 	string defaultMoveLeft;
 	string defaultMoveDown;
