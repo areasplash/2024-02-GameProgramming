@@ -304,6 +304,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 		int count = GetCreatureSize(creatureType, animationType, direction);
 		int total = GetCreatureSize(creatureType, animationType, direction, count - 1);
+		total = Mathf.Max(1, total);
 		int value = (int)(creature.Offset * 1000) % total;
 		func = i => GetCreatureSize(creatureType, animationType, direction, i);
 		int index = GetIndex(count, value, func);
@@ -382,9 +383,9 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		LoadParticleMap();
 	}
 
-	//void LateUpdate() {
-	//	DrawCreature();
-	//}
+	void LateUpdate() {
+		DrawCreature();
+	}
 
 
 

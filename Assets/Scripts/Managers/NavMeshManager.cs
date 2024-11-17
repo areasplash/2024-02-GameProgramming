@@ -2,13 +2,13 @@ using UnityEngine;
 
 using System.Collections.Generic;
 
+using UnityEngine.AI;
 using Unity.AI.Navigation;
 
 #if UNITY_EDITOR
 	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
-
 
 
 
@@ -20,20 +20,41 @@ using Unity.AI.Navigation;
 	[CustomEditor(typeof(NavMeshManager)), CanEditMultipleObjects]
 	public class NavMeshManagerEditor : Editor {
 
-		//SerializedProperty m_MainCamera;
+		SerializedProperty m_NavMeshSurfaces;
 
 		NavMeshManager I => target as NavMeshManager;
 
 		void OnEnable() {
-			//m_MainCamera     = serializedObject.FindProperty("m_MainCamera");
+			m_NavMeshSurfaces = serializedObject.FindProperty("m_NavMeshSurfaces");
 		}
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
-			Undo.RecordObject(target, "Change NavMes hManager Properties");
+			Undo.RecordObject(target, "Change NavMesh Manager Properties");
 			Space();
 			LabelField("NavMesh", EditorStyles.boldLabel);
-			//PropertyField(m_MainCamera);
+			PropertyField(m_NavMeshSurfaces);
+			Space();
+			LabelField("Actions", EditorStyles.boldLabel);
+			BeginHorizontal();
+			{
+				PrefixLabel("Bake NavMesh");
+				if (GUILayout.Button("Bake")) I.Bake();
+			}
+			EndHorizontal();
+			BeginHorizontal();
+			{
+				PrefixLabel("Clear NavMesh");
+				if (GUILayout.Button("Clear")) I.Clear();
+			}
+			EndHorizontal();
+			/*if (GUILayout.Button("Test")) {
+				for (int i = 0; i < m_NavMeshSurfaces.arraySize; i++) {
+					var navMeshSurface = m_NavMeshSurfaces.GetArrayElementAtIndex(i)
+						.objectReferenceValue as NavMeshSurface;
+					Debug.Log(navMeshSurface.agentTypeID);
+				}
+			}*/
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -48,34 +69,28 @@ using Unity.AI.Navigation;
 
 public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
-	[SerializeField] List<NavMeshSurface> navMeshSurfaces = new();
-
-
-
-	public enum Hitbox {
-		None = 0,
-		S   = -1923039037,
-		M   =  -902729914,
-		L   =   287145453,
-		XL  =   658490984,
-		XXL =    65107623,
-	}
-	static readonly Dictionary<Hitbox, Vector2> HITBOX = new() {
-		{ Hitbox.None, new Vector2(0.00f, 0.00f) },
-		{ Hitbox.S,    new Vector2(0.00f, 0.00f) },
-		{ Hitbox.M,    new Vector2(0.00f, 0.00f) },
-		{ Hitbox.L,    new Vector2(0.00f, 0.00f) },
-		{ Hitbox.XL,   new Vector2(0.00f, 0.00f) },
-		{ Hitbox.XXL,  new Vector2(0.00f, 0.00f) },
-	};
+	[SerializeField] List<NavMeshSurface> m_NavMeshSurfaces = new List<NavMeshSurface>();
 
 	
 
 	public void Bake() {
-		foreach (var navMeshSurface in navMeshSurfaces) navMeshSurface.BuildNavMesh();
+		foreach (var navMeshSurface in m_NavMeshSurfaces) navMeshSurface.BuildNavMesh();
 	}
 
 	public void Clear() {
-		foreach (var navMeshSurface in navMeshSurfaces) navMeshSurface.RemoveData();
+		foreach (var navMeshSurface in m_NavMeshSurfaces) navMeshSurface.RemoveData();
+	}
+
+
+
+	NavMeshPath path;
+
+	void CalculatePath(Vector3 start, Vector3 end) {
+		path.ClearCorners();
+		if (NavMesh.CalculatePath(start, end, NavMesh.AllAreas, path)) {
+			for (int i = 0; i < path.corners.Length - 1; i++) {
+				Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 1);
+			}
+		}
 	}
 }

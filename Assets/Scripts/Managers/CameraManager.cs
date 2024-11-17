@@ -276,11 +276,19 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	public Ray ScreenPointToRay(Vector3 position) {
 		if (MainCamera) {
-			float multiplier = RenderTextureSize.x / Screen.width;
+			float multiplier = (float)RenderTextureSize.x / Screen.width;
 			Vector3 viewport = MainCamera.ScreenToViewportPoint(position * multiplier);
 			return MainCamera.ViewportPointToRay(viewport);
 		}
 		return default;
+	}
+
+	public Vector3 GetPixelated(Vector3 position) {
+		Vector3 positionInversed = transform.InverseTransformDirection(position);
+		positionInversed.x = Mathf.Round(positionInversed.x * pixelPerUnit) / pixelPerUnit;
+		positionInversed.y = Mathf.Round(positionInversed.y * pixelPerUnit) / pixelPerUnit;
+		positionInversed.z = Mathf.Round(positionInversed.z * pixelPerUnit) / pixelPerUnit;
+		return transform.TransformDirection(positionInversed);
 	}
 
 	
@@ -307,18 +315,27 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	// Lifecycle
 
+	float pixelPerUnit;
+
+	void UpdatePixelPerUnit() => pixelPerUnit = UIManager.I.PixelPerUnit;
+
+
+
 	Vector3    position;
 	Quaternion rotation;
 
 	void UpdateTransform() {
 		if (Target) TargetPosition = Target.transform.position;
 		if (!FreezePosition[0] || !FreezePosition[1] || !FreezePosition[2]) {
-			Vector3 a = transform.position;
-			Vector3 b = TargetPosition;
-			if (!FreezePosition[0]) a.x = b.x;
-			if (!FreezePosition[1]) a.y = b.y;
-			if (!FreezePosition[2]) a.z = b.z;
-			transform.position = a;
+			float distance = Vector3.Distance(transform.position, TargetPosition);
+			if (1 / pixelPerUnit * Mathf.Sqrt(3) < distance || transform.rotation != rotation) {
+				Vector3 a = transform.position;
+				Vector3 b = TargetPosition;
+				if (!FreezePosition[0]) a.x = b.x;
+				if (!FreezePosition[1]) a.y = b.y;
+				if (!FreezePosition[2]) a.z = b.z;
+				transform.position = a;
+			}
 		}
 		if (!FreezeRotation[0] || !FreezeRotation[1] || !FreezeRotation[2]) {
 			Vector3 direction = (TargetPosition - transform.position).normalized;
@@ -331,29 +348,12 @@ public class CameraManager : MonoSingleton<CameraManager> {
 				transform.eulerAngles = a;
 			}
 		}
-		if (transform.position != position) {
-			if (transform.rotation != rotation) {
-				position = transform.position;
-				rotation = transform.rotation;
-			}
-			else {
-				position = GetPixelated(transform.position);
-				transform.position = position;
-			}
+		if (transform.rotation != rotation) {
+			rotation = transform.rotation;
 		}
-		DrawManager.I.DrawCreature();
-	}
-	
-	float pixelPerUnit;
-
-	void UpdatePixelPerUnit() => pixelPerUnit = UIManager.I.PixelPerUnit;
-
-	public Vector3 GetPixelated(Vector3 position) {
-		Vector3 positionInversed = transform.InverseTransformPoint(position);
-		positionInversed.x = Mathf.Round(positionInversed.x * pixelPerUnit) / pixelPerUnit;
-		positionInversed.y = Mathf.Round(positionInversed.y * pixelPerUnit) / pixelPerUnit;
-		positionInversed.z = Mathf.Round(positionInversed.z * pixelPerUnit) / pixelPerUnit;
-		return transform.TransformPoint(positionInversed);
+		else if (transform.position != position) {
+			position = transform.position = GetPixelated(transform.position);
+		}
 	}
 
 

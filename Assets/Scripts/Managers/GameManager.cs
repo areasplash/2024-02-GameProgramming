@@ -59,7 +59,7 @@ public class GameManager : MonoSingleton<GameManager> {
 			if (InputManager.I.GetKeyDown(KeyAction.LeftClick)) {
 				Ray ray = CameraManager.I.ScreenPointToRay(InputManager.I.PointPosition);
 				if (Physics.Raycast(ray, out RaycastHit hit)) {
-					Debug.Log(hit.point);
+					Debug.DrawLine(ray.origin, hit.point, Color.red, 1);
 				}
 			}
 			if (InputManager.I.GetKeyDown(KeyAction.RightClick)) {
@@ -73,12 +73,12 @@ public class GameManager : MonoSingleton<GameManager> {
 			}
 		}
 		{
-			Vector3 direction = new();
+			Vector3 direction = Vector3.zero;
 			direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
 			direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
 			direction.y = 0;
 			direction.Normalize();
-			transform.position += direction * 4 * Time.deltaTime;
+			transform.position += direction * 5 * Time.deltaTime;
 		}
 	}
 }

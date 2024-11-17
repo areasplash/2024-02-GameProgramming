@@ -50,8 +50,10 @@ using System.Collections.Generic;
 			PropertyField(m_Atlas);
 			if (m_Atlas.objectReferenceValue) {
 				BeginHorizontal();
-				PrefixLabel("Generate Atlas");
-				if (GUILayout.Button("Generate")) I.GenerateAtlas();
+				{
+					PrefixLabel("Generate Atlas");
+					if (GUILayout.Button("Generate")) I.GenerateAtlas();
+				}
 				EndHorizontal();
 			}
 			BeginHorizontal();
