@@ -122,7 +122,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	void GetDirection(float relativeYaw, int numDirections, out int direction, out bool xFlip) {
 		xFlip = false;
 		int i = 0;
-		int yaw = (int)Mathf.Repeat(relativeYaw / 360f * 256f, 256);
+		int yaw = (int)Mathf.Repeat(relativeYaw / 360f * 256f, 256 - 1);
 		switch (numDirections) {
 			case  1: i = (yaw +  0) / 128; if (0 < i) { i =  1 - i; xFlip = true; } break;
 			case  2: i = (yaw +  0) / 128;                                          break;
@@ -304,7 +304,6 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 		int count = GetCreatureSize(creatureType, animationType, direction);
 		int total = GetCreatureSize(creatureType, animationType, direction, count - 1);
-		total = Mathf.Max(1, total);
 		int value = (int)(creature.Offset * 1000) % total;
 		func = i => GetCreatureSize(creatureType, animationType, direction, i);
 		int index = GetIndex(count, value, func);
@@ -363,7 +362,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 			creatureBatcher.Add(GetCreatureData(creature, cameraYaw));
 			shadowBatcher  .Add(new ShadowData() {
-				position = CameraManager.I.GetPixelated(creature.transform.position),
+				position = creature.transform.position,
 				rotation = new Vector4(0, 0, 0, 1),
 				scale    = creature.transform.localScale,
 			});

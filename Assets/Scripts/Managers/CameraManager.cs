@@ -395,13 +395,9 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	void Start() => Projection = Projection;
 
-	void Update() {
-		UpdatePixelPerUnit();
-	}
+	void Update() => UpdatePixelPerUnit();
 
-	void LateUpdate() {
-		UpdateTransform();
-	}
+	void LateUpdate() => UpdateTransform();
 
 	void FixedUpdate() {
 		UpdateCameraShake();
@@ -411,7 +407,5 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		BeginDetectLayer();
 	}
 
-	void OnTriggerStay(Collider collider) {
-		DetectLayer(collider);
-	}
+	void OnTriggerStay(Collider collider) => DetectLayer(collider);
 }
