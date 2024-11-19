@@ -298,8 +298,8 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	static Vector3 shakeDirection;
 
 	public void ShakeCamera(float strength, float duration) {
-			shakeStrength = strength;
-			shakeDuration = duration;
+		shakeStrength = strength;
+		shakeDuration = duration;
 	}
 
 	void UpdateCameraShake() {
@@ -325,6 +325,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	Quaternion rotation;
 
 	void UpdateTransform() {
+		/*
 		if (Target) TargetPosition = Target.transform.position;
 		if (!FreezePosition[0] || !FreezePosition[1] || !FreezePosition[2]) {
 			float distance = Vector3.Distance(transform.position, TargetPosition);
@@ -354,6 +355,9 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		else if (transform.position != position) {
 			position = transform.position = GetPixelated(transform.position);
 		}
+		*/
+		if (Target) TargetPosition = Target.transform.position;
+		transform.position = TargetPosition;
 	}
 
 

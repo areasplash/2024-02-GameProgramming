@@ -309,7 +309,8 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		int index = GetIndex(count, value, func);
 
 		CreatureData data = GetCreatureData(creatureType, animationType, direction, index);
-		data.position = CameraManager.I.GetPixelated(creature.transform.position);
+		//data.position = CameraManager.I.GetPixelated(creature.transform.position);
+		data.position = creature.transform.position;
 		data.rotation = CameraManager.I.transform.rotation;
 		if (xflip) {
 			data.offset.x += data.tiling.x;

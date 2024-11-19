@@ -83,12 +83,12 @@ public class GameManager : MonoSingleton<GameManager> {
 				float delta = InputManager.I.PointPosition.x - pointPosition.x;
 				CameraManager.I.Rotation = rotation + new Vector3(0, delta * mouseSensitivity, 0);
 			}
-			Vector3 direction = Vector3.zero;
-			direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
-			direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
-			direction.y = 0;
-			direction.Normalize();
-			transform.position += direction * 5 * Time.deltaTime;
+			//Vector3 direction = Vector3.zero;
+			//direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
+			//direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
+			//direction.y = 0;
+			//direction.Normalize();
+			//m_Player.transform.position += direction * 5 * Time.deltaTime;
 		}
 	}
 }

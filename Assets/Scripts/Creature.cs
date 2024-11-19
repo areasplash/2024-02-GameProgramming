@@ -155,8 +155,6 @@ public class Creature : MonoBehaviour {
 	public int   CurrentMask  { get; private set; }
 	public float LayerOpacity { get; set; }
 
-	public bool  IsFalling    { get; private set; }
-
 
 
 	// Methods
@@ -183,18 +181,26 @@ public class Creature : MonoBehaviour {
 
 
 
-	bool isFalling;
+	Collider   ground;
+	Vector3    groundVelocity = Vector3.zero;
+	Quaternion groundRotation = Quaternion.identity;
+	bool       isGrounded     = false;
 
-	void BeginDetectFalling() {
-		isFalling = true;
+	void BeginDetectGround() {
+		isGrounded = false;
 	}
 
-	void DetectFalling(Collider collider) {
-		if (!collider.isTrigger) isFalling = false;
+	void DetectGround(Collider collider) {
+		if (!collider.isTrigger) {
+			ground         = collider;
+			groundVelocity = Vector3.zero;
+			groundRotation = collider.transform.rotation;
+			isGrounded     = true;
+		}
 	}
 
-	void EndDetectFalling() {
-		IsFalling = isFalling;
+	void EndDetectGround() {
+		
 	}
 
 
@@ -207,18 +213,32 @@ public class Creature : MonoBehaviour {
 
 	void UpdatePhysics() {
 		Vector3 velocity = Vector3.zero;
-		if (queue.Count == 0) {
+		
+		Vector3 direction = Vector3.zero;
+		direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
+		direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
+		direction.y = 0;
+		direction.Normalize();
+		
+		if (direction == Vector3.zero && queue.Count == 0) {
 			AnimationType = AnimationType.Idle;
 		}
 		else {
 			AnimationType = AnimationType.Move;
-			Vector3 delta = queue.Peek() - transform.position;
-			velocity = new Vector3(delta.x, 0, delta.z).normalized * Speed;
-			if (velocity != Vector3.zero) rb.rotation = Quaternion.LookRotation(velocity);
-			if (new Vector3(delta.x, 0, delta.z).magnitude < 0.1f) queue.Dequeue();
+
+			if (direction != Vector3.zero) {
+				velocity = direction * Speed;
+				queue.Clear();
+			}
+			else {
+				Vector3 delta = queue.Peek() - transform.position;
+				velocity = new Vector3(delta.x, 0, delta.z).normalized * Speed;
+				if (new Vector3(delta.x, 0, delta.z).magnitude < 0.1f) queue.Dequeue();
+			}
 		}
-		Force = IsFalling? Force + Physics.gravity * Time.fixedDeltaTime : Vector3.zero;
-		rb.linearVelocity = velocity + Force;
+		Force = isGrounded ? Vector3.zero : Force + Physics.gravity * Time.deltaTime;
+		rb.linearVelocity = groundRotation * velocity + Force;
+		if (velocity != Vector3.zero) rb.rotation = Quaternion.LookRotation(velocity);
 	}
 
 
@@ -231,13 +251,13 @@ public class Creature : MonoBehaviour {
 		EndDetectLayer();
 		BeginDetectLayer();
 
-		EndDetectFalling();
+		EndDetectGround();
 		UpdatePhysics();
-		BeginDetectFalling();
+		BeginDetectGround();
 	}
 
 	void OnTriggerStay(Collider collider) {
 		DetectLayer  (collider);
-		DetectFalling(collider);
+		DetectGround(collider);
 	}
 }
