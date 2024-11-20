@@ -3,13 +3,9 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using UnityEngine.AI;
-using NUnit.Framework;
-
-
-
 
 #if UNITY_EDITOR
-using UnityEditor;
+	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
 
@@ -88,6 +84,12 @@ using UnityEditor;
 
 public class Creature : MonoBehaviour {
 
+	// Constants
+
+	const string PrefabPath = "Prefabs/Creature";
+
+
+
 	// Fields
 
 	[SerializeField] CreatureType  m_CreatureType  = CreatureType.None;
@@ -152,55 +154,149 @@ public class Creature : MonoBehaviour {
 
 
 
-	public int   CurrentMask  { get; private set; }
+	public int   LayerMask    { get; private set; }
 	public float LayerOpacity { get; set; }
 
 
 
 	// Methods
 
+	public void GetData(ref int[] data) {
+		int i = 0;
+		data[i++] = Utility.ToInt(transform.position);
+		data[i++] = Utility.ToInt(transform.rotation);
 
+		data[i++] = Utility.ToInt(CreatureType);
+		data[i++] = Utility.ToInt(AnimationType);
+		data[i++] = Utility.ToInt(Offset);
+		data[i++] = Utility.ToInt(HitboxType);
+
+		data[i++] = Utility.ToInt(Speed);
+		data[i++] = Utility.ToInt(Force, true);
+	}
+
+	public void SetData(int[] data) {
+		int i = 0;
+		transform.position = Utility.ToVector3(data[i++]);
+		transform.rotation = Utility.ToQuaternion(data[i++]);
+
+		CreatureType       = Utility.ToEnum<CreatureType>(data[i++]);
+		AnimationType      = Utility.ToEnum<AnimationType>(data[i++]);
+		Offset             = Utility.ToFloat(data[i++]);
+		HitboxType         = Utility.ToEnum<HitboxType>(data[i++]);
+
+		Speed              = Utility.ToFloat(data[i++]);
+		Force              = Utility.ToVector3(data[i++], true);
+	}
+
+	
+
+	static List<Creature> creatureList = new List<Creature>();
+	static List<Creature> creaturePool = new List<Creature>();
+
+	static Creature creature;
+	static Creature creaturePrefab;
+
+	public static Creature Spawn(CreatureType type, Vector3 position) {
+		if (creaturePool.Count == 0) {
+			if (!creaturePrefab) creaturePrefab = Resources.Load<Creature>(PrefabPath);
+			creature = Instantiate(creaturePrefab);
+		}
+		else {
+			int i = creaturePool.Count - 1;
+			creature = creaturePool[i];
+			creature.gameObject.SetActive(true);
+			creaturePool.RemoveAt(i);
+		}
+		creatureList.Add(creature);
+		creature.transform.position = position;
+		return creature;
+	}
+
+	public static void Despawn(Creature creature) {
+		creatureList.Remove(creature);
+		creaturePool.Add   (creature);
+		creature.gameObject.SetActive(false);
+	}
+
+	void OnRemove() {
+		creatureList.Remove(this);
+		creaturePool.Add   (this);
+		gameObject.SetActive(false);
+	}
 
 
 
 	// Lifecycle
 
-	int currentMask;
+	List<Collider> layers       = new List<Collider>();
+	bool           layerChanged = false;
 
 	void BeginDetectLayer() {
-		currentMask = 0;
+		layerChanged = false;
 	}
 
-	void DetectLayer(Collider collider) {
-		if (collider.isTrigger) currentMask |= 1 << collider.gameObject.layer;
+	void OnDetectLayerEnter(Collider collider) {
+		if (collider.isTrigger) {
+			layers.Add(collider);
+			layerChanged = true;
+		}
+	}
+
+	void OnDetectLayerExit(Collider collider) {
+		if (collider.isTrigger) {
+			layers.Remove(collider);
+			layerChanged = true;
+		}
 	}
 
 	void EndDetectLayer() {
-		CurrentMask = currentMask;
+		if (layerChanged) {
+			LayerMask = 0;
+			for(int i = 0; i < layers.Count; i++) LayerMask |= 1 << layers[i].gameObject.layer;
+		}
 	}
 
 
 
-	Collider   ground;
-	Vector3    groundVelocity = Vector3.zero;
-	Quaternion groundRotation = Quaternion.identity;
-	bool       isGrounded     = false;
+	List<Collider> grounds         = new List<Collider>();
+	bool           groundChanged   = false;
+	Rigidbody      groundRigidbody = null;
+	Quaternion     groundRotation  = Quaternion.identity;
+	bool           isGrounded      = false;
 
 	void BeginDetectGround() {
-		isGrounded = false;
+		groundChanged = false;
 	}
 
-	void DetectGround(Collider collider) {
+	void OnDetectGroundEnter(Collider collider) {
 		if (!collider.isTrigger) {
-			ground         = collider;
-			groundVelocity = Vector3.zero;
-			groundRotation = collider.transform.rotation;
-			isGrounded     = true;
+			grounds.Add(collider);
+			groundChanged = true;
+		}
+	}
+
+	void OnDetectGroundExit(Collider collider) {
+		if (!collider.isTrigger) {
+			grounds.Remove(collider);
+			groundChanged = true;
 		}
 	}
 
 	void EndDetectGround() {
-		
+		if (groundChanged) {
+			if (0 < grounds.Count) {
+				int i = grounds.Count - 1;
+				grounds[i].TryGetComponent(out groundRigidbody);
+				groundRotation  = grounds[i].transform.rotation;
+				isGrounded      = true;
+			}
+			else {
+				groundRigidbody = null;
+				groundRotation  = Quaternion.identity;
+				isGrounded      = false;
+			}
+		}
 	}
 
 
@@ -209,26 +305,19 @@ public class Creature : MonoBehaviour {
 
 	void StartPhysics() => TryGetComponent(out rb);
 
+	public Vector3        input = Vector3.zero;
 	public Queue<Vector3> queue = new Queue<Vector3>();
 
 	void UpdatePhysics() {
 		Vector3 velocity = Vector3.zero;
-		
-		Vector3 direction = Vector3.zero;
-		direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
-		direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
-		direction.y = 0;
-		direction.Normalize();
-		
-		if (direction == Vector3.zero && queue.Count == 0) {
+		if (input == Vector3.zero && queue.Count == 0) {
 			AnimationType = AnimationType.Idle;
 		}
 		else {
 			AnimationType = AnimationType.Move;
-
-			if (direction != Vector3.zero) {
-				velocity = direction * Speed;
-				queue.Clear();
+			if (input != Vector3.zero) {
+				velocity = input * Speed;
+				if (0 < queue.Count) queue.Clear();
 			}
 			else {
 				Vector3 delta = queue.Peek() - transform.position;
@@ -245,19 +334,31 @@ public class Creature : MonoBehaviour {
 
 	void Start() => StartPhysics();
 
+	void OnEnable() {
+		layerChanged  = true;
+		groundChanged = true;
+	}
+
 	void Update() => Offset += Time.deltaTime;
 
 	void FixedUpdate() {
-		EndDetectLayer();
-		BeginDetectLayer();
-
-		EndDetectGround();
-		UpdatePhysics();
+		EndDetectLayer   ();
+		BeginDetectLayer ();
+		EndDetectGround  ();
 		BeginDetectGround();
+
+		UpdatePhysics();
 	}
 
-	void OnTriggerStay(Collider collider) {
-		DetectLayer  (collider);
-		DetectGround(collider);
+	void OnTriggerEnter(Collider collider) {
+		OnDetectLayerEnter (collider);
+		OnDetectGroundEnter(collider);
 	}
+
+	void OnTriggerExit(Collider collider) {
+		OnDetectLayerExit (collider);
+		OnDetectGroundExit(collider);
+	}
+
+	void OnDestory() => OnRemove();
 }

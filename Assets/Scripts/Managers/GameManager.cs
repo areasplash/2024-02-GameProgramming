@@ -65,10 +65,17 @@ public class GameManager : MonoSingleton<GameManager> {
 
 	void Update() {
 		if (m_Player && UIManager.I.ActiveCanvas == CanvasType.Game) {
+			{
+				Vector3 direction = Vector3.zero;
+				direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
+				direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
+				direction.y = 0;
+				direction.Normalize();
+				m_Player.input = direction;
+			}
 			if (InputManager.I.GetKeyDown(KeyAction.LeftClick)) {
 				Ray ray = CameraManager.I.ScreenPointToRay(InputManager.I.PointPosition);
 				if (Physics.Raycast(ray, out RaycastHit hit)) {
-					
 					Vector3 start = m_Player.transform.position;
 					m_Player.queue.Clear();
 					NavMeshManager.I.FindPath(start, hit.point, ref m_Player.queue, 0.75f);
@@ -83,12 +90,6 @@ public class GameManager : MonoSingleton<GameManager> {
 				float delta = InputManager.I.PointPosition.x - pointPosition.x;
 				CameraManager.I.Rotation = rotation + new Vector3(0, delta * mouseSensitivity, 0);
 			}
-			//Vector3 direction = Vector3.zero;
-			//direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
-			//direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
-			//direction.y = 0;
-			//direction.Normalize();
-			//m_Player.transform.position += direction * 5 * Time.deltaTime;
 		}
 	}
 }

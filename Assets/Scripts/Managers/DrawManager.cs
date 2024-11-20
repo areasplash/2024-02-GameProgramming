@@ -350,13 +350,13 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	public void DrawCreature() {
 		Quaternion cameraRotation = CameraManager.I.transform.rotation;
 		float cameraYaw    = GetYaw(cameraRotation);
-		int   cameraMask   = CameraManager.I.CurrentMask;
-		int   exteriorMask = CameraManager.I.ExteriorMask;
+		int   cameraMask   = CameraManager.I.LayerMask;
+		int   exteriorMask = CameraManager.I.ExteriorLayer;
 		float delta        = Time.deltaTime / CameraManager.I.TransitionTime;
 
 		Creature[] creatures = FindObjectsByType<Creature>(FindObjectsSortMode.None);
 		foreach (Creature creature in creatures) {
-			int mask = creature.CurrentMask;
+			int mask = creature.LayerMask;
 			if (mask == 0) mask |= exteriorMask;
 			bool match = (mask & cameraMask) != 0;
 			creature.LayerOpacity = Mathf.Clamp01(creature.LayerOpacity + (match? +delta : -delta));

@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
+
 
 #if UNITY_EDITOR
-	using UnityEditor;
+using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
 
@@ -68,9 +70,9 @@ using UnityEngine.UI;
 			EndHorizontal();
 			Space();
 			LabelField("Camera Transition", EditorStyles.boldLabel);
-			I.DefaultMask    = MaskField("Default Mask",    I.DefaultMask,  LayerNames);
-			I.ExteriorMask   = MaskField("Exterior Mask",   I.ExteriorMask, LayerNames);
-			I.InteriorMask   = MaskField("Interior Mask",   I.InteriorMask, LayerNames);
+			I.DefaultLayer   = MaskField("Default Layer",   I.DefaultLayer,  LayerNames);
+			I.ExteriorLayer  = MaskField("Exterior Layer",  I.ExteriorLayer, LayerNames);
+			I.InteriorLayer  = MaskField("Interior Layer",  I.InteriorLayer, LayerNames);
 			I.TransitionTime = Slider   ("Transition Time", I.TransitionTime, 0, 3);
 			PropertyField(m_MainRawImage);
 			PropertyField(m_FadeRawImage);
@@ -119,7 +121,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	[SerializeField] float      m_OrthographicSize  = 11.25f;
 	[SerializeField] float      m_Projection        = 01.00f;
 
-	[SerializeField] int      m_CommonLayer    = 0;
+	[SerializeField] int      m_DefaultLayer   = 0;
 	[SerializeField] int      m_ExteriorLayer  = 0;
 	[SerializeField] int      m_InteriorLayer  = 0;
 	[SerializeField] float    m_TransitionTime = 0.5f;
@@ -213,22 +215,22 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	
 
-	public int DefaultMask {
-		get => m_CommonLayer;
-		set => m_CommonLayer = value;
+	public int DefaultLayer {
+		get => m_DefaultLayer;
+		set => m_DefaultLayer = value;
 	}
 
-	public int ExteriorMask {
+	public int ExteriorLayer {
 		get => m_ExteriorLayer;
 		set => m_ExteriorLayer = value;
 	}
 
-	public int InteriorMask {
+	public int InteriorLayer {
 		get => m_InteriorLayer;
 		set => m_InteriorLayer = value;
 	}
 
-	public int CurrentMask { get; private set; }
+	public int LayerMask { get; private set; }
 
 	public float TransitionTime {
 		get => m_TransitionTime;
@@ -362,26 +364,42 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 
 
-	int currentMask;
+	List<Collider> layers       = new List<Collider>();
+	bool           layerChanged = false;
 
 	void BeginDetectLayer() {
-		currentMask = DefaultMask;
+		layerChanged = false;
 	}
 
-	void DetectLayer(Collider collider) {
-		if (collider.isTrigger) currentMask |= 1 << collider.gameObject.layer;
+	void OnDetectLayerEnter(Collider collider) {
+		if (collider.isTrigger) {
+			layers.Add(collider);
+			layerChanged = true;
+		}
+	}
+
+	void OnDetectLayerExit(Collider collider) {
+		if (collider.isTrigger) {
+			layers.Remove(collider);
+			layerChanged = true;
+		}
 	}
 
 	void EndDetectLayer() {
-		if ((currentMask & ExteriorMask) == 0 && (currentMask & InteriorMask) == 0) {
-			currentMask |= ExteriorMask;
+		if (layerChanged) {
+			LayerMask = DefaultLayer;
+			for (int i = 0; i < layers.Count; i++) LayerMask |= 1 << layers[i].gameObject.layer;
+			if ((LayerMask & ExteriorLayer) == 0 && (LayerMask & InteriorLayer) == 0) {
+				LayerMask |= ExteriorLayer;
+			}
 		}
-		CurrentMask = currentMask;
 	}
 
-	void UpdateLayer() {
+
+
+	void UpdateMask() {
 		if (FadeRawImage.color.a == 0) {
-			if (MainCamera.cullingMask != currentMask) FadeCamera.cullingMask = currentMask;
+			if (MainCamera.cullingMask != LayerMask) FadeCamera.cullingMask = LayerMask;
 		}
 		if (FadeCamera.cullingMask != 0) {
 			float delta = Time.fixedDeltaTime / TransitionTime;
@@ -399,6 +417,10 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 	void Start() => Projection = Projection;
 
+	void OnEnable() {
+		layerChanged = true;
+	}
+
 	void Update() => UpdatePixelPerUnit();
 
 	void LateUpdate() => UpdateTransform();
@@ -406,10 +428,12 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	void FixedUpdate() {
 		UpdateCameraShake();
 
-		EndDetectLayer();
-		UpdateLayer();
+		EndDetectLayer  ();
 		BeginDetectLayer();
+
+		UpdateMask();
 	}
 
-	void OnTriggerStay(Collider collider) => DetectLayer(collider);
+	void OnTriggerEnter(Collider collider) => OnDetectLayerEnter(collider);
+	void OnTriggerExit (Collider collider) => OnDetectLayerExit (collider);
 }
