@@ -1,16 +1,26 @@
 using UnityEngine;
-
-using System.Collections.Generic;
-
 using UnityEngine.AI;
 using Unity.AI.Navigation;
-using System;
 
+using System;
+using System.Collections.Generic;
 
 #if UNITY_EDITOR
-using UnityEditor;
+	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
+
+
+
+[Serializable] public enum HitboxType {
+	Humanoid,
+}
+
+[Serializable] public struct HitboxData {
+	public int agentTypeID;
+	public float radius;
+	public float height;
+}
 
 
 
@@ -66,18 +76,6 @@ using UnityEditor;
 // ====================================================================================================
 // NavMesh Manager
 // ====================================================================================================
-
-[Serializable] public enum HitboxType {
-	Humanoid,
-}
-
-[Serializable] public struct HitboxData {
-	public int agentTypeID;
-	public float radius;
-	public float height;
-}
-
-
 
 public class NavMeshManager : MonoSingleton<NavMeshManager> {
 

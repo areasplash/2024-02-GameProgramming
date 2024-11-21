@@ -12,6 +12,14 @@ using System.Collections.Generic;
 
 
 
+[Serializable] public struct TextureData {
+	public Vector2 size;
+	public Vector2 tiling;
+	public Vector2 offset;
+}
+
+
+
 // ====================================================================================================
 // Atlas Map SO Editor
 // ====================================================================================================
@@ -72,14 +80,6 @@ using System.Collections.Generic;
 // ====================================================================================================
 // Atlas Map SO
 // ====================================================================================================
-
-[Serializable] public struct TextureData {
-	public Vector2 size;
-	public Vector2 tiling;
-	public Vector2 offset;
-}
-
-
 
 [CreateAssetMenu(fileName = "AtlasMap", menuName = "Scriptable Objects/AtlasMap")]
 public class AtlasMapSO : ScriptableObject {

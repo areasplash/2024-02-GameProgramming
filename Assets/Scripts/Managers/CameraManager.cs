@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
+
 using System.Collections.Generic;
 
-
 #if UNITY_EDITOR
-using UnityEditor;
+	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
 #endif
 
@@ -27,14 +27,6 @@ using UnityEditor;
 
 		CameraManager I => target as CameraManager;
 
-		string[] layerNames;
-		string[] LayerNames => layerNames ??= GetLayerNames();
-		string[] GetLayerNames() {
-			string[] names = new string[32];
-			for (int i = 0; i < 32; i++) names[i] = LayerMask.LayerToName(i);
-			return names;
-		}
-
 		void OnEnable() {
 			m_MainCamera     = serializedObject.FindProperty("m_MainCamera");
 			m_FadeCamera     = serializedObject.FindProperty("m_FadeCamera");
@@ -42,6 +34,14 @@ using UnityEditor;
 			m_FadeRawImage   = serializedObject.FindProperty("m_FadeRawImage");
 			m_Target         = serializedObject.FindProperty("m_Target");
 			m_TargetPosition = serializedObject.FindProperty("m_TargetPosition");
+		}
+
+		string[] layerNames;
+		string[] LayerNames => layerNames ??= GetLayerNames();
+		string[] GetLayerNames() {
+			string[] names = new string[32];
+			for (int i = 0; i < 32; i++) names[i] = LayerMask.LayerToName(i);
+			return names;
 		}
 
 		public override void OnInspectorGUI() {

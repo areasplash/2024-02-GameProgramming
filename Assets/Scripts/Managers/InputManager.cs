@@ -12,6 +12,25 @@ using System.Collections.Generic;
 
 
 
+[Serializable] public enum KeyAction {
+	MoveUp,
+	MoveLeft,
+	MoveDown,
+	MoveRight,
+	Interact,
+	Cancel,
+	
+	Point,
+	LeftClick,
+	MiddleClick,
+	RightClick,
+	Scroll,
+	Move,
+	Control,
+}
+
+
+
 // ====================================================================================================
 // Input Manager Editor
 // ====================================================================================================
@@ -45,25 +64,6 @@ using System.Collections.Generic;
 // ====================================================================================================
 // Input Manager
 // ====================================================================================================
-
-[Serializable] public enum KeyAction {
-	MoveUp,
-	MoveLeft,
-	MoveDown,
-	MoveRight,
-	Interact,
-	Cancel,
-	
-	Point,
-	LeftClick,
-	MiddleClick,
-	RightClick,
-	Scroll,
-	Move,
-	Control,
-}
-
-
 
 public class InputManager : MonoSingleton<InputManager> {
 

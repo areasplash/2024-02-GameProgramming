@@ -11,6 +11,37 @@ using System.Runtime.InteropServices;
 
 
 
+struct CreatureData {
+	public Vector3    position;
+	public Quaternion rotation;
+	public Vector3    scale;
+
+	public Vector2 tiling;
+	public Vector2 offset;
+	public Vector3 color;
+	public float   emission;
+	public float   alpha;
+}
+
+struct ParticleData {
+	public Vector3 position;
+	public Vector3 scale;
+
+	public Vector2 tiling;
+	public Vector2 offset;
+	public Vector3 color;
+	public float   emission;
+	public float   alpha;
+}
+
+struct ShadowData {
+	public Vector3 position;
+	public Vector4 rotation;
+	public Vector3 scale;
+}
+
+
+
 // ====================================================================================================
 // Draw Manager Editor
 // ====================================================================================================
@@ -64,37 +95,6 @@ using System.Runtime.InteropServices;
 // ====================================================================================================
 // Draw Manager
 // ====================================================================================================
-
-struct CreatureData {
-	public Vector3    position;
-	public Quaternion rotation;
-	public Vector3    scale;
-
-	public Vector2 tiling;
-	public Vector2 offset;
-	public Vector3 color;
-	public float   emission;
-	public float   alpha;
-}
-
-struct ParticleData {
-	public Vector3 position;
-	public Vector3 scale;
-
-	public Vector2 tiling;
-	public Vector2 offset;
-	public Vector3 color;
-	public float   emission;
-	public float   alpha;
-}
-
-struct ShadowData {
-	public Vector3 position;
-	public Vector4 rotation;
-	public Vector3 scale;
-}
-
-
 
 public class DrawManager : MonoSingleton<DrawManager> {
 

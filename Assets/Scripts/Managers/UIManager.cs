@@ -15,6 +15,19 @@ using System.Collections.Generic;
 
 
 
+[Serializable, Flags] public enum CanvasType {
+	None	     = 0,
+	MainMenu     = 1 << 0,
+	Game         = 1 << 1,
+	Dialogue     = 1 << 2,
+	Menu         = 1 << 3,
+	Settings     = 1 << 4,
+	Confirmation = 1 << 5,
+	Fade         = 1 << 6,
+}
+
+
+
 // ====================================================================================================
 // UI Manager Editor
 // ====================================================================================================
@@ -108,19 +121,6 @@ using System.Collections.Generic;
 // ====================================================================================================
 // UI Manager
 // ====================================================================================================
-
-[Serializable, Flags] public enum CanvasType {
-	None	     = 0,
-	MainMenu     = 1 << 0,
-	Game         = 1 << 1,
-	Dialogue     = 1 << 2,
-	Menu         = 1 << 3,
-	Settings     = 1 << 4,
-	Confirmation = 1 << 5,
-	Fade         = 1 << 6,
-}
-
-
 
 public class UIManager : MonoSingleton<UIManager> {
 	
