@@ -443,12 +443,12 @@ public class UIManager : MonoSingleton<UIManager> {
 		SoundFX           = PlayerPrefs.GetFloat ("SoundFX", 1f);
 		MouseSensitivity  = PlayerPrefs.GetFloat ("MouseSensitivity", 1f);
 
-		defaultMoveUp    ??= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveUp));
-		defaultMoveLeft  ??= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveLeft));
-		defaultMoveDown  ??= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveDown));
-		defaultMoveRight ??= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveRight));
-		defaultInteract  ??= ToString(InputManager.I.GetKeysBinding(KeyAction.Interact));
-		defaultCancel    ??= ToString(InputManager.I.GetKeysBinding(KeyAction.Cancel));
+		defaultMoveUp    ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveUp));
+		defaultMoveLeft  ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveLeft));
+		defaultMoveDown  ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveDown));
+		defaultMoveRight ??= ToString(InputManager.GetKeysBinding(KeyAction.MoveRight));
+		defaultInteract  ??= ToString(InputManager.GetKeysBinding(KeyAction.Interact));
+		defaultCancel    ??= ToString(InputManager.GetKeysBinding(KeyAction.Cancel));
 
 		string strMoveUp    = PlayerPrefs.GetString("MoveUp",    defaultMoveUp);
 		string strMoveLeft  = PlayerPrefs.GetString("MoveLeft",  defaultMoveLeft);
@@ -457,12 +457,12 @@ public class UIManager : MonoSingleton<UIManager> {
 		string strInteract  = PlayerPrefs.GetString("Interact",  defaultInteract);
 		string strCancel    = PlayerPrefs.GetString("Cancel",    defaultCancel);
 
-		InputManager.I.SetKeysBinding(KeyAction.MoveUp,    ToKeys(strMoveUp));
-		InputManager.I.SetKeysBinding(KeyAction.MoveLeft,  ToKeys(strMoveLeft));
-		InputManager.I.SetKeysBinding(KeyAction.MoveDown,  ToKeys(strMoveDown));
-		InputManager.I.SetKeysBinding(KeyAction.MoveRight, ToKeys(strMoveRight));
-		InputManager.I.SetKeysBinding(KeyAction.Interact,  ToKeys(strInteract));
-		InputManager.I.SetKeysBinding(KeyAction.Cancel,    ToKeys(strCancel));
+		InputManager.SetKeysBinding(KeyAction.MoveUp,    ToKeys(strMoveUp));
+		InputManager.SetKeysBinding(KeyAction.MoveLeft,  ToKeys(strMoveLeft));
+		InputManager.SetKeysBinding(KeyAction.MoveDown,  ToKeys(strMoveDown));
+		InputManager.SetKeysBinding(KeyAction.MoveRight, ToKeys(strMoveRight));
+		InputManager.SetKeysBinding(KeyAction.Interact,  ToKeys(strInteract));
+		InputManager.SetKeysBinding(KeyAction.Cancel,    ToKeys(strCancel));
 		
 		UpdateLanguage();
 		UpdateFullScreen();
@@ -485,12 +485,12 @@ public class UIManager : MonoSingleton<UIManager> {
 		PlayerPrefs.SetFloat ("SoundFX",          SoundFX);
 		PlayerPrefs.SetFloat ("MouseSensitivity", MouseSensitivity);
 
-		string strMoveUp	= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveUp));
-		string strMoveLeft	= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveLeft));
-		string strMoveDown	= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveDown));
-		string strMoveRight	= ToString(InputManager.I.GetKeysBinding(KeyAction.MoveRight));
-		string strInteract	= ToString(InputManager.I.GetKeysBinding(KeyAction.Interact));
-		string strCancel	= ToString(InputManager.I.GetKeysBinding(KeyAction.Cancel));
+		string strMoveUp	= ToString(InputManager.GetKeysBinding(KeyAction.MoveUp));
+		string strMoveLeft	= ToString(InputManager.GetKeysBinding(KeyAction.MoveLeft));
+		string strMoveDown	= ToString(InputManager.GetKeysBinding(KeyAction.MoveDown));
+		string strMoveRight	= ToString(InputManager.GetKeysBinding(KeyAction.MoveRight));
+		string strInteract	= ToString(InputManager.GetKeysBinding(KeyAction.Interact));
+		string strCancel	= ToString(InputManager.GetKeysBinding(KeyAction.Cancel));
 
 		PlayerPrefs.SetString("MoveUp",    strMoveUp);
 		PlayerPrefs.SetString("MoveLeft",  strMoveLeft);
@@ -514,10 +514,10 @@ public class UIManager : MonoSingleton<UIManager> {
 	Selectable selectable;
 
 	void Update() {
-		if (InputManager.I.GetKeyDown(KeyAction.Move)) {
+		if (InputManager.GetKeyDown(KeyAction.Move)) {
 			if (!Selected) Selected = FirstSelected;
 		}
-		if (InputManager.I.GetKeyDown(KeyAction.Interact)) {
+		if (InputManager.GetKeyDown(KeyAction.Interact)) {
 			if (Selected && Selected.TryGetComponent(out selectable)) {
 				if (selectable is CustomButton    customButton   ) customButton   .OnSubmit();
 				if (selectable is SettingsButton  settingsButton ) settingsButton .OnSubmit();
@@ -526,7 +526,7 @@ public class UIManager : MonoSingleton<UIManager> {
 				if (selectable is SettingsSlider  settingsSlider ) settingsSlider .OnSubmit();
 			}
 		}
-		if (InputManager.I.GetKeyDown(KeyAction.Cancel)) Back();
+		if (InputManager.GetKeyDown(KeyAction.Cancel)) Back();
 	}
 
 	void LateUpdate() {
@@ -662,15 +662,15 @@ public class UIManager : MonoSingleton<UIManager> {
 			preset.y < Screen.currentResolution.height);
 		
 		if (CanvasScaler) CanvasScaler.scaleFactor = multiplier;
-		if (CameraManager.I) {
+		if (CameraManager.Instance) {
 			Vector2Int size = new Vector2Int(Screen.width, Screen.height);
 			if (PixelPerfect) {
 				size.x = (int)Mathf.Ceil(Screen.width  / multiplier);
 				size.y = (int)Mathf.Ceil(Screen.height / multiplier);
 			}
 			if (size != Vector2Int.zero) {
-				CameraManager.I.RenderTextureSize = size;
-				CameraManager.I. OrthographicSize = size.y / 2 / PixelPerUnit;
+				CameraManager.RenderTextureSize = size;
+				CameraManager. OrthographicSize = size.y / 2 / PixelPerUnit;
 			}
 		}
 		if (screenResolution) {
@@ -760,7 +760,7 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	void UpdateKeys(SettingsButton button, KeyAction keyAction) {
 		if (button) action[(int)keyAction] = button;
-		string str = ToString(InputManager.I.GetKeysBinding(keyAction));
+		string str = ToString(InputManager.GetKeysBinding(keyAction));
 		str = str.Replace("upArrow",    "↑");
 		str = str.Replace("leftArrow",  "←");
 		str = str.Replace("downArrow",  "↓");
@@ -782,12 +782,12 @@ public class UIManager : MonoSingleton<UIManager> {
 		OpenConfirmation("Binding", "Binding Message", "Apply Binding", "Cancel Binding");
 		List<string> keys = new();
 		if (confirmationPositive) confirmationPositive.OnClick.AddListener(() => {
-			InputManager.I.SetKeysBinding(keyAction, keys);
+			InputManager.SetKeysBinding(keyAction, keys);
 		});
-		InputManager.I.RecordKeys();
+		InputManager.RecordKeys();
 		while ((ActiveCanvas & CanvasType.Confirmation) != 0) {
 			yield return null;
-			switch (InputManager.I.RecordedKey) {
+			switch (InputManager.RecordedKey) {
 				case "":
 					break;
 				case "enter":
@@ -798,8 +798,8 @@ public class UIManager : MonoSingleton<UIManager> {
 				case "escape":
 					break;
 				default:
-					if (!keys.Exists(key => key.Equals(InputManager.I.RecordedKey))) {
-						keys.Add(InputManager.I.RecordedKey);
+					if (!keys.Exists(key => key.Equals(InputManager.RecordedKey))) {
+						keys.Add(InputManager.RecordedKey);
 						string str = ToString(keys);
 						str = str.Replace("upArrow",    "↑");
 						str = str.Replace("leftArrow",  "←");
@@ -810,7 +810,7 @@ public class UIManager : MonoSingleton<UIManager> {
 					break;
 			}
 		}
-		InputManager.I.StopRecordKeys();
+		InputManager.StopRecordKeys();
 		if (action[(int)keyAction]) action[(int)keyAction].Refresh();
 	}
 

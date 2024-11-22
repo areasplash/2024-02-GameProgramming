@@ -36,11 +36,6 @@ using System.Collections.Generic;
 	[CustomEditor(typeof(Creature)), CanEditMultipleObjects]
 	public class CreatureEditor : Editor {
 
-		SerializedProperty m_CreatureType;
-		SerializedProperty m_AnimationType;
-		SerializedProperty m_Offset;
-		SerializedProperty m_HitboxType;
-
 		SerializedProperty m_Velocity;
 		SerializedProperty m_ForcedVelocity;
 		SerializedProperty m_GroundVelocity;
@@ -49,11 +44,6 @@ using System.Collections.Generic;
 		Creature I => target as Creature;
 
 		void OnEnable() {
-			m_CreatureType  = serializedObject.FindProperty("m_CreatureType");
-			m_AnimationType = serializedObject.FindProperty("m_AnimationType");
-			m_Offset        = serializedObject.FindProperty("m_Offset");
-			m_HitboxType    = serializedObject.FindProperty("m_HitboxType");
-
 			m_Velocity       = serializedObject.FindProperty("m_Velocity");
 			m_ForcedVelocity = serializedObject.FindProperty("m_ForcedVelocity");
 			m_GroundVelocity = serializedObject.FindProperty("m_GroundVelocity");
@@ -132,7 +122,7 @@ public class Creature : MonoBehaviour {
 		get => m_HitboxType;
 		set {
 			m_HitboxType = value;
-			HitboxData data = NavMeshManager.I.GetHitboxData(value);
+			HitboxData data = NavMeshManager.Instance.GetHitboxData(value);
 			if (TryGetComponent(out CapsuleCollider capsule)) {
 				capsule.radius = data.radius;
 				capsule.height = data.height;
@@ -223,11 +213,43 @@ public class Creature : MonoBehaviour {
 
 	// Lifecycle
 
+	static List<Creature> creatureList = new List<Creature>();
+	static List<Creature> creaturePool = new List<Creature>();
+	static Creature creaturePrefab;
+	static Creature creature;
+
+	public static List<Creature> GetList() => creatureList;
+
+	public static Creature Spawn(CreatureType type, Vector3 position) {
+		if (creaturePool.Count == 0) {
+			if (!creaturePrefab) creaturePrefab = Resources.Load<Creature>(PrefabPath);
+			creature = Instantiate(creaturePrefab);
+		}
+		else {
+			int i = creaturePool.Count - 1;
+			creature = creaturePool[i];
+			creature.gameObject.SetActive(true);
+			creaturePool.RemoveAt(i);
+		}
+		creature.transform.position = position;
+		creature.transform.rotation = Quaternion.identity;
+		creature.CreatureType = type;
+		return creature;
+	}
+
+	public static void Despawn(Creature creature) {
+		if (!creature) return;
+		creature.gameObject.SetActive(false);
+	}
+
+
+
 	bool creatureSpawned;
 
-	
-
-	void OnEnable() => creatureSpawned = true;
+	void OnEnable() {
+		creatureList.Add(this);
+		creatureSpawned = true;
+	}
 
 	void Update() {
 		if (creatureSpawned) {
@@ -242,35 +264,39 @@ public class Creature : MonoBehaviour {
 
 	void OnDisable() {
 		OnDespawn?.Invoke();
+		creatureList.Remove(this);
+		creaturePool.Add   (this);
+	}
+
+	void OnDestory() {
+		creatureList.Remove(this);
+		creaturePool.Add   (this);
 	}
 
 
 
-	// Physics
-
-	Rigidbody rb;
+	public float TransitionOpacity { get; set; }
 
 	List<Collider> layers          = new List<Collider>();
 	bool           layerChanged    = false;
+	int            layerMask       = 0;
+
 	List<Collider> grounds         = new List<Collider>();
 	bool           groundChanged   = false;
 	Rigidbody      groundRigidbody = null;
 	Quaternion     groundRotation  = Quaternion.identity;
+	bool           isGrounded      = false;
 
-
-
-	public int   LayerMask    { get; private set; }
-	public float LayerOpacity { get; set; }
-	public bool  IsGrounded   { get; private set; }
-
-
+	Rigidbody rb;
 
 	void Start() => TryGetComponent(out rb);
 
 	void InitTrigger() {
 		layers.Clear();
-		LayerMask    = Utility.GetLayerMaskAtPoint(transform.position, gameObject);
-		LayerOpacity = ((CameraManager.I.LayerMask | LayerMask) != 0)? 1 : 0;
+		layerChanged = true;
+		layerMask = Utility.GetLayerMaskAtPoint(transform.position, gameObject);
+		if (layerMask == 0) layerMask |= CameraManager.ExteriorLayer;
+		TransitionOpacity = ((CameraManager.CullingMask | layerMask) != 0)? 1 : 0;
 
 		grounds.Clear();
 		groundChanged = true;
@@ -300,30 +326,38 @@ public class Creature : MonoBehaviour {
 
 	void EndTrigger() {
 		if (layerChanged) {
-			LayerMask = 0;
-			for(int i = 0; i < layers.Count; i++) LayerMask |= 1 << layers[i].gameObject.layer;
 			layerChanged = false;
+			layerMask = 0;
+			for(int i = 0; i < layers.Count; i++) layerMask |= 1 << layers[i].gameObject.layer;
+			if (layerMask == 0) layerMask |= CameraManager.ExteriorLayer;
 		}
 		if (groundChanged) {
+			groundChanged = false;
 			if (0 < grounds.Count) {
 				int i = grounds.Count - 1;
 				grounds[i].TryGetComponent(out groundRigidbody);
 				groundRotation  = grounds[i].transform.localRotation;
-				IsGrounded      = true;
+				isGrounded      = true;
 			}
 			else {
 				groundRigidbody = null;
 				groundRotation  = Quaternion.identity;
-				IsGrounded      = false;
+				isGrounded      = false;
 			}
-			groundChanged = false;
 		}
 	}
 
 	void FixedUpdate() {
 		EndTrigger();
+
+		bool visible = (CameraManager.CullingMask & layerMask) != 0;
+		if ((visible && TransitionOpacity < 1) || (!visible && 0 < TransitionOpacity)) {
+			TransitionOpacity += (visible? 1 : -1) * Time.deltaTime / CameraManager.TransitionTime;
+			TransitionOpacity = Mathf.Clamp01(TransitionOpacity);
+		}
+
 		if (groundRigidbody) GroundVelocity = groundRigidbody.linearVelocity;
-		if (!IsGrounded) GravitVelocity += Physics.gravity * Time.deltaTime;
+		if (!isGrounded) GravitVelocity += Physics.gravity * Time.deltaTime;
 		
 		Vector3 linearVelocity = Vector3.zero;
 		linearVelocity += groundRotation * Velocity;
@@ -340,49 +374,8 @@ public class Creature : MonoBehaviour {
 			if (GroundVelocity.sqrMagnitude < 0.01f) GroundVelocity = Vector3.zero;
 		}
 		if (GravitVelocity != Vector3.zero) {
-			if (IsGrounded) GravitVelocity = Vector3.zero;
+			if (isGrounded) GravitVelocity = Vector3.zero;
 		}
-	}
-
-
-
-	// Creature Pool
-
-	static List<Creature> creatureList = new List<Creature>();
-	static List<Creature> creaturePool = new List<Creature>();
-	static Creature creaturePrefab;
-	static Creature creature;
-
-
-
-	public static List<Creature> GetList() => creatureList;
-
-	public static Creature Spawn(CreatureType type, Vector3 position) {
-		if (creaturePool.Count == 0) {
-			if (!creaturePrefab) creaturePrefab = Resources.Load<Creature>(PrefabPath);
-			creature = Instantiate(creaturePrefab);
-		}
-		else {
-			int i = creaturePool.Count - 1;
-			creature = creaturePool[i];
-			creature.gameObject.SetActive(true);
-			creaturePool.RemoveAt(i);
-		}
-		creatureList.Add(creature);
-		creature.transform.position = position;
-		return creature;
-	}
-
-	public static void Despawn(Creature creature) {
-		if (!creature) return;
-		creature.gameObject.SetActive(false);
-		creatureList.Remove(creature);
-		creaturePool.Add   (creature);
-	}
-
-	void OnDestory() {
-		creatureList.Remove(this);
-		creaturePool.Add   (this);
 	}
 
 
@@ -411,8 +404,6 @@ public class Creature : MonoBehaviour {
 
 	public Vector3        input = Vector3.zero;
 	public Queue<Vector3> queue = new Queue<Vector3>();
-
-
 
 	void UpdatePlayer() {
 		if (input == Vector3.zero && queue.Count == 0) {

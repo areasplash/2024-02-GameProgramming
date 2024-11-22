@@ -1,10 +1,11 @@
 using UnityEngine;
+
 using System.Collections.Generic;
 
-
 #if UNITY_EDITOR
-using UnityEditor;
+	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
+	using static GameManager;
 #endif
 
 
@@ -50,45 +51,37 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 
-	// Properties
-
-
-
-	// Methods
-
-
-
 	// Lifecycle
 
 	Vector2 pointPosition;
 	Vector3 rotation;
 
 	void Update() {
-		if (m_Player && UIManager.I.ActiveCanvas == CanvasType.Game) {
+		if (m_Player && UIManager.Instance.ActiveCanvas == CanvasType.Game) {
 			{
 				Vector3 direction = Vector3.zero;
-				direction += CameraManager.I.transform.right   * InputManager.I.MoveDirection.x;
-				direction += CameraManager.I.transform.forward * InputManager.I.MoveDirection.y;
+				direction += CameraManager.Instance.transform.right   * InputManager.MoveDirection.x;
+				direction += CameraManager.Instance.transform.forward * InputManager.MoveDirection.y;
 				direction.y = 0;
 				direction.Normalize();
 				m_Player.input = direction;
 			}
-			if (InputManager.I.GetKeyDown(KeyAction.LeftClick)) {
-				Ray ray = CameraManager.I.ScreenPointToRay(InputManager.I.PointPosition);
+			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
+				Ray ray = CameraManager.ScreenPointToRay(InputManager.PointPosition);
 				if (Physics.Raycast(ray, out RaycastHit hit)) {
 					Vector3 start = m_Player.transform.position;
 					m_Player.queue.Clear();
-					NavMeshManager.I.FindPath(start, hit.point, ref m_Player.queue, 0.75f);
+					NavMeshManager.Instance.FindPath(start, hit.point, ref m_Player.queue, 0.75f);
 				}
 			}
-			if (InputManager.I.GetKeyDown(KeyAction.RightClick)) {
-				pointPosition = InputManager.I.PointPosition;
-				rotation = CameraManager.I.Rotation;
+			if (InputManager.GetKeyDown(KeyAction.RightClick)) {
+				pointPosition = InputManager.PointPosition;
+				rotation = CameraManager.EulerRotation;
 			}
-			if (InputManager.I.GetKey(KeyAction.RightClick)) {
-				float mouseSensitivity = UIManager.I.MouseSensitivity;
-				float delta = InputManager.I.PointPosition.x - pointPosition.x;
-				CameraManager.I.Rotation = rotation + new Vector3(0, delta * mouseSensitivity, 0);
+			if (InputManager.GetKey(KeyAction.RightClick)) {
+				float mouseSensitivity = UIManager.Instance.MouseSensitivity;
+				float delta = InputManager.PointPosition.x - pointPosition.x;
+				CameraManager.EulerRotation = rotation + new Vector3(0, delta * mouseSensitivity, 0);
 			}
 		}
 	}

@@ -8,15 +8,14 @@ using UnityEngine;
 
 public class MonoSingleton<T> : MonoBehaviour where T : Object {
 
-	static T i;
+	static T instance;
 
-	public static T I => i? i : i = FindAnyObjectByType<T>();
+	public static T Instance => instance ??= FindAnyObjectByType<T>();
 
 	protected virtual void Awake() {
-		if (i == null || i == this) {
-			i = this as T;
-			DontDestroyOnLoad(gameObject);
-		}
+		if (Instance == this) DontDestroyOnLoad(gameObject);
 		else Destroy(gameObject);
 	}
+
+	protected virtual void OnApplicationQuit() => instance = null;
 }

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 #if UNITY_EDITOR
 	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
+	using static InputManager;
 #endif
 
 
@@ -41,8 +42,6 @@ using System.Collections.Generic;
 
 		SerializedProperty m_InputActionAsset;
 
-		InputManager I => target as InputManager;
-
 		void OnEnable() {
 			m_InputActionAsset = serializedObject.FindProperty("m_InputActionAsset");
 		}
@@ -75,47 +74,46 @@ public class InputManager : MonoSingleton<InputManager> {
 
 	// Properties
 
-	InputActionAsset Actions => m_InputActionAsset;
-
-	public Vector2 MoveDirection { get; private set; }
-	public Vector2 PointPosition { get; private set; }
-	public Vector2 ScrollWheel   { get; private set; }
-
-	public string RecordedKey { get; private set; }
+	static InputActionAsset Actions => Instance?.m_InputActionAsset;
 
 
 
 	// Methods
 
-	readonly bool[] keyPrev = new bool[Enum.GetValues(typeof(KeyAction)).Length];
-	readonly bool[] keyNext = new bool[Enum.GetValues(typeof(KeyAction)).Length];
-	Vector2 moveDirection;
-	Vector2 pointPosition;
+	static bool[] keyPrev = new bool[Enum.GetValues(typeof(KeyAction)).Length];
+	static bool[] keyNext = new bool[Enum.GetValues(typeof(KeyAction)).Length];
+	static Vector2 moveDirection;
+	static Vector2 pointPosition;
 
-	public bool GetKey    (KeyAction key) =>  keyNext[(int)key];
-	public bool GetKeyDown(KeyAction key) =>  keyNext[(int)key] && !keyPrev[(int)key];
-	public bool GetKeyUp  (KeyAction key) => !keyNext[(int)key] &&  keyPrev[(int)key];
+	public static Vector2 MoveDirection { get; private set; }
+	public static Vector2 PointPosition { get; private set; }
+	public static Vector2 ScrollWheel   { get; private set; }
 
-	void BindKeys() {
-		if (!Actions) return;
-		for (int i = 0; i < keyNext.Length; i++) {
-			int index = i;
-			Actions[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
-				KeyAction.Move   => context => moveDirection = context.ReadValue<Vector2>(),
-				KeyAction.Point  => context => PointPosition = context.ReadValue<Vector2>(),
-				KeyAction.Scroll => context => ScrollWheel   = context.ReadValue<Vector2>(),
-				_                => context => {},
-			};
-			Actions[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
-				KeyAction.Move   => context => keyNext[index] = MoveDirection != Vector2.zero,
-				KeyAction.Point  => context => keyNext[index] = PointPosition != pointPosition,
-				KeyAction.Scroll => context => keyNext[index] = ScrollWheel   != Vector2.zero,
-				_                => context => keyNext[index] = context.action.IsPressed(),
-			};
+	public static bool GetKey    (KeyAction key) =>  keyNext[(int)key];
+	public static bool GetKeyDown(KeyAction key) =>  keyNext[(int)key] && !keyPrev[(int)key];
+	public static bool GetKeyUp  (KeyAction key) => !keyNext[(int)key] &&  keyPrev[(int)key];
+
+	static void BindKeys() {
+		if (Actions) {
+			for (int i = 0; i < keyNext.Length; i++) {
+				int index = i;
+				Actions[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
+					KeyAction.Move   => context => moveDirection = context.ReadValue<Vector2>(),
+					KeyAction.Point  => context => PointPosition = context.ReadValue<Vector2>(),
+					KeyAction.Scroll => context => ScrollWheel   = context.ReadValue<Vector2>(),
+					_                => context => {},
+				};
+				Actions[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
+					KeyAction.Move   => context => keyNext[index] = MoveDirection != Vector2.zero,
+					KeyAction.Point  => context => keyNext[index] = PointPosition != pointPosition,
+					KeyAction.Scroll => context => keyNext[index] = ScrollWheel   != Vector2.zero,
+					_                => context => keyNext[index] = context.action.IsPressed(),
+				};
+			}
 		}
 	}
 
-	void PeekKeys() {
+	static void PeekKeys() {
 		Vector2 md = MoveDirection;
 		Vector2 dir = Vector2.zero;
 		if (GetKey(KeyAction.MoveUp   ) && (0 < md.y || GetKeyUp(KeyAction.MoveDown ))) dir.y = +1;
@@ -134,9 +132,9 @@ public class InputManager : MonoSingleton<InputManager> {
 
 
 
-	InputAction inputAction;
+	static InputAction inputAction;
 
-	public List<string> GetKeysBinding(KeyAction keyAction) {
+	public static List<string> GetKeysBinding(KeyAction keyAction) {
 		List<string> keys = new List<string>();
 		if (Actions) {
 			inputAction = Actions.FindAction(keyAction.ToString());
@@ -151,7 +149,7 @@ public class InputManager : MonoSingleton<InputManager> {
 		return keys;
 	}
 
-	public void SetKeysBinding(KeyAction keyAction, List<string> keys) {
+	public static void SetKeysBinding(KeyAction keyAction, List<string> keys) {
 		if (Actions) {
 			inputAction = Actions.FindAction(keyAction.ToString());
 			if (inputAction != null) {
@@ -166,33 +164,36 @@ public class InputManager : MonoSingleton<InputManager> {
 		UpdateMoveBinding();
 	}
 
-	void UpdateMoveBinding() {
-		if (!Actions) return;
-		List<string> keysUp    = GetKeysBinding(KeyAction.MoveUp   );
-		List<string> keysLeft  = GetKeysBinding(KeyAction.MoveLeft );
-		List<string> keysDown  = GetKeysBinding(KeyAction.MoveDown );
-		List<string> keysRight = GetKeysBinding(KeyAction.MoveRight);
-		inputAction = Actions.FindAction(KeyAction.Move.ToString());
-		if (inputAction != null) {
-			for (int i = inputAction.bindings.Count - 1; -1 < i; i--) {
-				string[] parts = inputAction.bindings[i].path.Split('/');
-				if (parts[0].Equals("<Keyboard>")) inputAction.ChangeBinding(i).Erase();
-				// path: "<Device>/Key"
+	static void UpdateMoveBinding() {
+		if (Actions) {
+			List<string> keysUp    = GetKeysBinding(KeyAction.MoveUp   );
+			List<string> keysLeft  = GetKeysBinding(KeyAction.MoveLeft );
+			List<string> keysDown  = GetKeysBinding(KeyAction.MoveDown );
+			List<string> keysRight = GetKeysBinding(KeyAction.MoveRight);
+			inputAction = Actions.FindAction(KeyAction.Move.ToString());
+			if (inputAction != null) {
+				for (int i = inputAction.bindings.Count - 1; -1 < i; i--) {
+					string[] parts = inputAction.bindings[i].path.Split('/');
+					if (parts[0].Equals("<Keyboard>")) inputAction.ChangeBinding(i).Erase();
+					// path: "<Device>/Key"
+				}
+				var composite = inputAction.AddCompositeBinding("2DVector");
+				foreach (string key in keysUp   ) composite.With("Up",    "<Keyboard>/" + key);
+				foreach (string key in keysLeft ) composite.With("Left",  "<Keyboard>/" + key);
+				foreach (string key in keysDown ) composite.With("Down",  "<Keyboard>/" + key);
+				foreach (string key in keysRight) composite.With("Right", "<Keyboard>/" + key);
 			}
-			var composite = inputAction.AddCompositeBinding("2DVector");
-			foreach (string key in keysUp   ) composite.With("Up",    "<Keyboard>/" + key);
-			foreach (string key in keysLeft ) composite.With("Left",  "<Keyboard>/" + key);
-			foreach (string key in keysDown ) composite.With("Down",  "<Keyboard>/" + key);
-			foreach (string key in keysRight) composite.With("Right", "<Keyboard>/" + key);
 		}
 	}
 
 
 
-	public void RecordKeys    () => RecordedKey = "";
-	public void StopRecordKeys() => RecordedKey = null;
+	public static string RecordedKey { get; private set; }
 
-	void BindRecordKeys() {
+	public static void RecordKeys    () => RecordedKey = "";
+	public static void StopRecordKeys() => RecordedKey = null;
+
+	static void BindRecordKeys() {
 		InputSystem.onAnyButtonPress.Call(inputControl => {
 			if (RecordedKey != null) {
 				string[] parts = inputControl.path.Split('/');

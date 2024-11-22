@@ -157,7 +157,7 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 	
 	float Ratio => (Value - MinValue) / (MaxValue - MinValue);
 	int   Width => Mathf.RoundToInt(Ratio * (RectTransform.rect.width - m_HandleRect.rect.width));
-	bool  Fine  => InputManager.I.GetKey(KeyAction.Control);
+	bool  Fine  => InputManager.GetKey(KeyAction.Control);
 
 
 

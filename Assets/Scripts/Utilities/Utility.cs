@@ -10,7 +10,7 @@ using System;
 
 public static class Utility {
 
-	// Data Conversion
+	// Methods
 
 	public static int   ToInt  (float value) => (int  )(value * 10000.0f);
 	public static float ToFloat(int   value) => (float)(value *  0.0001f);
@@ -106,8 +106,6 @@ public static class Utility {
 	*/
 
 
-
-	// Layer Detection
 
 	static RaycastHit[] hits = new RaycastHit[16];
 

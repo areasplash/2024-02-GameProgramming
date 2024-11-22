@@ -58,8 +58,6 @@ struct ShadowData {
 		SerializedProperty m_CreatureAtlasMap;
 		SerializedProperty m_ParticleAtlasMap;
 
-		DrawManager I => target as DrawManager;
-
 		void OnEnable() {
 			m_SphereMesh       = serializedObject.FindProperty("m_SphereMesh");
 			m_ShadowMaterial   = serializedObject.FindProperty("m_ShadowMaterial");
@@ -159,10 +157,10 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 
 
-	readonly HashMap<int, int>          creatureSizeMap = new HashMap<int, int>();
-	readonly HashMap<int, int>          particleSizeMap = new HashMap<int, int>();
-	readonly HashMap<int, CreatureData> creatureDataMap = new HashMap<int, CreatureData>();
-	readonly HashMap<int, ParticleData> particleDataMap = new HashMap<int, ParticleData>();
+	HashMap<int, int>          creatureSizeMap = new HashMap<int, int>();
+	HashMap<int, int>          particleSizeMap = new HashMap<int, int>();
+	HashMap<int, CreatureData> creatureDataMap = new HashMap<int, CreatureData>();
+	HashMap<int, ParticleData> particleDataMap = new HashMap<int, ParticleData>();
 
 	int GetCreatureSize(
 		CreatureType  creatureType  = (CreatureType )(-1),
@@ -207,7 +205,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 
 	void LoadCreatureMap() {
-		float pixelPerUnit = UIManager.I.PixelPerUnit;
+		float pixelPerUnit = UIManager.Instance.PixelPerUnit;
 		creatureSizeMap.Clear();
 		creatureDataMap.Clear();
 		if (m_CreatureAtlasMap) foreach (var pair in m_CreatureAtlasMap.atlasMap) {
@@ -252,7 +250,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	}
 
 	void LoadParticleMap() {
-		float pixelPerUnit = UIManager.I.PixelPerUnit;
+		float pixelPerUnit = UIManager.Instance.PixelPerUnit;
 		particleSizeMap.Clear();
 		particleDataMap.Clear();
 		if (m_ParticleAtlasMap) foreach (var pair in m_ParticleAtlasMap.atlasMap) {
@@ -309,14 +307,13 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		int index = GetIndex(count, value, func);
 
 		CreatureData data = GetCreatureData(creatureType, animationType, direction, index);
-		//data.position = CameraManager.I.GetPixelated(creature.transform.position);
 		data.position = creature.transform.position;
-		data.rotation = CameraManager.I.transform.rotation;
+		data.rotation = CameraManager.Rotation;
 		if (xflip) {
 			data.offset.x += data.tiling.x;
 			data.tiling.x *= -1;
 		}
-		data.alpha = creature.LayerOpacity;
+		data.alpha = creature.TransitionOpacity;
 		return data;
 	}
 
@@ -348,19 +345,8 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	}
 
 	public void DrawCreature() {
-		Quaternion cameraRotation = CameraManager.I.transform.rotation;
-		float cameraYaw    = GetYaw(cameraRotation);
-		int   cameraMask   = CameraManager.I.LayerMask;
-		int   exteriorMask = CameraManager.I.ExteriorLayer;
-		float delta        = Time.deltaTime / CameraManager.I.TransitionTime;
-
-		Creature[] creatures = FindObjectsByType<Creature>(FindObjectsSortMode.None);
-		foreach (Creature creature in creatures) {
-			int mask = creature.LayerMask;
-			if (mask == 0) mask |= exteriorMask;
-			bool match = (mask & cameraMask) != 0;
-			creature.LayerOpacity = Mathf.Clamp01(creature.LayerOpacity + (match? +delta : -delta));
-
+		float cameraYaw = GetYaw(CameraManager.Instance.transform.rotation);
+		foreach (Creature creature in Creature.GetList()) {
 			creatureBatcher.Add(GetCreatureData(creature, cameraYaw));
 			shadowBatcher  .Add(new ShadowData() {
 				position = creature.transform.position,
