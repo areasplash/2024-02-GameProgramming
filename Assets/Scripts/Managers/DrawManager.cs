@@ -24,8 +24,9 @@ struct CreatureData {
 }
 
 struct ParticleData {
-	public Vector3 position;
-	public Vector3 scale;
+	public Vector3    position;
+	public Quaternion rotation;
+	public Vector3    scale;
 
 	public Vector2 tiling;
 	public Vector2 offset;
@@ -290,35 +291,6 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 
 
-	Func<int, int> func;
-
-	CreatureData GetCreatureData(Creature creature, float cameraYaw = 0) {
-		CreatureType  creatureType  = creature.CreatureType;
-		AnimationType animationType = creature.AnimationType;
-
-		float relativeYaw   = GetYaw(creature.transform.rotation) - cameraYaw;
-		int   numDirections = GetCreatureSize(creatureType, animationType);
-		GetDirection(relativeYaw, numDirections, out int direction, out bool xflip);
-
-		int count = GetCreatureSize(creatureType, animationType, direction);
-		int total = GetCreatureSize(creatureType, animationType, direction, count - 1);
-		int value = (int)(creature.Offset * 1000) % total;
-		func = i => GetCreatureSize(creatureType, animationType, direction, i);
-		int index = GetIndex(count, value, func);
-
-		CreatureData data = GetCreatureData(creatureType, animationType, direction, index);
-		data.position = creature.transform.position;
-		data.rotation = CameraManager.Rotation;
-		if (xflip) {
-			data.offset.x += data.tiling.x;
-			data.tiling.x *= -1;
-		}
-		data.alpha = creature.TransitionOpacity;
-		return data;
-	}
-
-
-
 	GPUBatcher<ShadowData>   shadowBatcher;
 	GPUBatcher<CreatureData> creatureBatcher;
 	GPUBatcher<ParticleData> particleBatcher;
@@ -344,10 +316,34 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		particleBatcher?.Dispose();
 	}
 
-	public void DrawCreature() {
-		float cameraYaw = GetYaw(CameraManager.Instance.transform.rotation);
+	Func<int, int> func;
+
+	void DrawCreature() {
+		float cameraYaw = GetYaw(CameraManager.Rotation);
 		foreach (Creature creature in Creature.GetList()) {
-			creatureBatcher.Add(GetCreatureData(creature, cameraYaw));
+			CreatureType  creatureType  = creature.CreatureType;
+			AnimationType animationType = creature.AnimationType;
+
+			float relativeYaw   = GetYaw(creature.transform.rotation) - cameraYaw;
+			int   numDirections = GetCreatureSize(creatureType, animationType);
+			GetDirection(relativeYaw, numDirections, out int direction, out bool xflip);
+
+			int count = GetCreatureSize(creatureType, animationType, direction);
+			int total = GetCreatureSize(creatureType, animationType, direction, count - 1);
+			int value = (int)(creature.Offset * 1000) % total;
+			func = i => GetCreatureSize(creatureType, animationType, direction, i);
+			int index = GetIndex(count, value, func);
+
+			CreatureData data = GetCreatureData(creatureType, animationType, direction, index);
+			data.position = creature.transform.position;
+			data.rotation = CameraManager.Rotation;
+			if (xflip) {
+				data.offset.x += data.tiling.x;
+				data.tiling.x *= -1;
+			}
+			data.alpha = creature.TransitionOpacity;
+
+			creatureBatcher.Add(data);
 			shadowBatcher  .Add(new ShadowData() {
 				position = creature.transform.position,
 				rotation = new Vector4(0, 0, 0, 1),
@@ -358,6 +354,28 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		shadowBatcher  .Draw ();
 		creatureBatcher.Clear();
 		shadowBatcher  .Clear();
+	}
+
+	void DrawParticle() {
+		float cameraYaw = GetYaw(CameraManager.Rotation);
+		foreach (Particle particle in Particle.GetList()) {
+			ParticleType particleType = particle.ParticleType;
+
+			int count = GetParticleSize(particleType);
+			int total = GetParticleSize(particleType, count - 1);
+			int value = (int)(particle.Offset * 1000) % total;
+			func = i => GetParticleSize(particleType, i);
+			int index = GetIndex(count, value, func);
+
+			ParticleData data = GetParticleData(particleType, index);
+			data.position = particle.transform.position;
+			data.rotation = CameraManager.Rotation;
+			data.alpha = particle.TransitionOpacity;
+
+			particleBatcher.Add(data);
+		}
+		particleBatcher.Draw();
+		particleBatcher.Clear();
 	}
 
 
@@ -371,9 +389,8 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 	void LateUpdate() {
 		DrawCreature();
+		DrawParticle();
 	}
-
-
 
 	void OnEnable() => ConstructGPUBatcher();
 	void OnDisable() => DestructGPUBatcher();

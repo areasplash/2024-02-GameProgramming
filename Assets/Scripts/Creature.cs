@@ -28,6 +28,8 @@ using System.Collections.Generic;
 
 
 
+
+
 // ====================================================================================================
 // Creature Editor
 // ====================================================================================================
@@ -36,19 +38,7 @@ using System.Collections.Generic;
 	[CustomEditor(typeof(Creature)), CanEditMultipleObjects]
 	public class CreatureEditor : Editor {
 
-		SerializedProperty m_Velocity;
-		SerializedProperty m_ForcedVelocity;
-		SerializedProperty m_GroundVelocity;
-		SerializedProperty m_GravitVelocity;
-
 		Creature I => target as Creature;
-
-		void OnEnable() {
-			m_Velocity       = serializedObject.FindProperty("m_Velocity");
-			m_ForcedVelocity = serializedObject.FindProperty("m_ForcedVelocity");
-			m_GroundVelocity = serializedObject.FindProperty("m_GroundVelocity");
-			m_GravitVelocity = serializedObject.FindProperty("m_GravitVelocity");
-		}
 
 		T EnumField<T>(string label, T value) where T : Enum => (T)EnumPopup(label, value);
 
@@ -56,17 +46,17 @@ using System.Collections.Generic;
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Creature Properties");
 			Space();
-			LabelField("Core", EditorStyles.boldLabel);
+			LabelField("Creature", EditorStyles.boldLabel);
 			I.CreatureType  = EnumField ("Creature Type",  I.CreatureType);
 			I.AnimationType = EnumField ("Animation Type", I.AnimationType);
 			I.Offset        = FloatField("Offset",         I.Offset);
 			I.HitboxType    = EnumField ("Hitbox Type",    I.HitboxType);
 			Space();
 			LabelField("Rigidbody", EditorStyles.boldLabel);
-			PropertyField(m_Velocity);
-			PropertyField(m_ForcedVelocity);
-			PropertyField(m_GroundVelocity);
-			PropertyField(m_GravitVelocity);
+			I.Velocity       = Vector3Field("Velocity",        I.Velocity);
+			I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
+			I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
+			I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -105,7 +95,14 @@ public class Creature : MonoBehaviour {
 
 	public CreatureType CreatureType {
 		get => m_CreatureType;
-		set => m_CreatureType = value;
+		set {
+			m_CreatureType = value;
+			#if UNITY_EDITOR
+				bool pooled = value == CreatureType.None;
+				gameObject.name = pooled? "Pooled Creature" : value.ToString();
+			#endif
+			Initialize();
+		}
 	}
 
 	public AnimationType AnimationType {
@@ -122,14 +119,14 @@ public class Creature : MonoBehaviour {
 		get => m_HitboxType;
 		set {
 			m_HitboxType = value;
-			HitboxData data = NavMeshManager.Instance.GetHitboxData(value);
+			HitboxData data = NavMeshManager.GetHitboxData(value);
 			if (TryGetComponent(out CapsuleCollider capsule)) {
 				capsule.radius = data.radius;
 				capsule.height = data.height;
 			}
 			if (TryGetComponent(out SphereCollider sphere)) {
 				sphere.center = new Vector3(0, -(data.height / 2 - data.radius) - 0.08f, 0);
-				sphere.radius = data.radius - 0.06f;
+				sphere.radius = data.radius - 0.04f;
 			}
 			if (TryGetComponent(out NavMeshAgent agent)) {
 				agent.agentTypeID = data.agentTypeID;
@@ -163,55 +160,7 @@ public class Creature : MonoBehaviour {
 
 
 
-	public Action OnSpawn   { get; set; }
-	public Action OnDespawn { get; set; }
-	public Action OnUpdate  { get; set; }
-
-
-
 	// Methods
-
-	public void GetData(ref int[] data) {
-		int i = 0;
-		data[i++] = Utility.ToInt(transform.position.x);
-		data[i++] = Utility.ToInt(transform.position.y);
-		data[i++] = Utility.ToInt(transform.position.z);
-		data[i++] = Utility.ToInt(transform.rotation);
-
-		data[i++] = Utility.ToInt(CreatureType);
-		data[i++] = Utility.ToInt(AnimationType);
-		data[i++] = Utility.ToInt(Offset);
-		data[i++] = Utility.ToInt(HitboxType);
-
-		data[i++] = Utility.ToInt(Velocity, true);
-		data[i++] = Utility.ToInt(ForcedVelocity, true);
-		data[i++] = Utility.ToInt(GroundVelocity, true);
-		data[i++] = Utility.ToInt(GravitVelocity, true);
-	}
-
-	public void SetData(int[] data) {
-		int i = 0;
-		Vector3 position;
-		position.x         = Utility.ToFloat(data[i++]);
-		position.y         = Utility.ToFloat(data[i++]);
-		position.z         = Utility.ToFloat(data[i++]);
-		transform.position = position;
-		transform.rotation = Utility.ToQuaternion(data[i++]);
-
-		CreatureType       = Utility.ToEnum<CreatureType>(data[i++]);
-		AnimationType      = Utility.ToEnum<AnimationType>(data[i++]);
-		Offset             = Utility.ToFloat(data[i++]);
-		HitboxType         = Utility.ToEnum<HitboxType>(data[i++]);
-
-		Velocity           = Utility.ToVector3(data[i++], true);
-		ForcedVelocity     = Utility.ToVector3(data[i++], true);
-		GroundVelocity     = Utility.ToVector3(data[i++], true);
-		GravitVelocity     = Utility.ToVector3(data[i++], true);
-	}
-
-
-
-	// Lifecycle
 
 	static List<Creature> creatureList = new List<Creature>();
 	static List<Creature> creaturePool = new List<Creature>();
@@ -237,43 +186,95 @@ public class Creature : MonoBehaviour {
 		return creature;
 	}
 
+	void OnSpawn() {
+		creatureList.Add(this);
+	}
+
 	public static void Despawn(Creature creature) {
 		if (!creature) return;
 		creature.gameObject.SetActive(false);
 	}
 
+	void OnDespawn() {
+		CreatureType   = CreatureType.None;
+		AnimationType  = AnimationType.Idle;
+		Offset         = 0;
+		HitboxType     = HitboxType.Humanoid;
 
+		Velocity       = Vector3.zero;
+		ForcedVelocity = Vector3.zero;
+		GroundVelocity = Vector3.zero;
+		GravitVelocity = Vector3.zero;
 
-	bool creatureSpawned;
-
-	void OnEnable() {
-		creatureList.Add(this);
-		creatureSpawned = true;
+		creatureList.Remove(this);
+		creaturePool.Add   (this);
 	}
 
-	void Update() {
-		if (creatureSpawned) {
-			creatureSpawned = false;
-			InitAction();
-			InitTrigger();
-			OnSpawn?.Invoke();
+	void OnDestroy() {
+		creatureList.Remove(this);
+		creaturePool.Remove(this);
+	}
+
+
+
+	void GetData(int[] data) {
+		if (data == null) data = new int[12];
+		int i = 0;
+		data[i++] = Utility.ToInt(transform.position.x);
+		data[i++] = Utility.ToInt(transform.position.y);
+		data[i++] = Utility.ToInt(transform.position.z);
+		data[i++] = Utility.ToInt(transform.rotation);
+
+		data[i++] = Utility.ToInt(CreatureType);
+		data[i++] = Utility.ToInt(AnimationType);
+		data[i++] = Utility.ToInt(Offset);
+		data[i++] = Utility.ToInt(HitboxType);
+
+		data[i++] = Utility.ToInt(Velocity);
+		data[i++] = Utility.ToInt(ForcedVelocity);
+		data[i++] = Utility.ToInt(GroundVelocity);
+		data[i++] = Utility.ToInt(GravitVelocity);
+	}
+
+	void SetData(int[] data) {
+		if (data == null) return;
+		int i = 0;
+		Vector3 position;
+		position.x         = Utility.ToFloat(data[i++]);
+		position.y         = Utility.ToFloat(data[i++]);
+		position.z         = Utility.ToFloat(data[i++]);
+		transform.position = position;
+		transform.rotation = Utility.ToQuaternion(data[i++]);
+
+		CreatureType       = Utility.ToEnum<CreatureType>(data[i++]);
+		AnimationType      = Utility.ToEnum<AnimationType>(data[i++]);
+		Offset             = Utility.ToFloat(data[i++]);
+		HitboxType         = Utility.ToEnum<HitboxType>(data[i++]);
+
+		Velocity           = Utility.ToVector3(data[i++]);
+		ForcedVelocity     = Utility.ToVector3(data[i++]);
+		GroundVelocity     = Utility.ToVector3(data[i++]);
+		GravitVelocity     = Utility.ToVector3(data[i++]);
+	}
+
+	public static void GetData(List<int[]> data) {
+		for (int i = 0; i < creatureList.Count; i++) {
+			if (data.Count - 1 < i) data.Add(null);
+			creatureList[i].GetData(data[i]);
 		}
-		Offset += Time.deltaTime;
-		OnUpdate?.Invoke();
 	}
 
-	void OnDisable() {
-		OnDespawn?.Invoke();
-		creatureList.Remove(this);
-		creaturePool.Add   (this);
-	}
-
-	void OnDestory() {
-		creatureList.Remove(this);
-		creaturePool.Add   (this);
+	public static void SetData(List<int[]> data) {
+		for (int i = 0; i < data.Count; i++) {
+			if (creatureList.Count - 1 < i) Spawn(CreatureType.None, Vector3.zero);
+			creatureList[i].SetData(data[i]);
+		}
+		for (int i = creatureList.Count - 1; data.Count <= i; i--) Despawn(creatureList[i]);
 	}
 
 
+
+	// Physics
 
 	public float TransitionOpacity { get; set; }
 
@@ -291,10 +292,10 @@ public class Creature : MonoBehaviour {
 
 	void Start() => TryGetComponent(out rb);
 
-	void InitTrigger() {
+	void BeginTrigger() {
 		layers.Clear();
 		layerChanged = true;
-		layerMask = Utility.GetLayerMaskAtPoint(transform.position, gameObject);
+		layerMask = Utility.GetLayerMaskAtPoint(transform.position, transform);
 		if (layerMask == 0) layerMask |= CameraManager.ExteriorLayer;
 		TransitionOpacity = ((CameraManager.CullingMask | layerMask) != 0)? 1 : 0;
 
@@ -380,30 +381,71 @@ public class Creature : MonoBehaviour {
 
 
 
-	// Creature Action
+	// Lifecycle
 
-	void InitAction() {
+	Action OnUpdate;
+
+	bool link = false;
+
+	void OnEnable() {
+		link = true;
+		BeginTrigger();
+		OnSpawn();
+	}
+
+	void Update() {
+		if (link) {
+			link = false;
+			LinkAction();
+		}
+		Offset += Time.deltaTime;
+		OnUpdate?.Invoke();
+	}
+
+	void OnDisable() {
+		OnDespawn();
+	}
+
+
+
+	// Creature
+
+	void Initialize() {
 		switch (CreatureType) {
 			case CreatureType.None:
+				break;
 			case CreatureType.Player:
-				OnSpawn   = () => {};
-				OnDespawn = () => {};
-				OnUpdate  = () => UpdatePlayer();
+				InitializeAsPlayer();
 				break;
 			case CreatureType.Client:
-				OnSpawn   = () => {};
-				OnDespawn = () => {};
-				OnUpdate  = () => UpdateClient();
+				break;
+		}
+	}
+
+	void LinkAction() {
+		switch (CreatureType) {
+			case CreatureType.None:
+				OnUpdate = () => {};
+				break;
+			case CreatureType.Player:
+				OnUpdate = () => UpdatePlayer();
+				break;
+			case CreatureType.Client:
+				OnUpdate = () => UpdateClient();
 				break;
 		}
 	}
 
 
 
-	// Action : Player
+	// Player
 
 	public Vector3        input = Vector3.zero;
 	public Queue<Vector3> queue = new Queue<Vector3>();
+
+	void InitializeAsPlayer() {
+		HitboxType = HitboxType.Humanoid;
+	}
 
 	void UpdatePlayer() {
 		if (input == Vector3.zero && queue.Count == 0) {
@@ -426,7 +468,7 @@ public class Creature : MonoBehaviour {
 
 
 
-	// Action : Client
+	// Client
 
 	public void UpdateClient() {
 

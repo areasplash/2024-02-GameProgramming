@@ -21,7 +21,7 @@ public static class Utility {
 	public static int ToInt <T>(T   value) where T : Enum => Convert.ToInt32 (value);
 	public static T   ToEnum<T>(int value) where T : Enum => (T)Enum.ToObject(typeof(T), value);
 
-	public static int ToInt(Vector3 value, bool highPrecision = false) {
+	public static int ToInt(Vector3 value, bool highPrecision = true) {
 		int x, y, z;
 		if (highPrecision) {
 			x = (int)((Mathf.Clamp(value.x, -63.9375f, 63.9375f) + 63.9375f) * 16);
@@ -35,7 +35,7 @@ public static class Utility {
 		}
 		return (x << 21) | (y << 11) | (z <<  0);
 	}
-	public static Vector3 ToVector3(int value, bool highPrecision = false) {
+	public static Vector3 ToVector3(int value, bool highPrecision = true) {
 		float x, y, z;
 		if (highPrecision) {
 			x = (((value >> 21) & 0x07FF) * 0.0625f) - 63.9375f;
@@ -105,18 +105,25 @@ public static class Utility {
 	}
 	*/
 
-
-
 	static RaycastHit[] hits = new RaycastHit[16];
 
 	static Collider collider;
 
-	public static int GetLayerAtPoint(Vector3 point, GameObject ignore = null) {
+	static bool IsIncluded(Transform source, Transform target) {
+		if (source == target) return true;
+		if (source) for (int i = 0; i < source.childCount; i++) {
+			if (IsIncluded(source.GetChild(i), target)) return true;
+		}
+		return false;
+	}
+
+	public static int GetLayerAtPoint(Vector3 point, Transform ignore = null) {
 		int result = 0;
 		int length = Physics.SphereCastNonAlloc(point, 0.5f, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) {
 			collider = hits[i].collider;
-			if (collider.isTrigger && collider.gameObject != ignore) {
+			if (collider.isTrigger) {
+				if (ignore && IsIncluded(ignore, collider.transform)) continue;
 				int layer = collider.gameObject.layer;
 				if (result < layer) result = layer;
 			}
@@ -124,12 +131,13 @@ public static class Utility {
 		return result;
 	}
 
-	public static int GetLayerMaskAtPoint(Vector3 point, GameObject ignore = null) {
+	public static int GetLayerMaskAtPoint(Vector3 point, Transform ignore = null) {
 		int result = 0;
 		int length = Physics.SphereCastNonAlloc(point, 0.5f, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) {
 			collider = hits[i].collider;
-			if (collider.isTrigger && collider.gameObject != ignore) {
+			if (collider.isTrigger) {
+				if (ignore && IsIncluded(ignore, collider.transform)) continue;
 				int layer = collider.gameObject.layer;
 				result |= 1 << layer;
 			}

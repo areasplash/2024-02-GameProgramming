@@ -81,7 +81,7 @@ using System.Collections.Generic;
 // Atlas Map SO
 // ====================================================================================================
 
-[CreateAssetMenu(fileName = "AtlasMap", menuName = "Scriptable Objects/AtlasMap")]
+[CreateAssetMenu(fileName = "AtlasMapSO", menuName = "Scriptable Objects/AtlasMap")]
 public class AtlasMapSO : ScriptableObject {
 
 	[Serializable] public class AtlasMap : HashMap<string, TextureData> {}

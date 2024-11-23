@@ -8,6 +8,7 @@ using System.Collections.Generic;
 #if UNITY_EDITOR
 	using UnityEditor;
 	using static UnityEditor.EditorGUILayout;
+	using static NavMeshManager;
 #endif
 
 
@@ -33,13 +34,9 @@ using System.Collections.Generic;
 	public class NavMeshManagerEditor : Editor {
 
 		SerializedProperty m_HumanoidMesh;
-		SerializedProperty m_SampleDistance;
-
-		NavMeshManager I => target as NavMeshManager;
 
 		void OnEnable() {
-			m_HumanoidMesh   = serializedObject.FindProperty("m_HumanoidMesh");
-			m_SampleDistance = serializedObject.FindProperty("m_SampleDistance");
+			m_HumanoidMesh = serializedObject.FindProperty("m_HumanoidMesh");
 		}
 
 		public override void OnInspectorGUI() {
@@ -51,13 +48,13 @@ using System.Collections.Generic;
 			BeginHorizontal();
 			{
 				PrefixLabel("Bake NavMesh");
-				if (GUILayout.Button("Bake" )) I.Bake ();
-				if (GUILayout.Button("Clear")) I.Clear();
+				if (GUILayout.Button("Bake" )) Bake ();
+				if (GUILayout.Button("Clear")) Clear();
 			}
 			EndHorizontal();
 			Space();
 			LabelField("NavMesh Properties", EditorStyles.boldLabel);
-			I.SampleDistance = Slider("Sample Distance", I.SampleDistance, 1f, 16f);
+			SampleDistance = Slider("Sample Distance", SampleDistance, 1f, 16f);
 			/*if (GUILayout.Button("Test")) {
 				for (int i = 0; i < m_NavMeshSurfaces.arraySize; i++) {
 					var navMeshSurface = m_NavMeshSurfaces.GetArrayElementAtIndex(i)
@@ -89,34 +86,36 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
 	// Properties
 
-	public float SampleDistance {
-		get => m_SampleDistance;
-		set => m_SampleDistance = value;
+	static NavMeshSurface HumanoidMesh => Instance? Instance.m_HumanoidMesh : default;
+
+	public static float SampleDistance {
+		get   =>  Instance? Instance.m_SampleDistance : default;
+		set { if (Instance) Instance.m_SampleDistance = value; }
 	}
 
 
 
 	// Methods
 
-	public void Bake() {
-		m_HumanoidMesh.BuildNavMesh();
+	public static void Bake() {
+		if (HumanoidMesh) HumanoidMesh.BuildNavMesh();
 	}
 
-	public void Clear() {
-		m_HumanoidMesh.RemoveData();
+	public static void Clear() {
+		if (HumanoidMesh) HumanoidMesh.RemoveData();
 	}
 
 
 
-	Dictionary<HitboxType, HitboxData> hitboxData = new Dictionary<HitboxType, HitboxData>();
+	static Dictionary<HitboxType, HitboxData> hitboxData = new Dictionary<HitboxType, HitboxData>();
 
-	public HitboxData GetHitboxData(HitboxType hitbox) {
+	public static HitboxData GetHitboxData(HitboxType hitbox) {
 		if (!hitboxData.ContainsKey(hitbox)) hitboxData[hitbox] = hitbox switch {
-			HitboxType.Humanoid => new HitboxData() {
-				agentTypeID = m_HumanoidMesh.agentTypeID,
-				radius      = m_HumanoidMesh.GetBuildSettings().agentRadius,
-				height      = m_HumanoidMesh.GetBuildSettings().agentHeight,
-			},
+			HitboxType.Humanoid => HumanoidMesh? new HitboxData() {
+					agentTypeID = HumanoidMesh.agentTypeID,
+					radius      = HumanoidMesh.GetBuildSettings().agentRadius,
+					height      = HumanoidMesh.GetBuildSettings().agentHeight,
+				} : default,
 			_ => throw new NotImplementedException(),
 		};
 		return hitboxData[hitbox];

@@ -391,7 +391,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	void InitTrigger() {
 		layers.Clear();
 		layerChanged = true;
-		layerMask = Utility.GetLayerMaskAtPoint(transform.position, gameObject);
+		layerMask = Utility.GetLayerMaskAtPoint(transform.position, transform);
 		if (layerMask == 0) layerMask |= ExteriorLayer;
 		CullingMask = layerMask | AbsoluteLayer;
 	}
