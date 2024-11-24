@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c48826a48f46154789ee28959030465, type: 3}
   m_Name: TerrainAtlasMap
   m_EditorClassIdentifier: 
-  m_TextureDirectory: Assets/Textures/Terrains
-  m_PrefabDirectory: Assets/Prefabs/Terrains
+  m_TexturePath: Assets/Textures/Terrains
+  m_NavMeshPrefabPath: Assets/Prefabs/Terrains
   m_MaximumAtlasSize: 8192
   m_Padding: 0
-  m_Atlas: {fileID: 2800000, guid: 1413577df77b3334db6eb7866df9b48d, type: 3}
+  m_TargetTexture: {fileID: 2800000, guid: 1413577df77b3334db6eb7866df9b48d, type: 3}
   m_AtlasMap:
     m_Keys:
     - BrickWall

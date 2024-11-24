@@ -28,8 +28,8 @@ using System.Collections.Generic;
 	[CustomEditor(typeof(AtlasMapSO)), CanEditMultipleObjects]
 	public class AtlasMapSOEditor : Editor {
 
-		SerializedProperty m_TextureDirectory;
-		SerializedProperty m_PrefabDirectory;
+		SerializedProperty m_TexturePath;
+		SerializedProperty m_NavMeshPrefabPath;
 		SerializedProperty m_MaximumAtlasSize;
 		SerializedProperty m_Padding;
 		SerializedProperty m_Atlas;
@@ -38,21 +38,24 @@ using System.Collections.Generic;
 		AtlasMapSO I => target as AtlasMapSO;
 
 		void OnEnable() {
-			m_TextureDirectory  = serializedObject.FindProperty("m_TextureDirectory");
-			m_PrefabDirectory   = serializedObject.FindProperty("m_PrefabDirectory");
+			m_TexturePath       = serializedObject.FindProperty("m_TexturePath");
+			m_NavMeshPrefabPath = serializedObject.FindProperty("m_NavMeshPrefabPath");
 			m_MaximumAtlasSize  = serializedObject.FindProperty("m_MaximumAtlasSize");
 			m_Padding           = serializedObject.FindProperty("m_Padding");
-			m_Atlas             = serializedObject.FindProperty("m_Atlas");
+			m_Atlas             = serializedObject.FindProperty("m_TargetTexture");
 			m_AtlasMap          = serializedObject.FindProperty("m_AtlasMap");
 		}
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Atlas Map SO Properties");
+
+			LabelField("Path", EditorStyles.boldLabel);
+			PropertyField(m_TexturePath);
+			PropertyField(m_NavMeshPrefabPath);
 			Space();
-			PropertyField(m_TextureDirectory);
-			PropertyField(m_PrefabDirectory);
-			Space();
+
+			LabelField("Atlas Map", EditorStyles.boldLabel);
 			PropertyField(m_MaximumAtlasSize);
 			PropertyField(m_Padding);
 			PropertyField(m_Atlas);
@@ -66,9 +69,11 @@ using System.Collections.Generic;
 			}
 			BeginHorizontal();
 			PrefixLabel("Atlas Map Size");
-			LabelField($"{((AtlasMapSO.AtlasMap)m_AtlasMap.boxedValue).Count}");
+			LabelField($"{((AtlasMapSO.HashMap)m_AtlasMap.boxedValue).Count}");
 			EndHorizontal();
 			PropertyField(m_AtlasMap);
+			Space();
+
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -84,25 +89,25 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "AtlasMapSO", menuName = "Scriptable Objects/AtlasMap")]
 public class AtlasMapSO : ScriptableObject {
 
-	[Serializable] public class AtlasMap : HashMap<string, TextureData> {}
+	[Serializable] public class HashMap : HashMap<string, TextureData> {}
 
 
 
 	// Fields
 
-	[SerializeField] string    m_TextureDirectory = "Assets/Textures";
-	[SerializeField] string    m_PrefabDirectory  = "Assets/Prefabs";
-	[SerializeField] int       m_MaximumAtlasSize = 8192;
-	[SerializeField] int       m_Padding          = 0;
-	[SerializeField] Texture2D m_Atlas            = null;
-	[SerializeField] AtlasMap  m_AtlasMap         = new AtlasMap();
+	[SerializeField] string    m_TexturePath       = "Assets/Textures";
+	[SerializeField] string    m_NavMeshPrefabPath = "Assets/Prefabs";
+	[SerializeField] int       m_MaximumAtlasSize  = 8192;
+	[SerializeField] int       m_Padding           = 0;
+	[SerializeField] Texture2D m_TargetTexture     = null;
+	[SerializeField] HashMap   m_AtlasMap          = new HashMap();
 
 
 
 	// Properties
 
-	public Texture2D atlas    => m_Atlas;
-	public AtlasMap  atlasMap => m_AtlasMap;
+	public Texture2D TargetTexture => m_TargetTexture;
+	public HashMap   AtlasMap      => m_AtlasMap;
 
 
 
@@ -120,17 +125,17 @@ public class AtlasMapSO : ScriptableObject {
 		}
 
 		public void GenerateAtlas() {
-			Texture2D[] textures = LoadAsset<Texture2D>(m_TextureDirectory);
-			GameObject[] prefabs = LoadAsset<GameObject>(m_PrefabDirectory);
+			Texture2D[] textures = LoadAsset<Texture2D>(m_TexturePath);
+			GameObject[] prefabs = LoadAsset<GameObject>(m_NavMeshPrefabPath);
 
 			Texture2D atlas = new Texture2D(m_MaximumAtlasSize, m_MaximumAtlasSize);
 			Rect[] rects = atlas.PackTextures(textures, m_Padding, m_MaximumAtlasSize);
 			byte[] bytes = atlas.EncodeToPNG();
-			File.WriteAllBytes(AssetDatabase.GetAssetPath(this.atlas), bytes);
+			File.WriteAllBytes(AssetDatabase.GetAssetPath(this.TargetTexture), bytes);
 			AssetDatabase.Refresh();
 
-			AtlasMap prevMap = atlasMap;
-			AtlasMap nextMap = new AtlasMap();
+			HashMap prevMap = AtlasMap;
+			HashMap nextMap = new HashMap();
 			for (int i = 0; i < textures.Length; i++) nextMap[textures[i].name] = new TextureData {
 				size   = new Vector2(textures[i].width, textures[i].height),
 				tiling = new Vector2(rects   [i].width, rects   [i].height),

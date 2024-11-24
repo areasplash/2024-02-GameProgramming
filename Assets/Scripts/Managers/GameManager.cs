@@ -16,7 +16,7 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(GameManager)), CanEditMultipleObjects]
-	public class GameManagerEditor : Editor {
+	public class GameManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_Player;
 
@@ -28,9 +28,11 @@ using System.Collections.Generic;
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
-			Space();
+
 			LabelField("Player", EditorStyles.boldLabel);
 			PropertyField(m_Player);
+			Space();
+
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}

@@ -38,7 +38,7 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(InputManager)), CanEditMultipleObjects]
-	public class InputManagerEditor : Editor {
+	public class InputManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_InputActionAsset;
 
@@ -49,9 +49,11 @@ using System.Collections.Generic;
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Input Manager Properties");
-			Space();
+
 			LabelField("Actions", EditorStyles.boldLabel);
 			PropertyField(m_InputActionAsset);
+			Space();
+			
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}

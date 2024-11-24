@@ -22,22 +22,23 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(Particle)), CanEditMultipleObjects]
-	public class ParticleEditor : Editor {
+	public class ParticleEditor : ExtendedEditor {
 
 		Particle I => target as Particle;
-
-		T EnumField<T>(string label, T value) where T : Enum => (T)EnumPopup(label, value);
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Particle Properties");
-			Space();
+
 			LabelField("Particle", EditorStyles.boldLabel);
 			I.ParticleType = EnumField ("Particle Type", I.ParticleType);
 			I.Offset	   = FloatField("Offset",        I.Offset);
 			Space();
+
 			LabelField("Rigidbody", EditorStyles.boldLabel);
 			I.Velocity = Vector3Field("Velocity", I.Velocity);
+			Space();
+			
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -75,7 +76,7 @@ public class Particle : MonoBehaviour {
 			m_ParticleType = value;
 			#if UNITY_EDITOR
 				bool pooled = value == ParticleType.None;
-				gameObject.name = pooled? "Pooled Particle" : value.ToString();
+				gameObject.name = pooled? "Particle" : value.ToString();
 			#endif
 			Initialize();
 		}
@@ -85,6 +86,8 @@ public class Particle : MonoBehaviour {
 		get => m_Offset;
 		set => m_Offset = value;
 	}
+
+
 
 	public Vector3 Velocity {
 		get => m_Velocity;

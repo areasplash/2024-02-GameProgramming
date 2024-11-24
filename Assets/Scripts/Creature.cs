@@ -11,6 +11,12 @@ using System.Collections.Generic;
 
 
 
+[Serializable] public enum CreatureType {
+	None,
+	Player,
+	Client,
+}
+
 [Serializable] public enum AnimationType {
 	Idle,
 	Move,
@@ -20,13 +26,47 @@ using System.Collections.Generic;
 	Drink,
 }
 
-[Serializable] public enum CreatureType {
-	None,
-	Player,
-	Client,
+[Serializable, Flags] public enum AttributeType {
+	Pinned   = 1 << 0,
+	Floating = 1 << 1,
+	Piercing = 1 << 2,
 }
 
+[Serializable] public enum ImmunityType {
+	None,
+	Low,
+	Partial,
+	Full,
+}
 
+[Serializable] public struct Effect {
+	float        m_strength;
+	float        m_duration;
+	ImmunityType m_immunity;
+
+	public float        strength { get => m_strength; set => m_strength = Mathf.Max(0, value); }
+	public float        duration { get => m_duration; set => m_duration = Mathf.Max(0, value); }
+	public ImmunityType immunity { get => m_immunity; set => m_immunity = value; }
+
+	public Effect(float strength = 0, float duration = 0, ImmunityType immunity = ImmunityType.None) {
+		m_strength = Mathf.Max(0, strength);
+		m_duration = Mathf.Max(0, duration);
+		m_immunity = immunity;
+	}
+}
+
+[Serializable] public struct Status {
+	float m_limit;
+	float m_value;
+
+	public float limit { get => m_limit; set => m_limit = Mathf.Max(    0, value); }
+	public float value { get => m_value; set => m_value = Mathf.Min(value, limit); }
+
+	public Status(float limit = 0, float value = 0) {
+		m_limit = Mathf.Max(    0,   limit);
+		m_value = Mathf.Min(value, m_limit);
+	}
+}
 
 
 
@@ -36,27 +76,30 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(Creature)), CanEditMultipleObjects]
-	public class CreatureEditor : Editor {
+	public class CreatureEditor : ExtendedEditor {
 
 		Creature I => target as Creature;
-
-		T EnumField<T>(string label, T value) where T : Enum => (T)EnumPopup(label, value);
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Creature Properties");
-			Space();
+
 			LabelField("Creature", EditorStyles.boldLabel);
 			I.CreatureType  = EnumField ("Creature Type",  I.CreatureType);
 			I.AnimationType = EnumField ("Animation Type", I.AnimationType);
 			I.Offset        = FloatField("Offset",         I.Offset);
 			I.HitboxType    = EnumField ("Hitbox Type",    I.HitboxType);
+			I.AttributeType = FlagField ("Attribute Type", I.AttributeType);
+			I.SenseRange    = Slider    ("Sense Range",    I.SenseRange, 0, 32);
 			Space();
+
 			LabelField("Rigidbody", EditorStyles.boldLabel);
 			I.Velocity       = Vector3Field("Velocity",        I.Velocity);
 			I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
 			I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
 			I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
+			Space();
+
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -83,6 +126,8 @@ public class Creature : MonoBehaviour {
 	[SerializeField] AnimationType m_AnimationType = AnimationType.Idle;
 	[SerializeField] float         m_Offset        = 0;
 	[SerializeField] HitboxType    m_HitboxType    = HitboxType.Humanoid;
+	[SerializeField] AttributeType m_AttributeType = 0;
+	[SerializeField] float         m_SenseRange    = 0;
 
 	[SerializeField] Vector3 m_Velocity       = Vector3.zero;
 	[SerializeField] Vector3 m_ForcedVelocity = Vector3.zero;
@@ -99,7 +144,7 @@ public class Creature : MonoBehaviour {
 			m_CreatureType = value;
 			#if UNITY_EDITOR
 				bool pooled = value == CreatureType.None;
-				gameObject.name = pooled? "Pooled Creature" : value.ToString();
+				gameObject.name = pooled? "Creature" : value.ToString();
 			#endif
 			Initialize();
 		}
@@ -115,24 +160,89 @@ public class Creature : MonoBehaviour {
 		set => m_Offset = value;
 	}
 
+	CapsuleCollider hitbox;
+	SphereCollider  ground;
+	NavMeshAgent    agent;
+
 	public HitboxType HitboxType {
 		get => m_HitboxType;
 		set {
 			m_HitboxType = value;
 			HitboxData data = NavMeshManager.GetHitboxData(value);
-			if (TryGetComponent(out CapsuleCollider capsule)) {
-				capsule.radius = data.radius;
-				capsule.height = data.height;
+			if (hitbox || TryGetComponent(out hitbox)) {
+				hitbox.radius = data.radius;
+				hitbox.height = data.height;
 			}
-			if (TryGetComponent(out SphereCollider sphere)) {
-				sphere.center = new Vector3(0, -(data.height / 2 - data.radius) - 0.08f, 0);
-				sphere.radius = data.radius - 0.04f;
+			if (ground || TryGetComponent(out ground)) {
+				ground.center = new Vector3(0, -(data.height / 2 - data.radius) - 0.08f, 0);
+				ground.radius = data.radius - 0.04f;
 			}
-			if (TryGetComponent(out NavMeshAgent agent)) {
+			if (agent || TryGetComponent(out agent)) {
 				agent.agentTypeID = data.agentTypeID;
 				agent.radius = data.radius;
 				agent.height = data.height;
 			}
+		}
+	}
+
+	static int entityMask = 0;
+	static int EntityMask {
+		get {
+			if (entityMask == 0) entityMask = 1 << LayerMask.NameToLayer("Entity");
+			return entityMask;
+		}
+	}
+
+	Rigidbody body;
+	Rigidbody Body {
+		get {
+			if (!body) TryGetComponent(out body);
+			return body;
+		}
+	}
+
+	public AttributeType AttributeType {
+		get => m_AttributeType;
+		set {
+			m_AttributeType = value;
+			if ((value & AttributeType.Pinned) != 0) {
+				Velocity 	   = Vector3.zero;
+				ForcedVelocity = Vector3.zero;
+				GroundVelocity = Vector3.zero;
+				GravitVelocity = Vector3.zero;
+				Body. linearVelocity = Vector3.zero;
+				Body.angularVelocity = Vector3.zero;
+				Body.mass = float.MaxValue;
+			}
+			else {
+				Body.mass = 1;
+			}
+			if ((value & AttributeType.Floating) != 0) {
+				GravitVelocity = Vector3.zero;
+			}
+			if ((value & AttributeType.Piercing) != 0) {
+				if (hitbox || TryGetComponent(out hitbox)) hitbox.excludeLayers |=  EntityMask;
+				if (ground || TryGetComponent(out ground)) ground.excludeLayers |=  EntityMask;
+			}
+			else {
+				if (hitbox || TryGetComponent(out hitbox)) hitbox.excludeLayers &= ~EntityMask;
+				if (ground || TryGetComponent(out ground)) ground.excludeLayers &= ~EntityMask;
+			}
+		}
+	}
+
+	SphereCollider sensor;
+
+	public float SenseRange {
+		get => m_SenseRange;
+		set {
+			value = Mathf.Max(0, value);
+			m_SenseRange = value;
+			if (!sensor) {
+				SphereCollider[] spheres = GetComponents<SphereCollider>();
+				if (1 < spheres.Length) sensor = spheres[1];
+			}
+			if (sensor) sensor.radius = value;
 		}
 	}
 
@@ -200,6 +310,8 @@ public class Creature : MonoBehaviour {
 		AnimationType  = AnimationType.Idle;
 		Offset         = 0;
 		HitboxType     = HitboxType.Humanoid;
+		AttributeType  = 0;
+		SenseRange     = 0;
 
 		Velocity       = Vector3.zero;
 		ForcedVelocity = Vector3.zero;
@@ -218,7 +330,7 @@ public class Creature : MonoBehaviour {
 
 
 	void GetData(int[] data) {
-		if (data == null) data = new int[12];
+		if (data == null) data = new int[14];
 		int i = 0;
 		data[i++] = Utility.ToInt(transform.position.x);
 		data[i++] = Utility.ToInt(transform.position.y);
@@ -229,6 +341,8 @@ public class Creature : MonoBehaviour {
 		data[i++] = Utility.ToInt(AnimationType);
 		data[i++] = Utility.ToInt(Offset);
 		data[i++] = Utility.ToInt(HitboxType);
+		data[i++] = Utility.ToInt(AttributeType);
+		data[i++] = Utility.ToInt(SenseRange);
 
 		data[i++] = Utility.ToInt(Velocity);
 		data[i++] = Utility.ToInt(ForcedVelocity);
@@ -250,6 +364,8 @@ public class Creature : MonoBehaviour {
 		AnimationType      = Utility.ToEnum<AnimationType>(data[i++]);
 		Offset             = Utility.ToFloat(data[i++]);
 		HitboxType         = Utility.ToEnum<HitboxType>(data[i++]);
+		AttributeType      = Utility.ToEnum<AttributeType>(data[i++]);
+		SenseRange         = Utility.ToFloat(data[i++]);
 
 		Velocity           = Utility.ToVector3(data[i++]);
 		ForcedVelocity     = Utility.ToVector3(data[i++]);
@@ -287,10 +403,6 @@ public class Creature : MonoBehaviour {
 	Rigidbody      groundRigidbody = null;
 	Quaternion     groundRotation  = Quaternion.identity;
 	bool           isGrounded      = false;
-
-	Rigidbody rb;
-
-	void Start() => TryGetComponent(out rb);
 
 	void BeginTrigger() {
 		layers.Clear();
@@ -357,21 +469,23 @@ public class Creature : MonoBehaviour {
 			TransitionOpacity = Mathf.Clamp01(TransitionOpacity);
 		}
 
+		if ((AttributeType & AttributeType.Pinned) != 0) return;
 		if (groundRigidbody) GroundVelocity = groundRigidbody.linearVelocity;
-		if (!isGrounded) GravitVelocity += Physics.gravity * Time.deltaTime;
-		
+		if (!isGrounded && (AttributeType & AttributeType.Floating) == 0) {
+			GravitVelocity += Physics.gravity * Time.deltaTime;
+		}
+
 		Vector3 linearVelocity = Vector3.zero;
 		linearVelocity += groundRotation * Velocity;
 		linearVelocity += ForcedVelocity + GroundVelocity + GravitVelocity;
-		rb.linearVelocity = linearVelocity;
-		if (Velocity != Vector3.zero) rb.rotation = Quaternion.LookRotation(Velocity);
+		Body.linearVelocity = linearVelocity;
 		
 		if (ForcedVelocity != Vector3.zero) {
-			ForcedVelocity *= 0.9f;
+			ForcedVelocity *= 0.90f;
 			if (ForcedVelocity.sqrMagnitude < 0.01f) ForcedVelocity = Vector3.zero;
 		}
 		if (GroundVelocity != Vector3.zero) {
-			GroundVelocity *= 0.9f;
+			GroundVelocity *= 0.98f;
 			if (GroundVelocity.sqrMagnitude < 0.01f) GroundVelocity = Vector3.zero;
 		}
 		if (GravitVelocity != Vector3.zero) {
@@ -445,6 +559,7 @@ public class Creature : MonoBehaviour {
 
 	void InitializeAsPlayer() {
 		HitboxType = HitboxType.Humanoid;
+		SenseRange = 2.5f;
 	}
 
 	void UpdatePlayer() {
@@ -463,6 +578,7 @@ public class Creature : MonoBehaviour {
 				Velocity = new Vector3(delta.x, 0, delta.z).normalized * 5;
 				if (new Vector3(delta.x, 0, delta.z).magnitude < 0.1f) queue.Dequeue();
 			}
+			if (Velocity != Vector3.zero) Body.rotation = Quaternion.LookRotation(Velocity);
 		}
 	}
 

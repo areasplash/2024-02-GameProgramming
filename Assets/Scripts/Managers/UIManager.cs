@@ -34,7 +34,7 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(UIManager)), CanEditMultipleObjects]
-	public class UIManagerEditor : Editor {
+	public class UIManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_MainMenuCanvas;
 		SerializedProperty m_GameCanvas;
@@ -82,7 +82,8 @@ using System.Collections.Generic;
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
-			Space();
+			Undo.RecordObject(target, "Change UI Manager Properties");
+
 			LabelField("Canvas", EditorStyles.boldLabel);
 			PropertyField(m_MainMenuCanvas);
 			PropertyField(m_GameCanvas);
@@ -92,6 +93,7 @@ using System.Collections.Generic;
 			PropertyField(m_ConfirmationCanvas);
 			PropertyField(m_FadeCanvas);
 			Space();
+
 			LabelField("First Selected", EditorStyles.boldLabel);
 			PropertyField(m_MainMenuFirstSelected);
 			PropertyField(m_GameFirstSelected);
@@ -101,15 +103,19 @@ using System.Collections.Generic;
 			PropertyField(m_ConfirmationFirstSelected);
 			PropertyField(m_FadeFirstSelected);
 			Space();
+
 			LabelField("UI", EditorStyles.boldLabel);
 			PropertyField(m_Canvas);
 			PropertyField(m_CanvasScaler);
 			Space();
+
 			LabelField("UI Properties", EditorStyles.boldLabel);
 			I.PixelPerfect        = Toggle         ("Pixel Perfect",        I.PixelPerfect);
 			I.PixelPerUnit        = FloatField     ("Pixel Per Unit",       I.PixelPerUnit);
 			I.ReferenceResolution = Vector2IntField("Reference Resolution", I.ReferenceResolution);
 			PropertyField(m_ResolutionPresets);
+			Space();
+
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}

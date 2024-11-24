@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 
 
 
-struct CreatureData {
+[Serializable] struct CreatureData {
 	public Vector3    position;
 	public Quaternion rotation;
 	public Vector3    scale;
@@ -23,7 +23,7 @@ struct CreatureData {
 	public float   alpha;
 }
 
-struct ParticleData {
+[Serializable] struct ParticleData {
 	public Vector3    position;
 	public Quaternion rotation;
 	public Vector3    scale;
@@ -35,7 +35,7 @@ struct ParticleData {
 	public float   alpha;
 }
 
-struct ShadowData {
+[Serializable] struct ShadowData {
 	public Vector3 position;
 	public Vector4 rotation;
 	public Vector3 scale;
@@ -49,7 +49,7 @@ struct ShadowData {
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(DrawManager)), CanEditMultipleObjects]
-	public class DrawManagerEditor : Editor {
+	public class DrawManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_SphereMesh;
 		SerializedProperty m_ShadowMaterial;
@@ -72,17 +72,20 @@ struct ShadowData {
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Draw Manager Properties");
-			Space();
-			LabelField("Shadow", EditorStyles.boldLabel);
-			PropertyField(m_SphereMesh);
-			PropertyField(m_ShadowMaterial);
-			Space();
+
 			LabelField("Material", EditorStyles.boldLabel);
 			PropertyField(m_QuadMesh);
 			PropertyField(m_CreatureMaterial);
 			PropertyField(m_ParticleMaterial);
 			PropertyField(m_CreatureAtlasMap);
 			PropertyField(m_ParticleAtlasMap);
+			Space();
+
+			LabelField("Shadow", EditorStyles.boldLabel);
+			PropertyField(m_SphereMesh);
+			PropertyField(m_ShadowMaterial);
+			Space();
+
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -209,7 +212,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		float pixelPerUnit = UIManager.Instance.PixelPerUnit;
 		creatureSizeMap.Clear();
 		creatureDataMap.Clear();
-		if (m_CreatureAtlasMap) foreach (var pair in m_CreatureAtlasMap.atlasMap) {
+		if (m_CreatureAtlasMap) foreach (var pair in m_CreatureAtlasMap.AtlasMap) {
 			// CreatureType_AnimationType_Direction_Index_Duration
 			string[] split = pair.Key.Split('_');
 			if (split.Length != 5) continue;
@@ -254,7 +257,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		float pixelPerUnit = UIManager.Instance.PixelPerUnit;
 		particleSizeMap.Clear();
 		particleDataMap.Clear();
-		if (m_ParticleAtlasMap) foreach (var pair in m_ParticleAtlasMap.atlasMap) {
+		if (m_ParticleAtlasMap) foreach (var pair in m_ParticleAtlasMap.AtlasMap) {
 			// ParticleType_Index_Duration
 			string[] split = pair.Key.Split('_');
 			if (split.Length != 3) continue;

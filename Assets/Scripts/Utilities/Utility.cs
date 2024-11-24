@@ -64,11 +64,11 @@ public static class Utility {
 		return Quaternion.Euler(x, y, z);
 	}
 
-	public static int ToInt(Color color) {
-		int r = (int)(Mathf.Clamp01(color.r) * 255);
-		int g = (int)(Mathf.Clamp01(color.g) * 255);
-		int b = (int)(Mathf.Clamp01(color.b) * 255);
-		int a = (int)(Mathf.Clamp01(color.a) * 255);
+	public static int ToInt(Color value) {
+		int r = (int)(Mathf.Clamp01(value.r) * 255);
+		int g = (int)(Mathf.Clamp01(value.g) * 255);
+		int b = (int)(Mathf.Clamp01(value.b) * 255);
+		int a = (int)(Mathf.Clamp01(value.a) * 255);
 		return (r << 24) | (g << 16) | (b <<  8) | (a <<  0); 
 	}
 	public static Color ToColor(int value) {
@@ -79,31 +79,31 @@ public static class Utility {
 		return new Color(r, g, b, a);
 	}
 
-	/*
-	public static int ToInt(EffectData value) {
-		int immunity = value.Immunity ? 1 : 0;
-		int strength = Mathf.RoundToInt(Mathf.Clamp(value.Strength, 0, EffectData.Max) / 0.03125f);
-		int duration = Mathf.RoundToInt(Mathf.Clamp(value.Duration, 0, EffectData.Max) / 0.03125f);
-		return (immunity << 30) | (strength << 15) | (duration <<  0);
+	public static int ToInt(Effect value) {
+		int strength = (int)(Mathf.Clamp(value.strength, 0, 2047.9375f) * 16);
+		int duration = (int)(Mathf.Clamp(value.duration, 0, 2047.9375f) * 16);
+		int immunity = (int)value.immunity;
+		return (strength << 17) | (duration <<  2) | (immunity <<  0);
 	}
-	public static EffectData ToEffectData(int value) {
-		bool  immunity = ((value >> 30) & 0x0003) != 0;
-		float strength = ((value >> 15) & 0x7FFF) * 0.03125f;
-		float duration = ((value >>  0) & 0x7FFF) * 0.03125f;
-		return new EffectData(immunity, strength, duration);
+	public static Effect ToEffect(int value) {
+		float        strength = ((value >> 17) & 0x7FFF) * 0.0625f;
+		float        duration = ((value >>  2) & 0x7FFF) * 0.0625f;
+		ImmunityType immunity = (ImmunityType)((value >> 0) & 0x3);
+		return new Effect(strength, duration, immunity);
 	}
 
-	public static int ToInt(StatusData value) {
-		int strength = Mathf.RoundToInt(Mathf.Clamp(value.Value, 0, StatusData.Max) / 0.03125f);
-		int duration = Mathf.RoundToInt(Mathf.Clamp(value.Limit, 0, StatusData.Max) / 0.03125f);
-		return (strength << 16) | (duration <<  0);
+	public static int ToInt(Status value) {
+		int limit = (int)(Mathf.Clamp(value.limit, 0, 4095.9375f) * 16);
+		int scale = (int)(Mathf.Clamp(value.value, 0, 4095.9375f) * 16);
+		return (limit << 16) | (scale <<  0);
 	}
-	public static StatusData ToStatusData(int value) {
-		float strength = ((value >> 16) & 0xFFFF) * 0.03125f;
-		float duration = ((value >>  0) & 0xFFFF) * 0.03125f;
-		return new StatusData(strength, duration);
+	public static Status ToStatus(int value) {
+		float limit = ((value >> 16) & 0xFFFF) * 0.0625f;
+		float scale = ((value >>  0) & 0xFFFF) * 0.0625f;
+		return new Status(limit, scale);
 	}
-	*/
+
+
 
 	static RaycastHit[] hits = new RaycastHit[16];
 

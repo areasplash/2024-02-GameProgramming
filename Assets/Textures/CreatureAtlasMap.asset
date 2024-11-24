@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c48826a48f46154789ee28959030465, type: 3}
   m_Name: CreatureAtlasMap
   m_EditorClassIdentifier: 
-  m_TextureDirectory: Assets/Textures/Creatures
-  m_PrefabDirectory: Assets/Prefabs/Creatures
+  m_TexturePath: Assets/Textures/Creatures
+  m_NavMeshPrefabPath: Assets/Prefabs/Creatures
   m_MaximumAtlasSize: 8192
   m_Padding: 0
-  m_Atlas: {fileID: 2800000, guid: 38fd27fa361f59f4faa57cdcd7452769, type: 3}
+  m_TargetTexture: {fileID: 2800000, guid: 38fd27fa361f59f4faa57cdcd7452769, type: 3}
   m_AtlasMap:
     m_Keys:
     - None_Idle_0_0_1000

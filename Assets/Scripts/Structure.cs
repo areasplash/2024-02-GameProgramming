@@ -24,24 +24,27 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(Structure)), CanEditMultipleObjects]
-	public class StructureEditor : Editor {
+	public class StructureEditor : ExtendedEditor {
 
 		Structure I => target as Structure;
-
-		T EnumField<T>(string label, T value) where T : Enum => (T)EnumPopup(label, value);
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Structure Properties");
-			Space();
+
 			LabelField("Structure", EditorStyles.boldLabel);
-			I.StructureType = EnumField("Structure Type", I.StructureType);
+			I.StructureType = EnumField  ("Structure Type", I.StructureType);
+			I.AttributeType = FlagField  ("Attribute Type", I.AttributeType);
+			I.Mesh          = ObjectField("Mesh",           I.Mesh);
 			Space();
+
 			LabelField("Rigidbody", EditorStyles.boldLabel);
 			I.Velocity       = Vector3Field("Velocity",        I.Velocity);
 			I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
 			I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
 			I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
+			Space();
+			
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -59,17 +62,20 @@ public class Structure : MonoBehaviour {
 	// Constants
 
 	const string PrefabPath = "Prefabs/Structure";
+	const string MeshPath   = "Prefabs/StructureMeshes/";
 
 
 
 	// Fields
 
-	[SerializeField] StructureType m_StructureType  = StructureType.None;
+	[SerializeField] StructureType m_StructureType = StructureType.None;
+	[SerializeField] GameObject    m_Mesh          = null;
+	[SerializeField] AttributeType m_AttributeType = 0;
 
-	[SerializeField] Vector3       m_Velocity       = Vector3.zero;
-	[SerializeField] Vector3       m_ForcedVelocity = Vector3.zero;
-	[SerializeField] Vector3       m_GroundVelocity = Vector3.zero;
-	[SerializeField] Vector3       m_GravitVelocity = Vector3.zero;
+	[SerializeField] Vector3 m_Velocity       = Vector3.zero;
+	[SerializeField] Vector3 m_ForcedVelocity = Vector3.zero;
+	[SerializeField] Vector3 m_GroundVelocity = Vector3.zero;
+	[SerializeField] Vector3 m_GravitVelocity = Vector3.zero;
 
 
 
@@ -81,11 +87,64 @@ public class Structure : MonoBehaviour {
 			m_StructureType = value;
 			#if UNITY_EDITOR
 				bool pooled = value == StructureType.None;
-				gameObject.name = pooled? "Pooled Structure" : value.ToString();
+				gameObject.name = pooled? "Structure" : value.ToString();
 			#endif
 			Initialize();
 		}
 	}
+
+	public GameObject Mesh {
+		get => m_Mesh;
+		set {
+			if (!value && m_Mesh) Destroy(m_Mesh);
+			m_Mesh = value;
+			if (m_Mesh) {
+				m_Mesh.transform.SetParent(transform);
+				m_Mesh.transform.localPosition = Vector3.zero;
+				m_Mesh.transform.localRotation = Quaternion.identity;
+			}
+		}
+	}
+
+	static int entityLayer = 0;
+	static int EntityLayer {
+		get {
+			if (entityLayer == 0) entityLayer = LayerMask.NameToLayer("Entity");
+			return entityLayer;
+		}
+	}
+
+	Rigidbody body;
+	Rigidbody Body {
+		get {
+			if (!body) TryGetComponent(out body);
+			return body;
+		}
+	}
+
+	public AttributeType AttributeType {
+		get => m_AttributeType;
+		set {
+			m_AttributeType = value;
+			if ((value & AttributeType.Pinned) != 0) {
+				Velocity       = Vector3.zero;
+				ForcedVelocity = Vector3.zero;
+				GroundVelocity = Vector3.zero;
+				GravitVelocity = Vector3.zero;
+				Body. linearVelocity = Vector3.zero;
+				Body.angularVelocity = Vector3.zero;
+				Body.mass = float.MaxValue;
+			}
+			else {
+				Body.mass = 1;
+			}
+			if ((value & AttributeType.Floating) != 0) {
+				GravitVelocity = Vector3.zero;
+			}
+		}
+	}
+
+
 
 	public Vector3 Velocity {
 		get => m_Velocity;
@@ -211,18 +270,16 @@ public class Structure : MonoBehaviour {
 
 	// Physics
 
+	int            layer           = 0;
+
 	List<Collider> grounds         = new List<Collider>();
 	bool           groundChanged   = false;
 	Rigidbody      groundRigidbody = null;
 	Quaternion     groundRotation  = Quaternion.identity;
 	bool           isGrounded      = false;
 
-	Rigidbody rb;
-
-	void Start() => TryGetComponent(out rb);
-
 	void BeginTrigger() {
-		gameObject.layer = Utility.GetLayerAtPoint(transform.position, transform);
+		layer = Utility.GetLayerAtPoint(transform.position, transform);
 
 		grounds.Clear();
 		groundChanged = true;
@@ -262,21 +319,23 @@ public class Structure : MonoBehaviour {
 	void FixedUpdate() {
 		EndTrigger();
 
+		if ((AttributeType & AttributeType.Pinned) != 0) return;
 		if (groundRigidbody) GroundVelocity = groundRigidbody.linearVelocity;
-		if (!isGrounded) GravitVelocity += Physics.gravity * Time.deltaTime;
+		if (!isGrounded && (AttributeType & AttributeType.Floating) == 0) {
+			GravitVelocity += Physics.gravity * Time.deltaTime;
+		}
 
 		Vector3 linearVelocity = Vector3.zero;
 		linearVelocity += groundRotation * Velocity;
 		linearVelocity += ForcedVelocity + GroundVelocity + GravitVelocity;
-		rb.linearVelocity = linearVelocity;
-		if (Velocity != Vector3.zero) rb.rotation = Quaternion.LookRotation(Velocity);
+		Body.linearVelocity = linearVelocity;
 
 		if (ForcedVelocity != Vector3.zero) {
-			ForcedVelocity *= 0.9f;
+			ForcedVelocity *= 0.90f;
 			if (ForcedVelocity.sqrMagnitude < 0.01f) ForcedVelocity = Vector3.zero;
 		}
 		if (GroundVelocity != Vector3.zero) {
-			GroundVelocity *= 0.9f;
+			GroundVelocity *= 0.98f;
 			if (GroundVelocity.sqrMagnitude < 0.01f) GroundVelocity = Vector3.zero;
 		}
 		if (GravitVelocity != Vector3.zero) {
@@ -307,6 +366,7 @@ public class Structure : MonoBehaviour {
 	}
 
 	void OnDisable() {
+		Destroy(Mesh);
 		OnDespawn();
 	}
 
@@ -314,7 +374,21 @@ public class Structure : MonoBehaviour {
 
 	// Structure
 
+	static Dictionary<StructureType, GameObject> mesh = new Dictionary<StructureType, GameObject>();
+
+	void SetLayer(GameObject gameObject, int layer) {
+		gameObject.layer = layer;
+		for (int i = 0; i < gameObject.transform.childCount; i++) {
+			SetLayer(gameObject.transform.GetChild(i).gameObject, layer);
+		}
+	}
+
 	void Initialize() {
+		if (!mesh.ContainsKey(StructureType)) mesh.Add(StructureType, null);
+		if (mesh[StructureType] ??= Resources.Load<GameObject>(MeshPath + StructureType.ToString())) {
+			Mesh = Instantiate(mesh[StructureType], transform);
+			SetLayer(Mesh, layer);
+		}
 		switch (StructureType) {
 			case StructureType.None:
 				break;

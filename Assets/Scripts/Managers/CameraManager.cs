@@ -17,7 +17,7 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(CameraManager)), CanEditMultipleObjects]
-	public class CameraManagerEditor : Editor {
+	public class CameraManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_MainCamera;
 		SerializedProperty m_FadeCamera;
@@ -41,25 +41,15 @@ using System.Collections.Generic;
 			m_TargetPosition = serializedObject.FindProperty("m_TargetPosition");
 		}
 
-		string[] layerNames;
-		string[] LayerNames {
-			get {
-				if (layerNames == null) {
-					layerNames = new string[32];
-					for (int i = 0; i < 32; i++) layerNames[i] = LayerMask.LayerToName(i);
-				}
-				return layerNames;
-			}
-		}
-
 		public override void OnInspectorGUI() { 
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change Camera Manager Properties");
-			Space();
+
 			LabelField("Camera", EditorStyles.boldLabel);
 			PropertyField(m_MainCamera);
 			PropertyField(m_FadeCamera);
 			Space();
+
 			LabelField("Camera Properties", EditorStyles.boldLabel);
 			RenderTextureSize = Vector2IntField("Render Texture Size", RenderTextureSize);
 			FieldOfView       = FloatField     ("Field Of View",       FieldOfView);
@@ -77,14 +67,16 @@ using System.Collections.Generic;
 			}
 			EndHorizontal();
 			Space();
+
 			LabelField("Camera Transition", EditorStyles.boldLabel);
-			m_AbsoluteLayer.intValue = MaskField("Absolute Layer",  AbsoluteLayer, LayerNames);
-			m_ExteriorLayer.intValue = MaskField("Exterior Layer", ExteriorLayer, LayerNames);
-			m_InteriorLayer.intValue = MaskField("Interior Layer", InteriorLayer, LayerNames);
-			TransitionTime = Slider   ("Transition Time", TransitionTime, 0, 3);
+			AbsoluteLayer = LayerMaskField("Absolute Layer", AbsoluteLayer);
+			ExteriorLayer = LayerMaskField("Exterior Layer", ExteriorLayer);
+			InteriorLayer = LayerMaskField("Interior Layer", InteriorLayer);
+			TransitionTime = Slider("Transition Time", TransitionTime, 0, 3);
 			PropertyField(m_MainRawImage);
 			PropertyField(m_FadeRawImage);
 			Space();
+
 			LabelField("Camera Tracking Controls", EditorStyles.boldLabel);
 			PropertyField(m_Target);
 			PropertyField(m_TargetPosition);
@@ -105,6 +97,8 @@ using System.Collections.Generic;
 				FreezeRotation[2] = ToggleLeft("Z", FreezeRotation[2], GUILayout.Width(28));
 			}
 			EndHorizontal();
+			Space();
+			
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
@@ -239,9 +233,20 @@ public class CameraManager : MonoSingleton<CameraManager> {
 
 
 
-	public static int AbsoluteLayer => Instance? Instance.m_AbsoluteLayer : default;
-	public static int ExteriorLayer => Instance? Instance.m_ExteriorLayer : default;
-	public static int InteriorLayer => Instance? Instance.m_InteriorLayer : default;
+	public static int AbsoluteLayer {
+		get   =>  Instance? Instance.m_AbsoluteLayer : default;
+		set { if (Instance) Instance.m_AbsoluteLayer = value; }
+	}
+
+	public static int ExteriorLayer {
+		get   =>  Instance? Instance.m_ExteriorLayer : default;
+		set { if (Instance) Instance.m_ExteriorLayer = value; }
+	}
+
+	public static int InteriorLayer {
+		get   =>  Instance? Instance.m_InteriorLayer : default;
+		set { if (Instance) Instance.m_InteriorLayer = value; }
+	}
 
 	public static float TransitionTime {
 		get   =>  Instance? Instance.m_TransitionTime : default;

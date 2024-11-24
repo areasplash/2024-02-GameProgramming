@@ -31,7 +31,7 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	[CustomEditor(typeof(NavMeshManager)), CanEditMultipleObjects]
-	public class NavMeshManagerEditor : Editor {
+	public class NavMeshManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_HumanoidMesh;
 
@@ -42,7 +42,7 @@ using System.Collections.Generic;
 		public override void OnInspectorGUI() {
 			serializedObject.Update();
 			Undo.RecordObject(target, "Change NavMesh Manager Properties");
-			Space();
+
 			LabelField("NavMesh", EditorStyles.boldLabel);
 			PropertyField(m_HumanoidMesh);
 			BeginHorizontal();
@@ -53,6 +53,7 @@ using System.Collections.Generic;
 			}
 			EndHorizontal();
 			Space();
+
 			LabelField("NavMesh Properties", EditorStyles.boldLabel);
 			SampleDistance = Slider("Sample Distance", SampleDistance, 1f, 16f);
 			/*if (GUILayout.Button("Test")) {
@@ -62,6 +63,8 @@ using System.Collections.Generic;
 					Debug.Log(navMeshSurface.agentTypeID);
 				}
 			}*/
+			Space();
+			
 			serializedObject.ApplyModifiedProperties();
 			if (GUI.changed) EditorUtility.SetDirty(target);
 		}
