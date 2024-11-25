@@ -157,7 +157,7 @@ public static class Utility {
 		}
 		return result;
 	}
-
+	
 	static Creature creature;
 
 	public static bool GetMatched(Vector3 point, float range, Predicate<Creature> match,

@@ -604,6 +604,7 @@ public class UIManager : MonoSingleton<UIManager> {
 		int index = Mathf.Max(0, LocalizationSettings.AvailableLocales.Locales.FindIndex(locale => {
 			return locale.Identifier.CultureInfo.NativeName.Equals(Language);
 		}));
+		string name = LocalizationSettings.SelectedLocale.Identifier.CultureInfo.NativeName;
 		LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[index];
 		if (language) language.Text = Language;
 	}

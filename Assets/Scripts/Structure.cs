@@ -123,7 +123,7 @@ public class Structure : MonoBehaviour {
 				ForcedVelocity = Vector3.zero;
 				GroundVelocity = Vector3.zero;
 				GravitVelocity = Vector3.zero;
-				Body. linearVelocity = Vector3.zero;
+				Body.       velocity = Vector3.zero;
 				Body.angularVelocity = Vector3.zero;
 				Body.mass = float.MaxValue;
 			}
@@ -319,7 +319,7 @@ public class Structure : MonoBehaviour {
 		EndTrigger();
 
 		if ((AttributeType & AttributeType.Pinned) != 0) return;
-		if (groundRigidbody) GroundVelocity = groundRigidbody.linearVelocity;
+		if (groundRigidbody) GroundVelocity = groundRigidbody.velocity;
 		if (!isGrounded && (AttributeType & AttributeType.Floating) == 0) {
 			GravitVelocity += Physics.gravity * Time.deltaTime;
 		}
@@ -327,7 +327,7 @@ public class Structure : MonoBehaviour {
 		Vector3 linearVelocity = Vector3.zero;
 		linearVelocity += groundRotation * Velocity;
 		linearVelocity += ForcedVelocity + GroundVelocity + GravitVelocity;
-		Body.linearVelocity = linearVelocity;
+		Body.velocity = linearVelocity;
 
 		if (ForcedVelocity != Vector3.zero) {
 			ForcedVelocity *= !isGrounded ? 0.97f : 0.91f;

@@ -198,7 +198,7 @@ public class Creature : MonoBehaviour {
 				ForcedVelocity = Vector3.zero;
 				GroundVelocity = Vector3.zero;
 				GravitVelocity = Vector3.zero;
-				Body. linearVelocity = Vector3.zero;
+				Body.       velocity = Vector3.zero;
 				Body.angularVelocity = Vector3.zero;
 				Body.mass = float.MaxValue;
 			}
@@ -209,12 +209,12 @@ public class Creature : MonoBehaviour {
 				GravitVelocity = Vector3.zero;
 			}
 			if ((value & AttributeType.Piercing) != 0) {
-				if (hitbox || TryGetComponent(out hitbox)) hitbox.excludeLayers |=  EntityMask;
-				if (ground || TryGetComponent(out ground)) ground.excludeLayers |=  EntityMask;
+				//if (hitbox || TryGetComponent(out hitbox)) hitbox.excludeLayers |=  EntityMask;
+				//if (ground || TryGetComponent(out ground)) ground.excludeLayers |=  EntityMask;
 			}
 			else {
-				if (hitbox || TryGetComponent(out hitbox)) hitbox.excludeLayers &= ~EntityMask;
-				if (ground || TryGetComponent(out ground)) ground.excludeLayers &= ~EntityMask;
+				//if (hitbox || TryGetComponent(out hitbox)) hitbox.excludeLayers &= ~EntityMask;
+				//if (ground || TryGetComponent(out ground)) ground.excludeLayers &= ~EntityMask;
 			}
 		}
 	}
@@ -469,7 +469,7 @@ public class Creature : MonoBehaviour {
 		}
 
 		if ((AttributeType & AttributeType.Pinned) != 0) return;
-		if (groundRigidbody) GroundVelocity = groundRigidbody.linearVelocity;
+		if (groundRigidbody) GroundVelocity = groundRigidbody.velocity;
 		if (!isGrounded && (AttributeType & AttributeType.Floating) == 0) {
 			GravitVelocity += Physics.gravity * Time.deltaTime;
 		}
@@ -477,7 +477,7 @@ public class Creature : MonoBehaviour {
 		Vector3 linearVelocity = Vector3.zero;
 		linearVelocity += groundRotation * Velocity;
 		linearVelocity += ForcedVelocity + GroundVelocity + GravitVelocity;
-		Body.linearVelocity = linearVelocity;
+		Body.velocity = linearVelocity;
 		
 		if (ForcedVelocity != Vector3.zero) {
 			ForcedVelocity *= !isGrounded ? 0.97f : 0.91f;

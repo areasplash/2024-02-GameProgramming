@@ -23,9 +23,6 @@ using System.Collections.Generic;
 		SerializedProperty m_FadeCamera;
 		SerializedProperty m_MainRawImage;
 		SerializedProperty m_FadeRawImage;
-		SerializedProperty m_AbsoluteLayer;
-		SerializedProperty m_ExteriorLayer;
-		SerializedProperty m_InteriorLayer;
 		SerializedProperty m_Target;
 		SerializedProperty m_TargetPosition;
 
@@ -34,9 +31,6 @@ using System.Collections.Generic;
 			m_FadeCamera     = serializedObject.FindProperty("m_FadeCamera");
 			m_MainRawImage   = serializedObject.FindProperty("m_MainRawImage");
 			m_FadeRawImage   = serializedObject.FindProperty("m_FadeRawImage");
-			m_AbsoluteLayer  = serializedObject.FindProperty("m_AbsoluteLayer");
-			m_ExteriorLayer  = serializedObject.FindProperty("m_ExteriorLayer");
-			m_InteriorLayer  = serializedObject.FindProperty("m_InteriorLayer");
 			m_Target         = serializedObject.FindProperty("m_Target");
 			m_TargetPosition = serializedObject.FindProperty("m_TargetPosition");
 		}
@@ -420,6 +414,7 @@ public class CameraManager : MonoSingleton<CameraManager> {
 			layerChanged = false;
 			layerMask = 0;
 			for (int i = 0; i < layers.Count; i++) layerMask |= 1 << layers[i].gameObject.layer;
+			layerMask &= ~AbsoluteLayer;
 			if (layerMask == 0) layerMask |= ExteriorLayer;
 			CullingMask = layerMask | AbsoluteLayer;
 		}

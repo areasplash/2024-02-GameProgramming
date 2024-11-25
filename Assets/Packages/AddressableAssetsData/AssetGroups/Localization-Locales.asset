@@ -13,23 +13,23 @@ MonoBehaviour:
   m_Name: Localization-Locales
   m_EditorClassIdentifier: 
   m_GroupName: Localization-Locales
-  m_GUID: 5671420daaf98854993646ed02d19ee9
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 1e1aa9241a6a38142972f9b5db7da131
   m_SerializeEntries:
   - m_GUID: 47fad491e8c89a4429a71c475f653eee
     m_Address: Korean (ko)
     m_ReadOnly: 1
     m_SerializedLabels:
     - Locale
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7b5cb4f39efb3b447a02242bb07b8c22
     m_Address: English (en)
     m_ReadOnly: 1
     m_SerializedLabels:
     - Locale
-    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 1
-  m_Settings: {fileID: 11400000, guid: b4e864c6c55bedd4096cfb3f0935b764, type: 2}
+  m_Settings: {fileID: 11400000, guid: 0fefbd22b603b714989307abfce12513, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: d9a534a0cdae51f4088fb0864a83755f, type: 2}
-    - {fileID: 11400000, guid: 215750694d2d78a488fa23e56755665f, type: 2}
+    - {fileID: 11400000, guid: 7bbecdfb6d93c0848a1f31526082221f, type: 2}
+    - {fileID: 11400000, guid: 32881cfbf37ed144b93ce1be2983e5b9, type: 2}

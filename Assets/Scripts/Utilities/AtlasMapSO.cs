@@ -69,7 +69,7 @@ using System.Collections.Generic;
 			}
 			BeginHorizontal();
 			PrefixLabel("Atlas Map Size");
-			LabelField($"{((AtlasMapSO.HashMap)m_AtlasMap.boxedValue).Count}");
+			//LabelField($"{((AtlasMapSO.HashMap)m_AtlasMap.boxedValue).Count}");
 			EndHorizontal();
 			PropertyField(m_AtlasMap);
 			Space();

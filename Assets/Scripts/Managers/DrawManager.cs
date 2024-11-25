@@ -35,7 +35,7 @@ using System.Runtime.InteropServices;
 	public float   alpha;
 }
 
-[Serializable] struct ShadowData {
+[Serializable] struct ShadowOnlyData {
 	public Vector3 position;
 	public Vector4 rotation;
 	public Vector3 scale;
@@ -52,7 +52,7 @@ using System.Runtime.InteropServices;
 	public class DrawManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_SphereMesh;
-		SerializedProperty m_ShadowMaterial;
+		SerializedProperty m_ShadowOnlyMaterial;
 		SerializedProperty m_QuadMesh;
 		SerializedProperty m_CreatureMaterial;
 		SerializedProperty m_ParticleMaterial;
@@ -60,13 +60,13 @@ using System.Runtime.InteropServices;
 		SerializedProperty m_ParticleAtlasMap;
 
 		void OnEnable() {
-			m_SphereMesh       = serializedObject.FindProperty("m_SphereMesh");
-			m_ShadowMaterial   = serializedObject.FindProperty("m_ShadowMaterial");
-			m_QuadMesh         = serializedObject.FindProperty("m_QuadMesh");
-			m_CreatureMaterial = serializedObject.FindProperty("m_CreatureMaterial");
-			m_ParticleMaterial = serializedObject.FindProperty("m_ParticleMaterial");
-			m_CreatureAtlasMap = serializedObject.FindProperty("m_CreatureAtlasMap");
-			m_ParticleAtlasMap = serializedObject.FindProperty("m_ParticleAtlasMap");
+			m_SphereMesh         = serializedObject.FindProperty("m_SphereMesh");
+			m_ShadowOnlyMaterial = serializedObject.FindProperty("m_ShadowOnlyMaterial");
+			m_QuadMesh           = serializedObject.FindProperty("m_QuadMesh");
+			m_CreatureMaterial   = serializedObject.FindProperty("m_CreatureMaterial");
+			m_ParticleMaterial   = serializedObject.FindProperty("m_ParticleMaterial");
+			m_CreatureAtlasMap   = serializedObject.FindProperty("m_CreatureAtlasMap");
+			m_ParticleAtlasMap   = serializedObject.FindProperty("m_ParticleAtlasMap");
 		}
 
 		public override void OnInspectorGUI() {
@@ -83,7 +83,7 @@ using System.Runtime.InteropServices;
 
 			LabelField("Shadow", EditorStyles.boldLabel);
 			PropertyField(m_SphereMesh);
-			PropertyField(m_ShadowMaterial);
+			PropertyField(m_ShadowOnlyMaterial);
 			Space();
 
 			serializedObject.ApplyModifiedProperties();
@@ -109,7 +109,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	[SerializeField] AtlasMapSO m_ParticleAtlasMap;
 
 	[SerializeField] Mesh     m_SphereMesh;
-	[SerializeField] Material m_ShadowMaterial;
+	[SerializeField] Material m_ShadowOnlyMaterial;
 
 
 
@@ -294,29 +294,29 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 
 
-	GPUBatcher<ShadowData>   shadowBatcher;
-	GPUBatcher<CreatureData> creatureBatcher;
-	GPUBatcher<ParticleData> particleBatcher;
+	GPUBatcher<CreatureData>   creatureBatcher;
+	GPUBatcher<ParticleData>   particleBatcher;
+	GPUBatcher<ShadowOnlyData> shadowOnlyBatcher;
 
 	void ConstructGPUBatcher() {
-		shadowBatcher   = new GPUBatcher<ShadowData>  (m_ShadowMaterial,   m_SphereMesh, 0);
-		creatureBatcher = new GPUBatcher<CreatureData>(m_CreatureMaterial, m_QuadMesh,   0);
-		particleBatcher = new GPUBatcher<ParticleData>(m_ParticleMaterial, m_QuadMesh,   0);
-		shadowBatcher  .param.layer = LayerMask.NameToLayer("Entity");
-		creatureBatcher.param.layer = LayerMask.NameToLayer("Entity");
-		particleBatcher.param.layer = LayerMask.NameToLayer("Entity");
-		shadowBatcher  .param.receiveShadows = false;
-		creatureBatcher.param.receiveShadows = false;
-		particleBatcher.param.receiveShadows = false;
-		shadowBatcher  .param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-		creatureBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		particleBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		creatureBatcher   = new GPUBatcher<CreatureData  >(m_CreatureMaterial,   m_QuadMesh,   0);
+		particleBatcher   = new GPUBatcher<ParticleData  >(m_ParticleMaterial,   m_QuadMesh,   0);
+		shadowOnlyBatcher = new GPUBatcher<ShadowOnlyData>(m_ShadowOnlyMaterial, m_SphereMesh, 0);
+		creatureBatcher  .param.layer = LayerMask.NameToLayer("Entity");
+		particleBatcher  .param.layer = LayerMask.NameToLayer("Entity");
+		shadowOnlyBatcher.param.layer = LayerMask.NameToLayer("Entity");
+		creatureBatcher  .param.receiveShadows = false;
+		particleBatcher  .param.receiveShadows = false;
+		shadowOnlyBatcher.param.receiveShadows = false;
+		creatureBatcher  .param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		particleBatcher  .param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		shadowOnlyBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
 	}
 
 	void DestructGPUBatcher() {
-		shadowBatcher  ?.Dispose();
-		creatureBatcher?.Dispose();
-		particleBatcher?.Dispose();
+		creatureBatcher  ?.Dispose();
+		particleBatcher  ?.Dispose();
+		shadowOnlyBatcher?.Dispose();
 	}
 
 	Func<int, int> func;
@@ -347,16 +347,16 @@ public class DrawManager : MonoSingleton<DrawManager> {
 			data.alpha = creature.TransitionOpacity;
 
 			creatureBatcher.Add(data);
-			shadowBatcher  .Add(new ShadowData() {
+			shadowOnlyBatcher.Add(new ShadowOnlyData() {
 				position = creature.transform.position,
 				rotation = new Vector4(0, 0, 0, 1),
 				scale    = creature.transform.localScale,
 			});
 		}
-		creatureBatcher.Draw ();
-		shadowBatcher  .Draw ();
-		creatureBatcher.Clear();
-		shadowBatcher  .Clear();
+		creatureBatcher  ?.Draw ();
+		shadowOnlyBatcher?.Draw ();
+		creatureBatcher  ?.Clear();
+		shadowOnlyBatcher?.Clear();
 	}
 
 	void DrawParticle() {
@@ -395,8 +395,8 @@ public class DrawManager : MonoSingleton<DrawManager> {
 		DrawParticle();
 	}
 
-	void OnEnable() => ConstructGPUBatcher();
-	void OnDisable() => DestructGPUBatcher();
+	void OnEnable () => ConstructGPUBatcher();
+	void OnDisable() =>  DestructGPUBatcher();
 }
 
 
@@ -405,7 +405,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 // Native List
 // ====================================================================================================
 
-public class NativeList<T> : IDisposable where T : struct {
+public struct NativeList<T> : IDisposable where T : struct {
 
 	// Fields
 
@@ -442,7 +442,10 @@ public class NativeList<T> : IDisposable where T : struct {
 
 	// Constructor, Destructor
 
-	public NativeList(int capacity = 64) => Capacity = capacity;
+	public NativeList(int capacity = 64) {
+		narray = new NativeArray<T>(Mathf.Max(capacity, 4), Allocator.Persistent);
+		length = 0;
+	}
 
 	public void Dispose() => narray.Dispose();
 
@@ -543,7 +546,7 @@ public class GPUBatcher<T> : IDisposable where T : unmanaged {
 		bufferArgs = new GraphicsBuffer(Args, narrayArgs.Capacity, sizeof(int));
 		bufferArgs.SetData(narrayArgs.GetArray(), 0, 0, narrayArgs.Length);
 
-		narrayStructured = new NativeList<T>();
+		narrayStructured = new NativeList<T>(64);
 		bufferStructured = new GraphicsBuffer(Structured, narrayStructured.Capacity, stride);
 		bufferStructured.SetData(narrayStructured.GetArray(), 0, 0, narrayStructured.Length);
 
@@ -559,8 +562,8 @@ public class GPUBatcher<T> : IDisposable where T : unmanaged {
 	public void Dispose() {
 		narrayArgs.Dispose();
 		bufferArgs.Release();
-		bufferStructured.Release();
 		narrayStructured.Dispose();
+		bufferStructured.Release();
 	}
 
 
