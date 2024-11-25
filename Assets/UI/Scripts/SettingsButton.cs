@@ -129,23 +129,12 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 
 
-	Transform  parent;
 	ScrollRect scrollRect;
-
-	bool TryGetComponentInParent<T>(out T component) where T : Component {
-		parent = transform.parent;
-		while (parent) {
-			if (parent.TryGetComponent(out component)) return true;
-			else parent = parent.parent;
-		}
-		component = null;
-		return false;
-	}
 
 	public override void OnSelect(BaseEventData eventData) {
 		base.OnSelect(eventData);
 		if (eventData is AxisEventData) {
-			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
+			if (scrollRect || Utility.TryGetComponentInParent(transform, out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
 				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;

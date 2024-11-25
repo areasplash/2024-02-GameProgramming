@@ -126,16 +126,20 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
 
 
-	NavMeshPath path;
-	NavMeshHit  hit;
+	static NavMeshPath path;
 
-	public bool FindPath(Vector3 start, Vector3 end, ref Queue<Vector3> queue, float offset = 1f) {
+	public static bool FindPath(Vector3 start, Vector3 end, ref Queue<Vector3> queue, float offset) {
 		path ??= new NavMeshPath();
+		NavMeshHit hit;
+		NavMesh.SamplePosition(start, out hit, 8f, NavMesh.AllAreas);
+		start = hit.position;
+		NavMesh.SamplePosition(end,   out hit, 8f, NavMesh.AllAreas);
+		end   = hit.position;
+		queue.Clear();
 		if (NavMesh.CalculatePath(start, end, NavMesh.AllAreas, path)) {
-			queue.Clear();
 			for (int i = 0; i < path.corners.Length - 1; i++) {
 				float s = Vector3.Distance(path.corners[i], path.corners[i + 1]);
-				for (float j = 0; j < s; j += m_SampleDistance) {
+				for (float j = 0; j < s; j += SampleDistance) {
 					Vector3 point = Vector3.Lerp(path.corners[i], path.corners[i + 1], j / s);
 					if (NavMesh.SamplePosition(point, out hit, offset * 2, NavMesh.AllAreas)) {
 						queue.Enqueue(new Vector3(point.x, hit.position.y + offset, point.z));

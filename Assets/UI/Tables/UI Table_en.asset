@@ -161,6 +161,30 @@ MonoBehaviour:
     m_Localized: 'Apply: Enter'
     m_Metadata:
       m_Items: []
+  - m_Id: 8823404370976768
+    m_Localized: Open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823797016551424
+    m_Localized: Close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823861214568448
+    m_Localized: Retrieve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823917288218624
+    m_Localized: Discard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823960531492864
+    m_Localized: Cook
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823995377770496
+    m_Localized: Serve
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

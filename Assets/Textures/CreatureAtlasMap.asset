@@ -19,6 +19,16 @@ MonoBehaviour:
   m_TargetTexture: {fileID: 2800000, guid: 38fd27fa361f59f4faa57cdcd7452769, type: 3}
   m_AtlasMap:
     m_Keys:
+    - Client_Idle_0_0_1000
+    - Client_Idle_0_1_0500
+    - Client_Idle_0_2_1000
+    - Client_Idle_0_3_0500
+    - Client_Move_0_0_100
+    - Client_Move_0_1_100
+    - Client_Move_0_2_100
+    - Client_Move_0_3_100
+    - Client_Move_0_4_100
+    - Client_Move_0_5_100
     - None_Idle_0_0_1000
     - None_Idle_0_1_0500
     - None_Idle_0_2_1000
@@ -100,3 +110,33 @@ MonoBehaviour:
     - size: {x: 32, y: 32}
       tiling: {x: 0.125, y: 0.25}
       offset: {x: 0.875, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.5, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.5, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.5, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.625, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.75, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.875, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.625, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.625, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.75, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.125, y: 0.25}
+      offset: {x: 0.875, y: 0.5}

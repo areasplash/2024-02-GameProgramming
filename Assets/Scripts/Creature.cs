@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 #if UNITY_EDITOR
@@ -27,9 +28,17 @@ using System.Collections.Generic;
 }
 
 [Serializable, Flags] public enum AttributeType {
-	Pinned   = 1 << 0,
-	Floating = 1 << 1,
-	Piercing = 1 << 2,
+	Pinned   = 1 <<  0,
+	Floating = 1 <<  1,
+	Piercing = 1 <<  2,
+
+	Interact = 1 << 16,
+	Open     = 1 << 17,
+	Close    = 1 << 18,
+	Retrieve = 1 << 19,
+	Discard  = 1 << 20,
+	Cook     = 1 << 21,
+	Serve    = 1 << 22,
 }
 
 [Serializable] public enum ImmunityType {
@@ -88,8 +97,8 @@ using System.Collections.Generic;
 			I.CreatureType  = EnumField ("Creature Type",  I.CreatureType);
 			I.AnimationType = EnumField ("Animation Type", I.AnimationType);
 			I.Offset        = FloatField("Offset",         I.Offset);
-			I.HitboxType    = EnumField ("Hitbox Type",    I.HitboxType);
 			I.AttributeType = FlagField ("Attribute Type", I.AttributeType);
+			I.HitboxType    = EnumField ("Hitbox Type",    I.HitboxType);
 			I.SenseRange    = Slider    ("Sense Range",    I.SenseRange, 0, 32);
 			Space();
 
@@ -125,8 +134,8 @@ public class Creature : MonoBehaviour {
 	[SerializeField] CreatureType  m_CreatureType  = CreatureType.None;
 	[SerializeField] AnimationType m_AnimationType = AnimationType.Idle;
 	[SerializeField] float         m_Offset        = 0;
-	[SerializeField] HitboxType    m_HitboxType    = HitboxType.Humanoid;
 	[SerializeField] AttributeType m_AttributeType = 0;
+	[SerializeField] HitboxType    m_HitboxType    = HitboxType.Humanoid;
 	[SerializeField] float         m_SenseRange    = 0;
 
 	[SerializeField] Vector3 m_Velocity       = Vector3.zero;
@@ -160,31 +169,6 @@ public class Creature : MonoBehaviour {
 		set => m_Offset = value;
 	}
 
-	CapsuleCollider hitbox;
-	SphereCollider  ground;
-	NavMeshAgent    agent;
-
-	public HitboxType HitboxType {
-		get => m_HitboxType;
-		set {
-			m_HitboxType = value;
-			HitboxData data = NavMeshManager.GetHitboxData(value);
-			if (hitbox || TryGetComponent(out hitbox)) {
-				hitbox.radius = data.radius;
-				hitbox.height = data.height;
-			}
-			if (ground || TryGetComponent(out ground)) {
-				ground.center = new Vector3(0, -(data.height / 2 - data.radius) - 0.08f, 0);
-				ground.radius = data.radius - 0.04f;
-			}
-			if (agent || TryGetComponent(out agent)) {
-				agent.agentTypeID = data.agentTypeID;
-				agent.radius = data.radius;
-				agent.height = data.height;
-			}
-		}
-	}
-
 	static int entityMask = 0;
 	static int EntityMask {
 		get {
@@ -200,6 +184,10 @@ public class Creature : MonoBehaviour {
 			return body;
 		}
 	}
+
+	CapsuleCollider hitbox;
+	SphereCollider  ground;
+	NavMeshAgent    agent;
 
 	public AttributeType AttributeType {
 		get => m_AttributeType;
@@ -231,19 +219,30 @@ public class Creature : MonoBehaviour {
 		}
 	}
 
-	SphereCollider sensor;
+	public HitboxType HitboxType {
+		get => m_HitboxType;
+		set {
+			m_HitboxType = value;
+			HitboxData data = NavMeshManager.GetHitboxData(value);
+			if (hitbox || TryGetComponent(out hitbox)) {
+				hitbox.radius = data.radius;
+				hitbox.height = data.height;
+			}
+			if (ground || TryGetComponent(out ground)) {
+				ground.center = new Vector3(0, -(data.height / 2 - data.radius) - 0.08f, 0);
+				ground.radius = data.radius - 0.04f;
+			}
+			if (agent || TryGetComponent(out agent)) {
+				agent.agentTypeID = data.agentTypeID;
+				agent.radius = data.radius;
+				agent.height = data.height;
+			}
+		}
+	}
 
 	public float SenseRange {
 		get => m_SenseRange;
-		set {
-			value = Mathf.Max(0, value);
-			m_SenseRange = value;
-			if (!sensor) {
-				SphereCollider[] spheres = GetComponents<SphereCollider>();
-				if (1 < spheres.Length) sensor = spheres[1];
-			}
-			if (sensor) sensor.radius = value;
-		}
+		set => m_SenseRange = value;
 	}
 
 
@@ -448,7 +447,7 @@ public class Creature : MonoBehaviour {
 			groundChanged = false;
 			if (0 < grounds.Count) {
 				int i = grounds.Count - 1;
-				grounds[i].TryGetComponent(out groundRigidbody);
+				Utility.TryGetComponentInParent(grounds[i].transform, out groundRigidbody);
 				groundRotation  = grounds[i].transform.localRotation;
 				isGrounded      = true;
 			}
@@ -481,11 +480,11 @@ public class Creature : MonoBehaviour {
 		Body.linearVelocity = linearVelocity;
 		
 		if (ForcedVelocity != Vector3.zero) {
-			ForcedVelocity *= 0.90f;
+			ForcedVelocity *= !isGrounded ? 0.97f : 0.91f;
 			if (ForcedVelocity.sqrMagnitude < 0.01f) ForcedVelocity = Vector3.zero;
 		}
 		if (GroundVelocity != Vector3.zero) {
-			GroundVelocity *= 0.98f;
+			GroundVelocity *= !isGrounded ? 0.97f : 0.91f;
 			if (GroundVelocity.sqrMagnitude < 0.01f) GroundVelocity = Vector3.zero;
 		}
 		if (GravitVelocity != Vector3.zero) {
@@ -495,8 +494,26 @@ public class Creature : MonoBehaviour {
 
 
 
+	// Interact
+
+	public bool IsInteractable() => (AttributeType & (AttributeType)(-1 & ~0xFFFF)) != 0;
+
+	public AttributeType GetInteractableType() {
+		if (IsInteractable()) for (int i = 16; i < 32; i++) {
+			if ((AttributeType & (AttributeType)(1 << i)) != 0) return (AttributeType)(1 << i);
+		}
+		return 0;
+	}
+
+	public void Interact(Creature creature) {
+		if (IsInteractable()) OnInteract?.Invoke(creature);
+	}
+
+
+
 	// Lifecycle
 
+	Action<Creature> OnInteract;
 	Action OnUpdate;
 
 	bool link = false;
@@ -532,6 +549,7 @@ public class Creature : MonoBehaviour {
 				InitializeAsPlayer();
 				break;
 			case CreatureType.Client:
+				InitializeClient();
 				break;
 		}
 	}
@@ -539,35 +557,95 @@ public class Creature : MonoBehaviour {
 	void LinkAction() {
 		switch (CreatureType) {
 			case CreatureType.None:
-				OnUpdate = () => {};
+				OnInteract = null;
+				OnUpdate   = null;
 				break;
 			case CreatureType.Player:
-				OnUpdate = () => UpdatePlayer();
+				OnInteract = null;
+				OnUpdate   = () => UpdatePlayer();
 				break;
 			case CreatureType.Client:
-				OnUpdate = () => UpdateClient();
+				OnInteract = null;
+				OnUpdate   = () => UpdateClient();
 				break;
 		}
+	}
+
+
+
+
+
+
+
+
+	Queue<Vector3> queue = new Queue<Vector3>();
+
+	static Predicate<Creature>  creatureMatch;
+	static Predicate<Structure> structureMatch;
+
+	Creature  targetCreature;
+	Structure targetStructure;
+
+	void FindPath(Vector3 target, ref Queue<Vector3> queue) {
+		float offset = NavMeshManager.GetHitboxData(HitboxType).height / 2;
+		NavMeshManager.FindPath(transform.position, target, ref queue, offset);
 	}
 
 
 
 	// Player
 
-	public Vector3        input = Vector3.zero;
-	public Queue<Vector3> queue = new Queue<Vector3>();
-
 	void InitializeAsPlayer() {
 		HitboxType = HitboxType.Humanoid;
 		SenseRange = 2.5f;
+
+		queue.Clear();
+		targetCreature  = null;
+		targetStructure = null;
 	}
 
+	Vector2 pointPosition;
+	Vector3 rotation;
+
 	void UpdatePlayer() {
+
+		// Input
+
+		Vector3 input = Vector3.zero;
+		if (UIManager.Instance.ActiveCanvas == CanvasType.Game) {
+			if (CameraManager.Target != gameObject) CameraManager.Target = gameObject;
+			
+			input += CameraManager.Instance.transform.right   * InputManager.MoveDirection.x;
+			input += CameraManager.Instance.transform.forward * InputManager.MoveDirection.y;
+			input.y = 0;
+			input.Normalize();
+			
+			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
+				Ray ray = CameraManager.ScreenPointToRay(InputManager.PointPosition);
+				if (Physics.Raycast(ray, out RaycastHit hit)) {
+					FindPath(hit.point, ref queue);
+				}
+			}
+			if (InputManager.GetKeyDown(KeyAction.RightClick)) {
+				pointPosition = InputManager.PointPosition;
+				rotation = CameraManager.EulerRotation;
+			}
+			if (InputManager.GetKey(KeyAction.RightClick)) {
+				float mouseSensitivity = UIManager.Instance.MouseSensitivity;
+				float delta = InputManager.PointPosition.x - pointPosition.x;
+				CameraManager.EulerRotation = rotation + new Vector3(0, delta * mouseSensitivity, 0);
+			}
+		}
+
+		// Movement
+
 		if (input == Vector3.zero && queue.Count == 0) {
+			if (AnimationType != AnimationType.Idle) Offset = 0;
 			AnimationType = AnimationType.Idle;
 			Velocity = Vector3.zero;
 		}
 		else {
+			if (AnimationType != AnimationType.Move) Offset = 0;
 			AnimationType = AnimationType.Move;
 			if (input != Vector3.zero) {
 				Velocity = input * 5;
@@ -576,9 +654,24 @@ public class Creature : MonoBehaviour {
 			else {
 				Vector3 delta = queue.Peek() - transform.position;
 				Velocity = new Vector3(delta.x, 0, delta.z).normalized * 5;
-				if (new Vector3(delta.x, 0, delta.z).magnitude < 0.1f) queue.Dequeue();
+				if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.02f) queue.Dequeue();
 			}
-			if (Velocity != Vector3.zero) Body.rotation = Quaternion.LookRotation(Velocity);
+			if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
+		}
+
+		// Interaction
+
+		creatureMatch  = (Creature  creature ) => creature .IsInteractable();
+		structureMatch = (Structure structure) => structure.IsInteractable();
+		Utility.GetMatched(transform.position, SenseRange, creatureMatch,  ref targetCreature );
+		Utility.GetMatched(transform.position, SenseRange, structureMatch, ref targetStructure);
+
+		if (targetCreature || targetStructure) {
+			if (targetCreature && targetStructure) targetStructure = null;
+			if (InputManager.GetKeyDown(KeyAction.Interact)) {
+				if (targetCreature ) targetCreature .Interact(this);
+				if (targetStructure) targetStructure.Interact(this);
+			}
 		}
 	}
 
@@ -586,7 +679,107 @@ public class Creature : MonoBehaviour {
 
 	// Client
 
-	public void UpdateClient() {
+	float delay = 0;
+	int   state = 0;
 
+	void InitializeClient() {
+		HitboxType = HitboxType.Humanoid;
+		SenseRange = 1.5f;
+
+		queue.Clear();
+		targetCreature  = null;
+		targetStructure = null;
+
+		delay = 0;
+		state = 0;
+	}
+
+	public void UpdateClient() {
+		delay -= Time.deltaTime;
+
+		Vector3[] array = queue.ToArray();
+		for (int i = 0; i < array.Length - 1; i++) {
+			Debug.DrawLine(array[i], array[i + 1], Color.red);
+		}
+
+		switch (state) {
+			// Search Chair
+			case 0:
+				if (AnimationType != AnimationType.Idle) Offset = 0;
+				AnimationType = AnimationType.Idle;
+
+				if (delay < 0) {
+					delay = UnityEngine.Random.Range(1f, 3f);
+						structureMatch = (Structure chair) =>
+						chair.StructureType == StructureType.Chair &&
+						(chair.AttributeType & AttributeType.Interact) != 0;
+					if (Utility.GetMatched(transform.position, 128f, structureMatch, ref targetStructure)) {
+						FindPath(targetStructure.transform.position, ref queue);
+						delay = 0;
+						state = 1;
+					}
+				}
+				break;
+			// Move
+			case 1:
+				if (AnimationType != AnimationType.Move) Offset = 0;
+				AnimationType = AnimationType.Move;
+
+				if (!targetStructure || (targetStructure.AttributeType & AttributeType.Interact) == 0) {
+					Velocity = Vector3.zero;
+					delay = 0;
+					state = 0;
+					break;
+				}
+				if (queue.Count == 0) {
+					Velocity = Vector3.zero;
+					transform.position = targetStructure.transform.position + Vector3.up;
+					targetStructure.AttributeType &= ~AttributeType.Interact;
+					delay = 0;
+					state = 2;
+					break;
+				}
+				Vector3 delta = queue.Peek() - transform.position;
+				Velocity = new Vector3(delta.x, 0, delta.z).normalized * 5;
+				if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.02f) queue.Dequeue();
+				if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
+				break;
+			// Wait
+			case 2:
+				if (AnimationType != AnimationType.Idle) Offset = 0;
+				AnimationType = AnimationType.Idle;
+
+				if (delay < 0) {
+					delay = UnityEngine.Random.Range(8f, 12f);
+					state = 3;
+				}
+				break;
+			// Search Exit
+			case 3:
+				if (AnimationType != AnimationType.Idle) Offset = 0;
+				AnimationType = AnimationType.Idle;
+
+				if (delay < 0) {
+					FindPath(GameManager.ClientSpawnPoint, ref queue);
+					targetStructure.AttributeType |= AttributeType.Interact;
+					delay = 0;
+					state = 4;
+				}
+				break;
+				// Move
+			case 4:
+				if (AnimationType != AnimationType.Move) Offset = 0;
+				AnimationType = AnimationType.Move;
+
+				if (queue.Count == 0) {
+					Despawn(this);
+					break;
+				}
+				Vector3 delta_ = queue.Peek() - transform.position;
+				Velocity = new Vector3(delta_.x, 0, delta_.z).normalized * 5;
+				if (new Vector3(delta_.x, 0, delta_.z).sqrMagnitude < 0.02f) queue.Dequeue();
+				if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
+				break;
+		}
 	}
 }

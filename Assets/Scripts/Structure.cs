@@ -69,8 +69,8 @@ public class Structure : MonoBehaviour {
 	// Fields
 
 	[SerializeField] StructureType m_StructureType = StructureType.None;
-	[SerializeField] GameObject    m_Mesh          = null;
 	[SerializeField] AttributeType m_AttributeType = 0;
+	[SerializeField] GameObject    m_Mesh;
 
 	[SerializeField] Vector3 m_Velocity       = Vector3.zero;
 	[SerializeField] Vector3 m_ForcedVelocity = Vector3.zero;
@@ -103,14 +103,6 @@ public class Structure : MonoBehaviour {
 				m_Mesh.transform.localPosition = Vector3.zero;
 				m_Mesh.transform.localRotation = Quaternion.identity;
 			}
-		}
-	}
-
-	static int entityLayer = 0;
-	static int EntityLayer {
-		get {
-			if (entityLayer == 0) entityLayer = LayerMask.NameToLayer("Entity");
-			return entityLayer;
 		}
 	}
 
@@ -205,8 +197,13 @@ public class Structure : MonoBehaviour {
 	}
 
 	void OnDespawn() {
-		StructureType = StructureType.None;
-		Velocity      = Vector3.zero;
+		StructureType  = StructureType.None;
+		AttributeType  = 0;
+		
+		Velocity       = Vector3.zero;
+		ForcedVelocity = Vector3.zero;
+		GroundVelocity = Vector3.zero;
+		GravitVelocity = Vector3.zero;
 
 		structureList.Remove(this);
 		structurePool.Add   (this);
@@ -226,8 +223,9 @@ public class Structure : MonoBehaviour {
 		data[i++] = Utility.ToInt(transform.position.y);
 		data[i++] = Utility.ToInt(transform.position.z);
 		data[i++] = Utility.ToInt(transform.rotation);
-
 		data[i++] = Utility.ToInt(StructureType);
+		data[i++] = Utility.ToInt(AttributeType);
+
 		data[i++] = Utility.ToInt(Velocity);
 		data[i++] = Utility.ToInt(ForcedVelocity);
 		data[i++] = Utility.ToInt(GroundVelocity);
@@ -243,8 +241,9 @@ public class Structure : MonoBehaviour {
 		position.z         = Utility.ToFloat(data[i++]);
 		transform.position = position;
 		transform.rotation = Utility.ToQuaternion(data[i++]);
-
 		StructureType      = Utility.ToEnum<StructureType>(data[i++]);
+		AttributeType      = Utility.ToEnum<AttributeType>(data[i++]);
+
 		Velocity           = Utility.ToVector3(data[i++]);
 		ForcedVelocity     = Utility.ToVector3(data[i++]);
 		GroundVelocity     = Utility.ToVector3(data[i++]);
@@ -304,7 +303,7 @@ public class Structure : MonoBehaviour {
 			groundChanged = false;
 			if (0 < grounds.Count) {
 				int i = grounds.Count - 1;
-				grounds[i].TryGetComponent(out groundRigidbody);
+				Utility.TryGetComponentInParent(grounds[i].transform, out groundRigidbody);
 				groundRotation  = grounds[i].transform.localRotation;
 				isGrounded      = true;
 			}
@@ -331,11 +330,11 @@ public class Structure : MonoBehaviour {
 		Body.linearVelocity = linearVelocity;
 
 		if (ForcedVelocity != Vector3.zero) {
-			ForcedVelocity *= 0.90f;
+			ForcedVelocity *= !isGrounded ? 0.97f : 0.91f;
 			if (ForcedVelocity.sqrMagnitude < 0.01f) ForcedVelocity = Vector3.zero;
 		}
 		if (GroundVelocity != Vector3.zero) {
-			GroundVelocity *= 0.98f;
+			GroundVelocity *= !isGrounded ? 0.97f : 0.91f;
 			if (GroundVelocity.sqrMagnitude < 0.01f) GroundVelocity = Vector3.zero;
 		}
 		if (GravitVelocity != Vector3.zero) {
@@ -345,8 +344,26 @@ public class Structure : MonoBehaviour {
 
 
 
+	// Interact
+
+	public bool IsInteractable() => (AttributeType & (AttributeType)(-1 & ~0xFFFF)) != 0;
+
+	public AttributeType GetInteractableType() {
+		if (IsInteractable()) for (int i = 16; i < 32; i++) {
+			if ((AttributeType & (AttributeType)(1 << i)) != 0) return (AttributeType)(1 << i);
+		}
+		return 0;
+	}
+
+	public void Interact(Creature creature) {
+		if (IsInteractable()) OnInteract?.Invoke(creature);
+	}
+
+
+
 	// Lifecycle
 
+	Action<Creature> OnInteract;
 	Action OnUpdate;
 
 	bool link = false;
@@ -398,7 +415,8 @@ public class Structure : MonoBehaviour {
 	void LinkAction() {
 		switch (StructureType) {
 			case StructureType.None:
-				OnUpdate = () => {};
+				OnInteract = null;
+				OnUpdate   = null;
 				break;
 		}
 	}

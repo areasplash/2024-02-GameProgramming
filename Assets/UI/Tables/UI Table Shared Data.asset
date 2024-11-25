@@ -155,6 +155,30 @@ MonoBehaviour:
     m_Key: Delete
     m_Metadata:
       m_Items: []
+  - m_Id: 8823404370976768
+    m_Key: Open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823797016551424
+    m_Key: Close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823861214568448
+    m_Key: Retrieve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823917288218624
+    m_Key: Discard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823960531492864
+    m_Key: Cook
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8823995377770496
+    m_Key: Serve
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
