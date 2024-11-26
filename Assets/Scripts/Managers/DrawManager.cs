@@ -347,10 +347,11 @@ public class DrawManager : MonoSingleton<DrawManager> {
 			data.alpha = creature.TransitionOpacity;
 
 			creatureBatcher.Add(data);
+			HitboxData hitbox = NavMeshManager.GetHitboxData(creature.HitboxType);
 			shadowOnlyBatcher.Add(new ShadowOnlyData() {
 				position = creature.transform.position,
 				rotation = new Vector4(0, 0, 0, 1),
-				scale    = creature.transform.localScale,
+				scale    = new Vector3(hitbox.radius * 2, hitbox.height, hitbox.radius * 2),
 			});
 		}
 		creatureBatcher  ?.Draw ();

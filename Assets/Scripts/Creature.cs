@@ -16,6 +16,24 @@ using System.Collections.Generic;
 	None,
 	Player,
 	Client,
+
+	ItemPlatter,
+	ItemFlour,
+	ItemCheese,
+	ItemButter,
+	ItemTomato,
+	ItemCabbage,
+	ItemBlueberry,
+	ItemMeat,
+
+	FoodSoup,
+	FoodSpaghetti,
+	FoodCheeseCake,
+	FoodSalad,
+	FoodSandwich,
+	FoodSteak,
+	FoodBeer,
+	FoodWine,
 }
 
 [Serializable] public enum AnimationType {
@@ -156,6 +174,7 @@ public class Creature : MonoBehaviour {
 				gameObject.name = pooled? "Creature" : value.ToString();
 			#endif
 			Initialize();
+			LinkAction();
 		}
 	}
 
@@ -551,6 +570,28 @@ public class Creature : MonoBehaviour {
 			case CreatureType.Client:
 				InitializeClient();
 				break;
+			
+			case CreatureType.ItemPlatter:
+			case CreatureType.ItemFlour:
+			case CreatureType.ItemCheese:
+			case CreatureType.ItemButter:
+			case CreatureType.ItemTomato:
+			case CreatureType.ItemCabbage:
+			case CreatureType.ItemBlueberry:
+			case CreatureType.ItemMeat:
+				HitboxType = HitboxType.Item;
+				break;
+
+			case CreatureType.FoodSoup:
+			case CreatureType.FoodSpaghetti:
+			case CreatureType.FoodCheeseCake:
+			case CreatureType.FoodSalad:
+			case CreatureType.FoodSandwich:
+			case CreatureType.FoodSteak:
+			case CreatureType.FoodBeer:
+			case CreatureType.FoodWine:
+				HitboxType = HitboxType.Item;
+				break;
 		}
 	}
 
@@ -567,6 +608,28 @@ public class Creature : MonoBehaviour {
 			case CreatureType.Client:
 				OnInteract = null;
 				OnUpdate   = () => UpdateClient();
+				break;
+			
+			case CreatureType.ItemPlatter:
+			case CreatureType.ItemFlour:
+			case CreatureType.ItemCheese:
+			case CreatureType.ItemButter:
+			case CreatureType.ItemTomato:
+			case CreatureType.ItemCabbage:
+			case CreatureType.ItemBlueberry:
+			case CreatureType.ItemMeat:
+				OnUpdate = () => transform.rotation = CameraManager.Rotation;
+				break;
+
+			case CreatureType.FoodSoup:
+			case CreatureType.FoodSpaghetti:
+			case CreatureType.FoodCheeseCake:
+			case CreatureType.FoodSalad:
+			case CreatureType.FoodSandwich:
+			case CreatureType.FoodSteak:
+			case CreatureType.FoodBeer:
+			case CreatureType.FoodWine:
+				OnUpdate = () => transform.rotation = CameraManager.Rotation;
 				break;
 		}
 	}

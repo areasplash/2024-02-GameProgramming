@@ -15,6 +15,7 @@ using System.Collections.Generic;
 
 [Serializable] public enum HitboxType {
 	Humanoid,
+	Item,
 }
 
 [Serializable] public struct HitboxData {
@@ -34,9 +35,11 @@ using System.Collections.Generic;
 	public class NavMeshManagerEditor : ExtendedEditor {
 
 		SerializedProperty m_HumanoidMesh;
+		SerializedProperty m_ItemMesh;
 
 		void OnEnable() {
 			m_HumanoidMesh = serializedObject.FindProperty("m_HumanoidMesh");
+			m_ItemMesh     = serializedObject.FindProperty("m_ItemMesh");
 		}
 
 		public override void OnInspectorGUI() {
@@ -45,6 +48,7 @@ using System.Collections.Generic;
 
 			LabelField("NavMesh", EditorStyles.boldLabel);
 			PropertyField(m_HumanoidMesh);
+			PropertyField(m_ItemMesh);
 			BeginHorizontal();
 			{
 				PrefixLabel("Bake NavMesh");
@@ -82,6 +86,7 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 	// Fields
 
 	[SerializeField] NavMeshSurface m_HumanoidMesh;
+	[SerializeField] NavMeshSurface m_ItemMesh;
 
 	[SerializeField] float m_SampleDistance = 1f;
 
@@ -90,6 +95,7 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 	// Properties
 
 	static NavMeshSurface HumanoidMesh => Instance? Instance.m_HumanoidMesh : default;
+	static NavMeshSurface ItemMesh     => Instance? Instance.m_ItemMesh     : default;
 
 	public static float SampleDistance {
 		get   =>  Instance? Instance.m_SampleDistance : default;
@@ -118,6 +124,11 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 					agentTypeID = HumanoidMesh.agentTypeID,
 					radius      = HumanoidMesh.GetBuildSettings().agentRadius,
 					height      = HumanoidMesh.GetBuildSettings().agentHeight,
+				} : default,
+			HitboxType.Item => ItemMesh? new HitboxData() {
+					agentTypeID = ItemMesh.agentTypeID,
+					radius      = ItemMesh.GetBuildSettings().agentRadius,
+					height      = ItemMesh.GetBuildSettings().agentHeight,
 				} : default,
 			_ => throw new NotImplementedException(),
 		};
