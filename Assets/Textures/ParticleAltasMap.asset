@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ParticleAltasMap
   m_EditorClassIdentifier: 
   m_TexturePath: Assets/Textures/Particles
-  m_NavMeshPrefabPath: Assets/Prefabs/Particles
+  m_NavMeshPrefabPath: Assets/Resources/Prefabs/Particles
   m_MaximumAtlasSize: 8192
   m_Padding: 0
   m_TargetTexture: {fileID: 2800000, guid: c96996e81dccc214cac0d87eb66bc2e9, type: 3}

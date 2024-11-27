@@ -18,6 +18,7 @@ using System.Collections.Generic;
 	Client,
 
 	ItemPlatter,
+	ItemPotato,
 	ItemFlour,
 	ItemCheese,
 	ItemButter,
@@ -100,38 +101,6 @@ using System.Collections.Generic;
 // ====================================================================================================
 // Creature Editor
 // ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(Creature)), CanEditMultipleObjects]
-	public class CreatureEditor : ExtendedEditor {
-
-		Creature I => target as Creature;
-
-		public override void OnInspectorGUI() {
-			serializedObject.Update();
-			Undo.RecordObject(target, "Change Creature Properties");
-
-			LabelField("Creature", EditorStyles.boldLabel);
-			I.CreatureType  = EnumField ("Creature Type",  I.CreatureType);
-			I.AnimationType = EnumField ("Animation Type", I.AnimationType);
-			I.Offset        = FloatField("Offset",         I.Offset);
-			I.AttributeType = FlagField ("Attribute Type", I.AttributeType);
-			I.HitboxType    = EnumField ("Hitbox Type",    I.HitboxType);
-			I.SenseRange    = Slider    ("Sense Range",    I.SenseRange, 0, 32);
-			Space();
-
-			LabelField("Rigidbody", EditorStyles.boldLabel);
-			I.Velocity       = Vector3Field("Velocity",        I.Velocity);
-			I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
-			I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
-			I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
-			Space();
-
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
 
 
 
@@ -285,6 +254,40 @@ public class Creature : MonoBehaviour {
 		get => m_GravitVelocity;
 		set => m_GravitVelocity = value;
 	}
+
+
+
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(Creature))]
+		class CreatureEditor : ExtendedEditor {
+
+			Creature I => target as Creature;
+
+			public override void OnInspectorGUI() {
+				serializedObject.Update();
+				Undo.RecordObject(target, "Change Creature Properties");
+
+				LabelField("Creature", EditorStyles.boldLabel);
+				I.CreatureType  = EnumField ("Creature Type",  I.CreatureType);
+				I.AnimationType = EnumField ("Animation Type", I.AnimationType);
+				I.Offset        = FloatField("Offset",         I.Offset);
+				I.AttributeType = FlagField ("Attribute Type", I.AttributeType);
+				I.HitboxType    = EnumField ("Hitbox Type",    I.HitboxType);
+				I.SenseRange    = Slider    ("Sense Range",    I.SenseRange, 0, 32);
+				Space();
+
+				LabelField("Rigidbody", EditorStyles.boldLabel);
+				I.Velocity       = Vector3Field("Velocity",        I.Velocity);
+				I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
+				I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
+				I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
+				Space();
+
+				serializedObject.ApplyModifiedProperties();
+				if (GUI.changed) EditorUtility.SetDirty(target);
+			}
+		}
+	#endif
 
 
 
@@ -509,6 +512,8 @@ public class Creature : MonoBehaviour {
 		if (GravitVelocity != Vector3.zero) {
 			if (isGrounded) GravitVelocity = Vector3.zero;
 		}
+
+		if (Body.position.y < -32) Despawn(this);
 	}
 
 

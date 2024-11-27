@@ -8,9 +8,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: WallUpMaterial
-  m_Shader: {fileID: -6465566751694194690, guid: a3b4f57b99466184d993d9575e6bfe8d, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
+  m_Shader: {fileID: -6465566751694194690, guid: a3b4f57b99466184d993d9575e6bfe8d,
+    type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -20,7 +19,6 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -89,7 +87,7 @@ Material:
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0
     - _AlphaToMask: 0
-    - _Angle_Fade: 105
+    - _Angle_Fade: 95
     - _Angle_Visible: 90
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
@@ -127,7 +125,6 @@ Material:
     - _Forward: {r: 0, g: 0, b: 1, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!114 &1846598195334774438
 MonoBehaviour:
   m_ObjectHideFlags: 11
