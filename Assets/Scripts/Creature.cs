@@ -14,6 +14,11 @@ using System.Collections.Generic;
 	None,
 	Player,
 	Client,
+	Adventurer,
+	Knight,
+	Necromancer,
+	Priest,
+	Wizard,
 
 	ItemPlatter,
 	ItemPotato,
