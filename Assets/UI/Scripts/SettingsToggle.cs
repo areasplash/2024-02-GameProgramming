@@ -15,58 +15,6 @@ using TMPro;
 
 
 
-// ====================================================================================================
-// Settings Toggle Editor
-// ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(SettingsToggle)), CanEditMultipleObjects]
-	public class SettingsToggleEditor : SelectableEditor {
-
-		SerializedProperty m_PositiveRect;
-		SerializedProperty m_NegativeRect;
-		SerializedProperty m_PositiveTextTMP;
-		SerializedProperty m_NegativeTextTMP;
-		SerializedProperty m_OnStateUpdated;
-		SerializedProperty m_OnValueChanged;
-
-		SettingsToggle I => target as SettingsToggle;
-
-		protected override void OnEnable() {
-			base.OnEnable();
-			m_PositiveRect    = serializedObject.FindProperty("m_PositiveRect");
-			m_NegativeRect    = serializedObject.FindProperty("m_NegativeRect");
-			m_PositiveTextTMP = serializedObject.FindProperty("m_PositiveTextTMP");
-			m_NegativeTextTMP = serializedObject.FindProperty("m_NegativeTextTMP");
-			m_OnStateUpdated  = serializedObject.FindProperty("m_OnStateUpdated");
-			m_OnValueChanged  = serializedObject.FindProperty("m_OnValueChanged");
-		}
-
-		public override void OnInspectorGUI() {
-			base.OnInspectorGUI();
-			Undo.RecordObject(target, "Settings Toggle Properties");
-			Space();
-			PropertyField(m_PositiveRect);
-			PropertyField(m_NegativeRect);
-			PropertyField(m_PositiveTextTMP);
-			PropertyField(m_NegativeTextTMP);
-			Space();
-			I.Value = Toggle("Value", I.Value);
-			Space();
-			PropertyField(m_OnStateUpdated);
-			PropertyField(m_OnValueChanged);
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
-
-
-
-// ====================================================================================================
-// Settings Toggle
-// ====================================================================================================
-
 public class SettingsToggle : Selectable, IPointerClickHandler {
 
 	[Serializable] public class ToggleUpdatedEvent : UnityEvent<SettingsToggle> {}
@@ -74,32 +22,39 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 
 
 
+	// =================================================================================================
 	// Fields
+	// =================================================================================================
 
-	[SerializeField] RectTransform   m_PositiveRect;
-	[SerializeField] RectTransform   m_NegativeRect;
-	[SerializeField] TextMeshProUGUI m_PositiveTextTMP;
-	[SerializeField] TextMeshProUGUI m_NegativeTextTMP;
+	[SerializeField] RectTransform      m_PositiveRect;
+	[SerializeField] RectTransform      m_NegativeRect;
+	[SerializeField] TextMeshProUGUI    m_PositiveTextTMP;
+	[SerializeField] TextMeshProUGUI    m_NegativeTextTMP;
+	[SerializeField] ToggleUpdatedEvent m_OnStateUpdated;
+	[SerializeField] ToggleChangedEvent m_OnValueChanged;
 
 	[SerializeField] bool m_Value = false;
 
-	[SerializeField] ToggleUpdatedEvent m_OnStateUpdated = new ToggleUpdatedEvent();
-	[SerializeField] ToggleChangedEvent m_OnValueChanged = new ToggleChangedEvent();
 
 
+	RectTransform PositiveRect {
+		get => m_PositiveRect;
+		set => m_PositiveRect = value;
+	}
 
-	// Properties
+	RectTransform NegativeRect {
+		get => m_NegativeRect;
+		set => m_NegativeRect = value;
+	}
 
-	RectTransform RectTransform => transform as RectTransform;
+	TextMeshProUGUI PositiveTextTMP {
+		get => m_PositiveTextTMP;
+		set => m_PositiveTextTMP = value;
+	}
 
-	public bool Value {
-		get => m_Value;
-		set {
-			if (m_Value == value) return;
-			m_Value = value;
-			OnValueChanged?.Invoke(m_Value);
-			Refresh();
-		}
+	TextMeshProUGUI NegativeTextTMP {
+		get => m_NegativeTextTMP;
+		set => m_NegativeTextTMP = value;
 	}
 
 	public ToggleUpdatedEvent OnStateUpdated {
@@ -114,7 +69,72 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 
 
 
+	public bool Value {
+		get => m_Value;
+		set {
+			if (m_Value == value) return;
+			m_Value = value;
+			OnValueChanged?.Invoke(m_Value);
+			Refresh();
+		}
+	}
+
+
+
+	RectTransform Rect => transform as RectTransform;
+
+
+
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(SettingsToggle))] class SettingsToggleEditor : SelectableEditor {
+
+			SerializedProperty m_PositiveRect;
+			SerializedProperty m_NegativeRect;
+			SerializedProperty m_PositiveTextTMP;
+			SerializedProperty m_NegativeTextTMP;
+			SerializedProperty m_OnStateUpdated;
+			SerializedProperty m_OnValueChanged;
+
+			SettingsToggle i => target as SettingsToggle;
+
+			protected override void OnEnable() {
+				base.OnEnable();
+				m_PositiveRect    = serializedObject.FindProperty("m_PositiveRect");
+				m_NegativeRect    = serializedObject.FindProperty("m_NegativeRect");
+				m_PositiveTextTMP = serializedObject.FindProperty("m_PositiveTextTMP");
+				m_NegativeTextTMP = serializedObject.FindProperty("m_NegativeTextTMP");
+				m_OnStateUpdated  = serializedObject.FindProperty("m_OnStateUpdated");
+				m_OnValueChanged  = serializedObject.FindProperty("m_OnValueChanged");
+			}
+
+			public override void OnInspectorGUI() {
+				base.OnInspectorGUI();
+				Undo.RecordObject(target, "Settings Toggle Properties");
+				
+				PropertyField(m_PositiveRect);
+				PropertyField(m_NegativeRect);
+				PropertyField(m_PositiveTextTMP);
+				PropertyField(m_NegativeTextTMP);
+				Space();
+
+				i.Value = Toggle("Value", i.Value);
+				Space();
+				
+				PropertyField(m_OnStateUpdated);
+				PropertyField(m_OnValueChanged);
+				Space();
+
+				serializedObject.ApplyModifiedProperties();
+				if (GUI.changed) EditorUtility.SetDirty(target);
+			}
+		}
+	#endif
+
+
+
+	// =================================================================================================
 	// Methods
+	// =================================================================================================
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable) Value = !Value;
@@ -142,12 +162,22 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 
 	ScrollRect scrollRect;
 
+	bool TryGetComponentInParent<T>(out T component) where T : Component {
+		component = null;
+		Transform parent = Rect;
+		while (parent != null) {
+			if  (parent.TryGetComponent(out component)) return true;
+			else parent = parent.parent;
+		}
+		return false;
+	}
+
 	public override void OnSelect(BaseEventData eventData) {
 		base.OnSelect(eventData);
 		if (eventData is AxisEventData) {
-			if (scrollRect || Utility.TryGetComponentInParent(transform, out scrollRect)) {
+			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
+				float pivot = Rect.rect.height / 2 - Rect.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
@@ -166,7 +196,9 @@ public class SettingsToggle : Selectable, IPointerClickHandler {
 
 
 
+	// =================================================================================================
 	// Lifecycle
+	// =================================================================================================
 
 	protected override void OnEnable() {
 		base.OnEnable();

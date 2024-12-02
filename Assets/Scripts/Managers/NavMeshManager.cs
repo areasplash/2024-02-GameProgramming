@@ -7,8 +7,6 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
-	using static UnityEditor.EditorGUILayout;
-	using static NavMeshManager;
 #endif
 
 
@@ -26,64 +24,11 @@ using System.Collections.Generic;
 
 
 
-// ====================================================================================================
-// NavMesh Manager Editor
-// ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(NavMeshManager)), CanEditMultipleObjects]
-	public class NavMeshManagerEditor : ExtendedEditor {
-
-		SerializedProperty m_HumanoidMesh;
-		SerializedProperty m_ItemMesh;
-
-		void OnEnable() {
-			m_HumanoidMesh = serializedObject.FindProperty("m_HumanoidMesh");
-			m_ItemMesh     = serializedObject.FindProperty("m_ItemMesh");
-		}
-
-		public override void OnInspectorGUI() {
-			serializedObject.Update();
-			Undo.RecordObject(target, "Change NavMesh Manager Properties");
-
-			LabelField("NavMesh", EditorStyles.boldLabel);
-			PropertyField(m_HumanoidMesh);
-			PropertyField(m_ItemMesh);
-			BeginHorizontal();
-			{
-				PrefixLabel("Bake NavMesh");
-				if (GUILayout.Button("Bake" )) Bake ();
-				if (GUILayout.Button("Clear")) Clear();
-			}
-			EndHorizontal();
-			Space();
-
-			LabelField("NavMesh Properties", EditorStyles.boldLabel);
-			SampleDistance = Slider("Sample Distance", SampleDistance, 1f, 16f);
-			/*if (GUILayout.Button("Test")) {
-				for (int i = 0; i < m_NavMeshSurfaces.arraySize; i++) {
-					var navMeshSurface = m_NavMeshSurfaces.GetArrayElementAtIndex(i)
-						.objectReferenceValue as NavMeshSurface;
-					Debug.Log(navMeshSurface.agentTypeID);
-				}
-			}*/
-			Space();
-			
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
-
-
-
-// ====================================================================================================
-// NavMesh Manager
-// ====================================================================================================
-
 public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
+	// ================================================================================================
 	// Fields
+	// ================================================================================================
 
 	[SerializeField] NavMeshSurface m_HumanoidMesh;
 	[SerializeField] NavMeshSurface m_ItemMesh;
@@ -92,10 +37,14 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
 	
 
-	// Properties
-
-	static NavMeshSurface HumanoidMesh => Instance? Instance.m_HumanoidMesh : default;
-	static NavMeshSurface ItemMesh     => Instance? Instance.m_ItemMesh     : default;
+	static NavMeshSurface HumanoidMesh {
+		get   =>  Instance? Instance.m_HumanoidMesh : default;
+		set { if (Instance) Instance.m_HumanoidMesh = value; }
+	}
+	static NavMeshSurface ItemMesh {
+		get   =>  Instance? Instance.m_ItemMesh : default;
+		set { if (Instance) Instance.m_ItemMesh = value; }
+	}
 
 	public static float SampleDistance {
 		get   =>  Instance? Instance.m_SampleDistance : default;
@@ -104,14 +53,44 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
 
 
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(NavMeshManager))] class NavMeshManagerEditor : ExtendedEditor {
+			public override void OnInspectorGUI() {
+				Begin("NavMesh Manager");
+
+				LabelField("NavMesh", EditorStyles.boldLabel);
+				HumanoidMesh = ObjectField("Humanoid Mesh", HumanoidMesh);
+				ItemMesh     = ObjectField("Item Mesh",     ItemMesh);
+				BeginHorizontal();
+				PrefixLabel("Bake NavMesh");
+				if (GUILayout.Button("Bake" )) Bake ();
+				if (GUILayout.Button("Clear")) Clear();
+				EndHorizontal();
+				Space();
+
+				LabelField("NavMesh Properties", EditorStyles.boldLabel);
+				SampleDistance = Slider("Sample Distance", SampleDistance, 1f, 16f);
+				Space();
+				
+				End();
+			}
+		}
+	#endif
+
+
+
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
 
 	public static void Bake() {
 		if (HumanoidMesh) HumanoidMesh.BuildNavMesh();
+		if (ItemMesh)     ItemMesh    .BuildNavMesh();
 	}
 
 	public static void Clear() {
 		if (HumanoidMesh) HumanoidMesh.RemoveData();
+		if (ItemMesh)     ItemMesh    .RemoveData();
 	}
 
 

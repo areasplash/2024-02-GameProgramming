@@ -185,6 +185,10 @@ MonoBehaviour:
     m_Localized: Serve
     m_Metadata:
       m_Items: []
+  - m_Id: 11263634432712704
+    m_Localized: Pixel Perfect
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

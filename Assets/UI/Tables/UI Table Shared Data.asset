@@ -179,6 +179,10 @@ MonoBehaviour:
     m_Key: Serve
     m_Metadata:
       m_Items: []
+  - m_Id: 11263634432712704
+    m_Key: Pixel Perfect
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
@@ -187,6 +191,7 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 5807965270378283035
-      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables,
+        asm: Unity.Localization}
       data:
         m_CustomEpoch: 1730345430539

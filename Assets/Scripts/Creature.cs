@@ -2,12 +2,10 @@ using UnityEngine;
 using UnityEngine.AI;
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
-	using static UnityEditor.EditorGUILayout;
 #endif
 
 
@@ -98,25 +96,15 @@ using System.Collections.Generic;
 
 
 
-// ====================================================================================================
-// Creature Editor
-// ====================================================================================================
-
-
-
-// ====================================================================================================
-// Creature
-// ====================================================================================================
-
 public class Creature : MonoBehaviour {
-
-	// Constants
 
 	const string PrefabPath = "Prefabs/Creature";
 
 
 
+	// ================================================================================================
 	// Fields
+	// ================================================================================================
 
 	[SerializeField] CreatureType  m_CreatureType  = CreatureType.None;
 	[SerializeField] AnimationType m_AnimationType = AnimationType.Idle;
@@ -131,8 +119,6 @@ public class Creature : MonoBehaviour {
 	[SerializeField] Vector3 m_GravitVelocity = Vector3.zero;
 
 
-
-	// Properties
 
 	public CreatureType CreatureType {
 		get => m_CreatureType;
@@ -258,14 +244,10 @@ public class Creature : MonoBehaviour {
 
 
 	#if UNITY_EDITOR
-		[CustomEditor(typeof(Creature))]
-		class CreatureEditor : ExtendedEditor {
-
+		[CustomEditor(typeof(Creature))] class CreatureEditor : ExtendedEditor {
 			Creature I => target as Creature;
-
 			public override void OnInspectorGUI() {
-				serializedObject.Update();
-				Undo.RecordObject(target, "Change Creature Properties");
+				Begin("Creature");
 
 				LabelField("Creature", EditorStyles.boldLabel);
 				I.CreatureType  = EnumField ("Creature Type",  I.CreatureType);
@@ -283,15 +265,16 @@ public class Creature : MonoBehaviour {
 				I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
 				Space();
 
-				serializedObject.ApplyModifiedProperties();
-				if (GUI.changed) EditorUtility.SetDirty(target);
+				End();
 			}
 		}
 	#endif
 
 
 
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
 
 	static List<Creature> creatureList = new List<Creature>();
 	static List<Creature> creaturePool = new List<Creature>();
@@ -411,7 +394,9 @@ public class Creature : MonoBehaviour {
 
 
 
-	// Physics
+	// ================================================================================================
+	// Lifecycle
+	// ================================================================================================
 
 	public float TransitionOpacity { get; set; }
 
@@ -430,7 +415,7 @@ public class Creature : MonoBehaviour {
 		layerChanged = true;
 		layerMask = Utility.GetLayerMaskAtPoint(transform.position, transform);
 		if (layerMask == 0) layerMask |= CameraManager.ExteriorLayer;
-		TransitionOpacity = ((CameraManager.CullingMask | layerMask) != 0)? 1 : 0;
+		TransitionOpacity = ((CameraManager.CullingMask | layerMask) != 0) ? 1 : 0;
 
 		grounds.Clear();
 		groundChanged = true;
@@ -518,8 +503,6 @@ public class Creature : MonoBehaviour {
 
 
 
-	// Interact
-
 	public bool IsInteractable() => (AttributeType & (AttributeType)(-1 & ~0xFFFF)) != 0;
 
 	public AttributeType GetInteractableType() {
@@ -534,8 +517,6 @@ public class Creature : MonoBehaviour {
 	}
 
 
-
-	// Lifecycle
 
 	Action<Creature> OnInteract;
 	Action OnUpdate;
@@ -563,7 +544,9 @@ public class Creature : MonoBehaviour {
 
 
 
+	// ------------------------------------------------------------------------------------------------
 	// Creature
+	// ------------------------------------------------------------------------------------------------
 
 	void Initialize() {
 		switch (CreatureType) {
@@ -641,11 +624,6 @@ public class Creature : MonoBehaviour {
 
 
 
-
-
-
-
-
 	Queue<Vector3> queue = new Queue<Vector3>();
 
 	static Predicate<Creature>  creatureMatch;
@@ -661,7 +639,9 @@ public class Creature : MonoBehaviour {
 
 
 
+	// ------------------------------------------------------------------------------------------------
 	// Player
+	// ------------------------------------------------------------------------------------------------
 
 	void InitializeAsPlayer() {
 		HitboxType = HitboxType.Humanoid;
@@ -680,7 +660,7 @@ public class Creature : MonoBehaviour {
 		// Input
 
 		Vector3 input = Vector3.zero;
-		if (UIManager.Instance.ActiveCanvas == CanvasType.Game) {
+		if (UIManager.ActiveCanvas == CanvasType.Game) {
 			if (CameraManager.Target != gameObject) CameraManager.Target = gameObject;
 			
 			input += CameraManager.Instance.transform.right   * InputManager.MoveDirection.x;
@@ -689,9 +669,8 @@ public class Creature : MonoBehaviour {
 			input.Normalize();
 			
 			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
-				Ray ray = CameraManager.ScreenPointToRay(InputManager.PointPosition);
-				if (Physics.Raycast(ray, out RaycastHit hit)) {
-					FindPath(hit.point, ref queue);
+				if (CameraManager.TryRaycast(InputManager.PointPosition, out Vector3 hit)) {
+					FindPath(hit, ref queue);
 				}
 			}
 			if (InputManager.GetKeyDown(KeyAction.RightClick)) {
@@ -699,7 +678,7 @@ public class Creature : MonoBehaviour {
 				rotation = CameraManager.EulerRotation;
 			}
 			if (InputManager.GetKey(KeyAction.RightClick)) {
-				float mouseSensitivity = UIManager.Instance.MouseSensitivity;
+				float mouseSensitivity = UIManager.MouseSensitivity;
 				float delta = InputManager.PointPosition.x - pointPosition.x;
 				CameraManager.EulerRotation = rotation + new Vector3(0, delta * mouseSensitivity, 0);
 			}
@@ -745,7 +724,9 @@ public class Creature : MonoBehaviour {
 
 
 
+	// ------------------------------------------------------------------------------------------------
 	// Client
+	// ------------------------------------------------------------------------------------------------
 
 	float delay = 0;
 	int   state = 0;

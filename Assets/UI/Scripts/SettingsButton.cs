@@ -16,50 +16,6 @@ using TMPro;
 
 
 
-// ====================================================================================================
-// Settings Button Editor
-// ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(SettingsButton)), CanEditMultipleObjects]
-	public class SettingsButtonEditor : SelectableEditor {
-
-		SerializedProperty m_TextTMP;
-		SerializedProperty m_LocalizeStringEvent;
-		SerializedProperty m_OnStateUpdated;
-		SerializedProperty m_OnClick;
-
-		SettingsButton I => target as SettingsButton;
-
-		protected override void OnEnable() {
-			base.OnEnable();
-			m_TextTMP             = serializedObject.FindProperty("m_TextTMP");
-			m_LocalizeStringEvent = serializedObject.FindProperty("m_LocalizeStringEvent");
-			m_OnStateUpdated      = serializedObject.FindProperty("m_OnStateUpdated");
-			m_OnClick             = serializedObject.FindProperty("m_OnClick");
-		}
-
-		public override void OnInspectorGUI() {
-			base.OnInspectorGUI();
-			Undo.RecordObject(target, "Settings Button Properties");
-			Space();
-			PropertyField(m_TextTMP);
-			PropertyField(m_LocalizeStringEvent);
-			Space();
-			PropertyField(m_OnStateUpdated);
-			PropertyField(m_OnClick);
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
-
-
-
-// ====================================================================================================
-// Settings Button
-// ====================================================================================================
-
 public class SettingsButton : Selectable, IPointerClickHandler {
 
 	[Serializable] public class ButtonUpdatedEvent : UnityEvent<SettingsButton> {}
@@ -67,28 +23,25 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 
 
-	// Fields
+	// ================================================================================================
+	// Methods
+	// ================================================================================================
 
 	[SerializeField] TextMeshProUGUI     m_TextTMP;
 	[SerializeField] LocalizeStringEvent m_LocalizeStringEvent;
-
-	[SerializeField] ButtonUpdatedEvent m_OnStateUpdated = new ButtonUpdatedEvent();
-	[SerializeField] ButtonClickedEvent m_OnClick        = new ButtonClickedEvent();
-
+	[SerializeField] ButtonUpdatedEvent  m_OnStateUpdated;
+	[SerializeField] ButtonClickedEvent  m_OnClick;
 
 
-	// Properties
 
-	RectTransform RectTransform => transform as RectTransform;
+	TextMeshProUGUI TextTMP {
+		get => m_TextTMP;
+		set => m_TextTMP = value;
+	}
 
-	LocalizeStringEvent LocalizeStringEvent => m_LocalizeStringEvent;
-
-	public string Text {
-		get => m_TextTMP ? m_TextTMP.text : string.Empty;
-		set {
-			if (LocalizeStringEvent) LocalizeStringEvent.StringReference.Clear();
-			if (m_TextTMP) m_TextTMP.text = value;
-		}
+	LocalizeStringEvent LocalizeStringEvent {
+		get => m_LocalizeStringEvent;
+		set => m_LocalizeStringEvent = value;
 	}
 
 	public ButtonUpdatedEvent OnStateUpdated {
@@ -103,7 +56,60 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 
 
+	RectTransform Rect => transform as RectTransform;
+
+	public string Text {
+		get => m_TextTMP ? m_TextTMP.text : string.Empty;
+		set {
+			if (LocalizeStringEvent) LocalizeStringEvent.StringReference.Clear();
+			if (m_TextTMP) m_TextTMP.text = value;
+		}
+	}
+
+
+
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(SettingsButton)), CanEditMultipleObjects]
+		public class SettingsButtonEditor : SelectableEditor {
+
+			SerializedProperty m_TextTMP;
+			SerializedProperty m_LocalizeStringEvent;
+			SerializedProperty m_OnStateUpdated;
+			SerializedProperty m_OnClick;
+
+			SettingsButton i => target as SettingsButton;
+
+			protected override void OnEnable() {
+				base.OnEnable();
+				m_TextTMP             = serializedObject.FindProperty("m_TextTMP");
+				m_LocalizeStringEvent = serializedObject.FindProperty("m_LocalizeStringEvent");
+				m_OnStateUpdated      = serializedObject.FindProperty("m_OnStateUpdated");
+				m_OnClick             = serializedObject.FindProperty("m_OnClick");
+			}
+
+			public override void OnInspectorGUI() {
+				base.OnInspectorGUI();
+				Undo.RecordObject(target, "Settings Button Properties");
+
+				PropertyField(m_TextTMP);
+				PropertyField(m_LocalizeStringEvent);
+				Space();
+				
+				PropertyField(m_OnStateUpdated);
+				PropertyField(m_OnClick);
+				Space();
+
+				serializedObject.ApplyModifiedProperties();
+				if (GUI.changed) EditorUtility.SetDirty(target);
+			}
+		}
+	#endif
+
+
+
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable) OnClick?.Invoke();
@@ -131,12 +137,22 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 	ScrollRect scrollRect;
 
+	bool TryGetComponentInParent<T>(out T component) where T : Component {
+		component = null;
+		Transform parent = Rect;
+		while (parent != null) {
+			if  (parent.TryGetComponent(out component)) return true;
+			else parent = parent.parent;
+		}
+		return false;
+	}
+
 	public override void OnSelect(BaseEventData eventData) {
 		base.OnSelect(eventData);
 		if (eventData is AxisEventData) {
-			if (scrollRect || Utility.TryGetComponentInParent(transform, out scrollRect)) {
+			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
+				float pivot = Rect.rect.height / 2 - Rect.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
@@ -155,7 +171,9 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 
 
 
+	// ================================================================================================
 	// Lifecycle
+	// ================================================================================================
 
 	protected override void OnEnable() {
 		base.OnEnable();

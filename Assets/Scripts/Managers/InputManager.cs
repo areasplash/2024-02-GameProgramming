@@ -7,8 +7,6 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
-	using static UnityEditor.EditorGUILayout;
-	using static InputManager;
 #endif
 
 
@@ -32,55 +30,42 @@ using System.Collections.Generic;
 
 
 
-// ====================================================================================================
-// Input Manager Editor
-// ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(InputManager)), CanEditMultipleObjects]
-	public class InputManagerEditor : ExtendedEditor {
-
-		SerializedProperty m_InputActionAsset;
-
-		void OnEnable() {
-			m_InputActionAsset = serializedObject.FindProperty("m_InputActionAsset");
-		}
-
-		public override void OnInspectorGUI() {
-			serializedObject.Update();
-			Undo.RecordObject(target, "Change Input Manager Properties");
-
-			LabelField("Actions", EditorStyles.boldLabel);
-			PropertyField(m_InputActionAsset);
-			Space();
-			
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
-
-
-
-// ====================================================================================================
-// Input Manager
-// ====================================================================================================
-
 public class InputManager : MonoSingleton<InputManager> {
 
+	// ================================================================================================
 	// Fields
+	// ================================================================================================
 
 	[SerializeField] InputActionAsset m_InputActionAsset;
 
 
 
-	// Properties
+	static InputActionAsset InputActionAsset {
+		get   =>  Instance? Instance.m_InputActionAsset : default;
+		set { if (Instance) Instance.m_InputActionAsset = value; }
+	}
 
-	static InputActionAsset Actions => Instance?.m_InputActionAsset;
+
+
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(InputManager))] class InputManagerEditor : ExtendedEditor {
+			public override void OnInspectorGUI() {
+				Begin("Input Manager");
+
+				LabelField("Actions", EditorStyles.boldLabel);
+				InputActionAsset = ObjectField("Input Action Asset", InputActionAsset);
+				Space();
+				
+				End();
+			}
+		}
+	#endif
 
 
 
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
 
 	static bool[] keyPrev = new bool[Enum.GetValues(typeof(KeyAction)).Length];
 	static bool[] keyNext = new bool[Enum.GetValues(typeof(KeyAction)).Length];
@@ -96,16 +81,16 @@ public class InputManager : MonoSingleton<InputManager> {
 	public static bool GetKeyUp  (KeyAction key) => !keyNext[(int)key] &&  keyPrev[(int)key];
 
 	static void BindKeys() {
-		if (Actions) {
+		if (InputActionAsset) {
 			for (int i = 0; i < keyNext.Length; i++) {
 				int index = i;
-				Actions[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
+				InputActionAsset[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
 					KeyAction.Move   => context => moveDirection = context.ReadValue<Vector2>(),
 					KeyAction.Point  => context => PointPosition = context.ReadValue<Vector2>(),
 					KeyAction.Scroll => context => ScrollWheel   = context.ReadValue<Vector2>(),
 					_                => context => {},
 				};
-				Actions[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
+				InputActionAsset[((KeyAction)i).ToString()].performed += (KeyAction)index switch {
 					KeyAction.Move   => context => keyNext[index] = MoveDirection != Vector2.zero,
 					KeyAction.Point  => context => keyNext[index] = PointPosition != pointPosition,
 					KeyAction.Scroll => context => keyNext[index] = ScrollWheel   != Vector2.zero,
@@ -138,8 +123,8 @@ public class InputManager : MonoSingleton<InputManager> {
 
 	public static List<string> GetKeysBinding(KeyAction keyAction) {
 		List<string> keys = new List<string>();
-		if (Actions) {
-			inputAction = Actions.FindAction(keyAction.ToString());
+		if (InputActionAsset) {
+			inputAction = InputActionAsset.FindAction(keyAction.ToString());
 			if (inputAction != null) {
 				for (int i = 0; i < inputAction.bindings.Count; i++) {
 					string[] parts = inputAction.bindings[i].path.Split('/');
@@ -152,8 +137,8 @@ public class InputManager : MonoSingleton<InputManager> {
 	}
 
 	public static void SetKeysBinding(KeyAction keyAction, List<string> keys) {
-		if (Actions) {
-			inputAction = Actions.FindAction(keyAction.ToString());
+		if (InputActionAsset) {
+			inputAction = InputActionAsset.FindAction(keyAction.ToString());
 			if (inputAction != null) {
 				for (int i = inputAction.bindings.Count - 1; -1 < i; i--) {
 					string[] parts = inputAction.bindings[i].path.Split('/');
@@ -167,12 +152,12 @@ public class InputManager : MonoSingleton<InputManager> {
 	}
 
 	static void UpdateMoveBinding() {
-		if (Actions) {
+		if (InputActionAsset) {
 			List<string> keysUp    = GetKeysBinding(KeyAction.MoveUp   );
 			List<string> keysLeft  = GetKeysBinding(KeyAction.MoveLeft );
 			List<string> keysDown  = GetKeysBinding(KeyAction.MoveDown );
 			List<string> keysRight = GetKeysBinding(KeyAction.MoveRight);
-			inputAction = Actions.FindAction(KeyAction.Move.ToString());
+			inputAction = InputActionAsset.FindAction(KeyAction.Move.ToString());
 			if (inputAction != null) {
 				for (int i = inputAction.bindings.Count - 1; -1 < i; i--) {
 					string[] parts = inputAction.bindings[i].path.Split('/');
@@ -207,7 +192,9 @@ public class InputManager : MonoSingleton<InputManager> {
 
 
 
+	// ================================================================================================
 	// Lifecycle
+	// ================================================================================================
 
 	void Start() {
 		BindKeys();

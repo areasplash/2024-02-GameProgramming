@@ -103,8 +103,8 @@ MonoBehaviour:
       m_FlipV: 0
       m_SwapUV: 0
       m_Fill: 1
-      m_Scale: {x: 0.125, y: 0.125}
-      m_Offset: {x: -0.24999997, y: -0.25}
+      m_Scale: {x: 0.0625, y: 0.0625}
+      m_Offset: {x: -0.74999994, y: -0.0625}
       m_Rotation: 0
       m_Anchor: 9
     m_Material: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
@@ -120,8 +120,8 @@ MonoBehaviour:
       m_FlipV: 0
       m_SwapUV: 0
       m_Fill: 1
-      m_Scale: {x: 0.125, y: 0.125}
-      m_Offset: {x: -0.24999997, y: -0.25}
+      m_Scale: {x: 0.0625, y: 0.0625}
+      m_Offset: {x: -0.74999994, y: -0.0625}
       m_Rotation: 0
       m_Anchor: 9
     m_Material: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
@@ -147,14 +147,14 @@ MonoBehaviour:
   - {x: 2, y: 6, z: 0}
   - {x: 2, y: 2, z: 0}
   m_Textures0:
-  - {x: 0.49999997, y: 0.25}
-  - {x: -0.000000029802322, y: 0.25}
-  - {x: -0.000000029802322, y: 0.5}
-  - {x: 0.49999997, y: 0.5}
-  - {x: -0.000000029802322, y: 0.5}
-  - {x: -0.000000029802322, y: 1}
-  - {x: 0.49999997, y: 1}
-  - {x: 0.49999997, y: 0.5}
+  - {x: 0.87499994, y: 0.0625}
+  - {x: 0.62499994, y: 0.0625}
+  - {x: 0.62499994, y: 0.1875}
+  - {x: 0.87499994, y: 0.1875}
+  - {x: 0.62499994, y: 0.1875}
+  - {x: 0.62499994, y: 0.4375}
+  - {x: 0.87499994, y: 0.4375}
+  - {x: 0.87499994, y: 0.1875}
   m_Textures2: []
   m_Textures3: []
   m_Tangents:
@@ -175,7 +175,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 10793
+  m_VersionIndex: 10812
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -228,7 +228,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 07468c867c5fbed4c9da29741b6b6d33, type: 2}
+  - {fileID: 2100000, guid: 9b2f4ab4b630bab4fa8328b24be68a61, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -8,9 +8,8 @@
 
 		float2 tiling;
 		float2 offset;
-		float3 color;
-		float  emission;
-		float  alpha;
+		float4 color;
+		float  intensity;
 	};
 
 	StructuredBuffer<ParticleData> _ParticleData;
@@ -75,24 +74,21 @@
 		out float3 Out,
 		out float2 Out_Tiling,
 		out float2 Out_Offset,
-		out float3 Out_Color,
-		out float  Out_Emission,
-		out float  Out_Alpha) {
+		out float4 Out_Color,
+		out float  Out_Intensity) {
 		
 		Out = In;
 		#ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
 			ParticleData data = _ParticleData[unity_InstanceID];
-			Out_Tiling   = data.tiling;
-			Out_Offset   = data.offset;
-			Out_Color    = data.color;
-			Out_Emission = data.emission;
-			Out_Alpha    = data.alpha;
+			Out_Tiling    = data.tiling;
+			Out_Offset    = data.offset;
+			Out_Color     = data.color;
+			Out_Intensity = data.intensity;
 		#else
-			Out_Tiling   = float2(1, 1);
-			Out_Offset   = float2(0, 0);
-			Out_Color    = float3(1, 1, 1);
-			Out_Emission = float (0);
-			Out_Alpha    = float (1);
+			Out_Tiling    = float2(1, 1);
+			Out_Offset    = float2(0, 0);
+			Out_Color     = float4(1, 1, 1, 1);
+			Out_Intensity = float (0);
 		#endif
 	}
 

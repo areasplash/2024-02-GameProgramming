@@ -15,61 +15,6 @@ using TMPro;
 
 
 
-// ====================================================================================================
-// Settings Slider Editor
-// ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(SettingsSlider)), CanEditMultipleObjects]
-	public class SettingsSliderEditor : SelectableEditor {
-
-		SerializedProperty m_BodyRect;
-		SerializedProperty m_HandleRect;
-		SerializedProperty m_TextTMP;
-		SerializedProperty m_OnStateUpdated;
-		SerializedProperty m_OnValueChanged;
-
-		SettingsSlider I => target as SettingsSlider;
-
-		protected override void OnEnable() {
-			base.OnEnable();
-			m_BodyRect       = serializedObject.FindProperty("m_BodyRect");
-			m_HandleRect     = serializedObject.FindProperty("m_HandleRect");
-			m_TextTMP        = serializedObject.FindProperty("m_TextTMP");
-			m_OnStateUpdated = serializedObject.FindProperty("m_OnStateUpdated");
-			m_OnValueChanged = serializedObject.FindProperty("m_OnValueChanged");
-		}
-
-		public override void OnInspectorGUI() {
-			base.OnInspectorGUI();
-			Undo.RecordObject(target, "Settings Slider Properties");
-			Space();
-			PropertyField(m_BodyRect);
-			PropertyField(m_HandleRect);
-			PropertyField(m_TextTMP);
-			Space();
-			I.MinValue = FloatField("Min Value", I.MinValue);
-			I.MaxValue = FloatField("Max Value", I.MaxValue);
-			I.Value    = Slider    ("Value",     I.Value,    I.MinValue, I.MaxValue);
-			I.Step     = Slider    ("Step",      I.Step,     I.MinValue, I.MaxValue);
-			I.FineStep = Slider    ("Fine Step", I.FineStep, I.MinValue, I.MaxValue);
-			I.Format   = TextField ("Format",    I.Format);
-			TextField(I.Text, "{0} = Value, {1} = Min Value, {2} = Max Value");
-			Space();
-			PropertyField(m_OnStateUpdated);
-			PropertyField(m_OnValueChanged);
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
-
-
-
-// ====================================================================================================
-// Settings Slider
-// ====================================================================================================
-
 public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	[Serializable] public class SliderUpdatedEvent : UnityEvent<SettingsSlider> {}
@@ -77,33 +22,57 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 
 
+	// ================================================================================================
 	// Fields
+	// ================================================================================================
 
-	[SerializeField] RectTransform   m_BodyRect;
-	[SerializeField] RectTransform   m_HandleRect;
-	[SerializeField] TextMeshProUGUI m_TextTMP;
+	[SerializeField] RectTransform      m_BodyRect;
+	[SerializeField] RectTransform      m_HandleRect;
+	[SerializeField] TextMeshProUGUI    m_TextTMP;
+	[SerializeField] SliderUpdatedEvent m_OnStateUpdated;
+	[SerializeField] SliderChangedEvent m_OnValueChanged;
 
 	[SerializeField] float  m_MinValue = 0;
 	[SerializeField] float  m_MaxValue = 1;
 	[SerializeField] float  m_Value    = 1;
 	[SerializeField] float  m_Step     = 0.10f;
-	[SerializeField] float  m_FineStep = 0.02f;
+	[SerializeField] float  m_Finestep = 0.02f;
 	[SerializeField] string m_Format   = "{0:P0}";
 
-	[SerializeField] SliderUpdatedEvent m_OnStateUpdated = new SliderUpdatedEvent();
-	[SerializeField] SliderChangedEvent m_OnValueChanged = new SliderChangedEvent();
 
 
+	RectTransform BodyRect {
+		get => m_BodyRect;
+		set => m_BodyRect = value;
+	}
 
-	// Properties
+	RectTransform HandleRect {
+		get => m_HandleRect;
+		set => m_HandleRect = value;
+	}
 
-	RectTransform RectTransform => transform as RectTransform;
+	TextMeshProUGUI TextTMP {
+		get => m_TextTMP;
+		set => m_TextTMP = value;
+	}
+
+	public SliderUpdatedEvent OnStateUpdated {
+		get => m_OnStateUpdated;
+		set => m_OnStateUpdated = value;
+	}
+
+	public SliderChangedEvent OnValueChanged {
+		get => m_OnValueChanged;
+		set => m_OnValueChanged = value;
+	}
+
+
 
 	public float MinValue {
 		get => m_MinValue;
 		set {
 			m_MinValue = Mathf.Min(value, MaxValue);
-			Value = Value;
+			this.Value = this.Value;
 		}
 	}
 
@@ -111,7 +80,7 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		get => m_MaxValue;
 		set {
 			m_MaxValue = Mathf.Max(value, MinValue);
-			Value = Value;
+			this.Value = this.Value;
 		}
 	}
 
@@ -130,9 +99,9 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		set => m_Step = Mathf.Clamp(value, 0, MaxValue - MinValue);
 	}
 
-	public float FineStep {
-		get => m_FineStep;
-		set => m_FineStep = Mathf.Clamp(value, 0, Step);
+	public float Finestep {
+		get => m_Finestep;
+		set => m_Finestep = Mathf.Clamp(value, 0, Step);
 	}
 
 	public string Format {
@@ -143,39 +112,85 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		}
 	}
 
-	public SliderUpdatedEvent OnStateUpdated {
-		get => m_OnStateUpdated;
-		set => m_OnStateUpdated = value;
-	}
 
-	public SliderChangedEvent OnValueChanged {
-		get => m_OnValueChanged;
-		set => m_OnValueChanged = value;
-	}
+
+	RectTransform Rect => transform as RectTransform;
 
 	public string Text => string.Format(Format, Value, MinValue, MaxValue);
 	
-	float Ratio => (Value - MinValue) / (MaxValue - MinValue);
-	int   Width => Mathf.RoundToInt(Ratio * (RectTransform.rect.width - m_HandleRect.rect.width));
-	bool  Fine  => InputManager.GetKey(KeyAction.Control);
+
+
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(SettingsSlider))] class SettingsSliderEditor : SelectableEditor {
+
+			SerializedProperty m_BodyRect;
+			SerializedProperty m_HandleRect;
+			SerializedProperty m_TextTMP;
+			SerializedProperty m_OnStateUpdated;
+			SerializedProperty m_OnValueChanged;
+
+			SettingsSlider i => target as SettingsSlider;
+
+			protected override void OnEnable() {
+				base.OnEnable();
+				m_BodyRect       = serializedObject.FindProperty("m_BodyRect");
+				m_HandleRect     = serializedObject.FindProperty("m_HandleRect");
+				m_TextTMP        = serializedObject.FindProperty("m_TextTMP");
+				m_OnStateUpdated = serializedObject.FindProperty("m_OnStateUpdated");
+				m_OnValueChanged = serializedObject.FindProperty("m_OnValueChanged");
+			}
+
+			public override void OnInspectorGUI() {
+				base.OnInspectorGUI();
+				Undo.RecordObject(target, "Settings Slider Properties");
+				
+				PropertyField(m_BodyRect);
+				PropertyField(m_HandleRect);
+				PropertyField(m_TextTMP);
+				Space();
+
+				i.MinValue = FloatField("Min Value", i.MinValue);
+				i.MaxValue = FloatField("Max Value", i.MaxValue);
+				i.Value    = Slider    ("Value",     i.Value,    i.MinValue, i.MaxValue);
+				i.Step     = Slider    ("Step",      i.Step,     i.MinValue, i.MaxValue);
+				i.Finestep = Slider    ("Fine Step", i.Finestep, i.MinValue, i.MaxValue);
+				i.Format   = TextField ("Format",    i.Format);
+				TextField(i.Text, "{0} = Value, {1} = Min Value, {2} = Max Value");
+				Space();
+
+				PropertyField(m_OnStateUpdated);
+				PropertyField(m_OnValueChanged);
+				Space();
+
+				serializedObject.ApplyModifiedProperties();
+				if (GUI.changed) EditorUtility.SetDirty(target);
+			}
+		}
+	#endif
 
 
 
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
+
+	float ratio => (Value - MinValue) / (MaxValue - MinValue);
+	int   width => Mathf.RoundToInt(ratio * (Rect.rect.width - m_HandleRect.rect.width));
+	bool  fine  => InputManager.GetKey(KeyAction.Control);
 
 	public void OnPointerClick(PointerEventData eventData) {
 		if (interactable && !eventData.dragging) {
-			Vector2 point = RectTransform.InverseTransformPoint(eventData.position);
-			if (point.x < Width) Value -= Fine ? FineStep : Step;
-			if (Width < point.x) Value += Fine ? FineStep : Step;
+			Vector2 point = Rect.InverseTransformPoint(eventData.position);
+			if (point.x < width) Value -= fine ? Finestep : Step;
+			if (width < point.x) Value += fine ? Finestep : Step;
 		}
 	}
 	
 	public void OnDrag(PointerEventData eventData) {
 		if (interactable) {
-			Vector2 point = RectTransform.InverseTransformPoint(eventData.position);
+			Vector2 point = Rect.InverseTransformPoint(eventData.position);
 			float a = m_HandleRect.rect.width / 2;
-			float b = RectTransform.rect.width - m_HandleRect.rect.width / 2;
+			float b = Rect.rect.width - m_HandleRect.rect.width / 2;
 			Value = Mathf.Lerp(MinValue, MaxValue, Mathf.InverseLerp(a, b, point.x));
 		}
 	}
@@ -183,7 +198,7 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 	public void OnSubmit() {
 		if (interactable) {
 			DoStateTransition(SelectionState.Pressed, false);
-			Value += Fine ? FineStep : Step;
+			Value += fine ? Finestep : Step;
 		}
 	}
 
@@ -191,11 +206,11 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		if (interactable) switch (eventData.moveDir) {
 			case MoveDirection.Left:
 				DoStateTransition(SelectionState.Pressed, false);
-				Value -= Fine ? FineStep : Step;
+				Value -= fine ? Finestep : Step;
 				return;
 			case MoveDirection.Right:
 				DoStateTransition(SelectionState.Pressed, false);
-				Value += Fine ? FineStep : Step;
+				Value += fine ? Finestep : Step;
 				return;
 		}
 		base.OnMove(eventData);
@@ -205,12 +220,22 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 	ScrollRect scrollRect;
 
+	bool TryGetComponentInParent<T>(out T component) where T : Component {
+		component = null;
+		Transform parent = Rect;
+		while (parent != null) {
+			if  (parent.TryGetComponent(out component)) return true;
+			else parent = parent.parent;
+		}
+		return false;
+	}
+
 	public override void OnSelect(BaseEventData eventData) {
 		base.OnSelect(eventData);
 		if (eventData is AxisEventData) {
-			if (scrollRect || Utility.TryGetComponentInParent(transform, out scrollRect)) {
+			if (scrollRect || TryGetComponentInParent(out scrollRect)) {
 				Vector2 anchoredPosition = scrollRect.content.anchoredPosition;
-				float pivot = RectTransform.rect.height / 2 - RectTransform.anchoredPosition.y;
+				float pivot = Rect.rect.height / 2 - Rect.anchoredPosition.y;
 				anchoredPosition.y = pivot - scrollRect.viewport.rect.height / 2;
 				scrollRect.content.anchoredPosition = anchoredPosition;
 			}
@@ -223,11 +248,11 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 		if (m_HandleRect) {
 			if (m_BodyRect) {
 				Vector2 sizeDelta = m_BodyRect.sizeDelta;
-				sizeDelta.x = m_HandleRect.rect.width / 2 + Width;
+				sizeDelta.x = m_HandleRect.rect.width / 2 + width;
 				m_BodyRect.sizeDelta = sizeDelta;
 			}
 			Vector2 anchoredPosition = m_HandleRect.anchoredPosition;
-			anchoredPosition.x = Width;
+			anchoredPosition.x = width;
 			m_HandleRect.anchoredPosition = anchoredPosition;
 		}
 		if (m_TextTMP) m_TextTMP.text = Text;
@@ -236,7 +261,9 @@ public class SettingsSlider : Selectable, IPointerClickHandler, IDragHandler {
 
 
 
+	// ================================================================================================
 	// Lifecycle
+	// ================================================================================================
 
 	protected override void OnEnable() {
 		base.OnEnable();

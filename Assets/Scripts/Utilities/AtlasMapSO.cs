@@ -7,7 +7,6 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
-	using static UnityEditor.EditorGUILayout;
 #endif
 
 
@@ -20,72 +19,6 @@ using System.Collections.Generic;
 
 
 
-// ====================================================================================================
-// Atlas Map SO Editor
-// ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(AtlasMapSO)), CanEditMultipleObjects]
-	public class AtlasMapSOEditor : Editor {
-
-		SerializedProperty m_TexturePath;
-		SerializedProperty m_NavMeshPrefabPath;
-		SerializedProperty m_MaximumAtlasSize;
-		SerializedProperty m_Padding;
-		SerializedProperty m_Atlas;
-		SerializedProperty m_AtlasMap;
-
-		AtlasMapSO I => target as AtlasMapSO;
-
-		void OnEnable() {
-			m_TexturePath       = serializedObject.FindProperty("m_TexturePath");
-			m_NavMeshPrefabPath = serializedObject.FindProperty("m_NavMeshPrefabPath");
-			m_MaximumAtlasSize  = serializedObject.FindProperty("m_MaximumAtlasSize");
-			m_Padding           = serializedObject.FindProperty("m_Padding");
-			m_Atlas             = serializedObject.FindProperty("m_TargetTexture");
-			m_AtlasMap          = serializedObject.FindProperty("m_AtlasMap");
-		}
-
-		public override void OnInspectorGUI() {
-			serializedObject.Update();
-			Undo.RecordObject(target, "Change Atlas Map SO Properties");
-
-			LabelField("Path", EditorStyles.boldLabel);
-			PropertyField(m_TexturePath);
-			PropertyField(m_NavMeshPrefabPath);
-			Space();
-
-			LabelField("Atlas Map", EditorStyles.boldLabel);
-			PropertyField(m_MaximumAtlasSize);
-			PropertyField(m_Padding);
-			PropertyField(m_Atlas);
-			if (m_Atlas.objectReferenceValue) {
-				BeginHorizontal();
-				{
-					PrefixLabel("Generate Atlas");
-					if (GUILayout.Button("Generate")) I.GenerateAtlas();
-				}
-				EndHorizontal();
-			}
-			BeginHorizontal();
-			PrefixLabel("Atlas Map Size");
-			//LabelField($"{((AtlasMapSO.HashMap)m_AtlasMap.boxedValue).Count}");
-			EndHorizontal();
-			PropertyField(m_AtlasMap);
-			Space();
-
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
-
-
-
-// ====================================================================================================
-// Atlas Map SO
-// ====================================================================================================
-
 [CreateAssetMenu(fileName = "AtlasMapSO", menuName = "Scriptable Objects/AtlasMap")]
 public class AtlasMapSO : ScriptableObject {
 
@@ -93,7 +26,9 @@ public class AtlasMapSO : ScriptableObject {
 
 
 
+	// ================================================================================================
 	// Fields
+	// ================================================================================================
 
 	[SerializeField] string    m_TexturePath       = "Assets/Textures";
 	[SerializeField] string    m_NavMeshPrefabPath = "Assets/Prefabs";
@@ -104,14 +39,76 @@ public class AtlasMapSO : ScriptableObject {
 
 
 
-	// Properties
+	string TexturePath {
+		get => m_TexturePath;
+		set => m_TexturePath = value;
+	}
 
-	public Texture2D TargetTexture => m_TargetTexture;
-	public HashMap   AtlasMap      => m_AtlasMap;
+	string NavMeshPrefabPath {
+		get => m_NavMeshPrefabPath;
+		set => m_NavMeshPrefabPath = value;
+	}
+
+	int MaximumAtlasSize {
+		get => m_MaximumAtlasSize;
+		set => m_MaximumAtlasSize = value;
+	}
+
+	int Padding {
+		get => m_Padding;
+		set => m_Padding = value;
+	}
+
+	public Texture2D TargetTexture {
+		get         => m_TargetTexture;
+		private set => m_TargetTexture = value;
+	}
+
+	public HashMap AtlasMap {
+		get         => m_AtlasMap;
+		private set => m_AtlasMap = value;
+	}
 
 
 
+	#if UNITY_EDITOR
+		[CustomEditor(typeof(AtlasMapSO))] class AtlasMapSOEditor : ExtendedEditor {
+			AtlasMapSO I => target as AtlasMapSO;
+			public override void OnInspectorGUI() {
+				Begin("Atlas Map");
+
+				LabelField("Path", EditorStyles.boldLabel);
+				I.TexturePath       = TextField("Texture Path",        I.TexturePath);
+				I.NavMeshPrefabPath = TextField("NavMesh Prefab Path", I.NavMeshPrefabPath);
+				Space();
+
+				LabelField("Atlas Map", EditorStyles.boldLabel);
+				I.MaximumAtlasSize = IntField   ("Maximum Atlas Size", I.MaximumAtlasSize);
+				I.Padding          = IntField   ("Padding",            I.Padding);
+				I.TargetTexture    = ObjectField("Atlas",              I.TargetTexture);
+				if (I.TargetTexture) {
+					BeginHorizontal();
+					PrefixLabel("Generate Atlas");
+					if (GUILayout.Button("Generate")) I.GenerateAtlas();
+					EndHorizontal();
+				}
+				BeginHorizontal();
+				PrefixLabel("Atlas Map Size");
+				LabelField($" {I.AtlasMap.Count}");
+				EndHorizontal();
+				PropertyField("m_AtlasMap");
+				Space();
+
+				End();
+			}
+		}
+	#endif
+
+
+
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
 
 	#if UNITY_EDITOR
 		T[] LoadAsset<T>(string path) where T : UnityEngine.Object {
@@ -131,7 +128,7 @@ public class AtlasMapSO : ScriptableObject {
 			Texture2D atlas = new Texture2D(m_MaximumAtlasSize, m_MaximumAtlasSize);
 			Rect[] rects = atlas.PackTextures(textures, m_Padding, m_MaximumAtlasSize);
 			byte[] bytes = atlas.EncodeToPNG();
-			File.WriteAllBytes(AssetDatabase.GetAssetPath(this.TargetTexture), bytes);
+			File.WriteAllBytes(AssetDatabase.GetAssetPath(TargetTexture), bytes);
 			AssetDatabase.Refresh();
 
 			HashMap prevMap = AtlasMap;
@@ -147,22 +144,22 @@ public class AtlasMapSO : ScriptableObject {
 				match &= prefabs[i].TryGetComponent(out ProBuilderMesh probuilderMesh);
 				match &= prevMap.TryGetValue(prefabs[i].name, out TextureData prev);
 				match &= nextMap.TryGetValue(prefabs[i].name, out TextureData next);
-				if (match) {
-					List<Vector4> uv = new List<Vector4>();
-					probuilderMesh.GetUVs(0, uv);
-					foreach (Face face in probuilderMesh.faces) face.manualUV = true;
-					for (int j = 0; j < uv.Count; j++) uv[j] = new Vector4(
-						(uv[j].x - prev.offset.x) / prev.tiling.x * next.tiling.x + next.offset.x,
-						(uv[j].y - prev.offset.y) / prev.tiling.y * next.tiling.y + next.offset.y,
-						uv[j].z,
-						uv[j].w
-					);
-					probuilderMesh.SetUVs (0, uv);
-					probuilderMesh.ToMesh ();
-					probuilderMesh.Refresh();
-					string path = AssetDatabase.GetAssetPath(prefabs[i]);
-					PrefabUtility.SaveAsPrefabAsset(prefabs[i], path);
-				}
+				if (!match) continue;
+				
+				List<Vector4> uv = new List<Vector4>();
+				probuilderMesh.GetUVs(0, uv);
+				foreach (Face face in probuilderMesh.faces) face.manualUV = true;
+				for (int j = 0; j < uv.Count; j++) uv[j] = new Vector4(
+					(uv[j].x - prev.offset.x) / prev.tiling.x * next.tiling.x + next.offset.x,
+					(uv[j].y - prev.offset.y) / prev.tiling.y * next.tiling.y + next.offset.y,
+					uv[j].z,
+					uv[j].w
+				);
+				probuilderMesh.SetUVs (0, uv);
+				probuilderMesh.ToMesh ();
+				probuilderMesh.Refresh();
+				string path = AssetDatabase.GetAssetPath(prefabs[i]);
+				PrefabUtility.SaveAsPrefabAsset(prefabs[i], path);
 			}
 			m_AtlasMap = nextMap;
 		}
@@ -171,20 +168,20 @@ public class AtlasMapSO : ScriptableObject {
 
 
 
-// ====================================================================================================
-// Hash Map
-// ====================================================================================================
-
 [Serializable] public class HashMap<K, V> : Dictionary<K, V>, ISerializationCallbackReceiver {
 
+	// ================================================================================================
 	// Fields
+	// ================================================================================================
 
 	[SerializeField] List<K> m_Keys   = new List<K>();
 	[SerializeField] List<V> m_Values = new List<V>();
 
 
 
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
 
 	public void OnBeforeSerialize() {
 		m_Keys  .Clear();

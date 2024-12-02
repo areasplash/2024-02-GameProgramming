@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 	using UnityEditor;
-	using static UnityEditor.EditorGUILayout;
 #endif
 
 
@@ -14,59 +13,21 @@ using System.Collections.Generic;
 	None,
 	Table,
 	Chair,
+	Chest,
 }
 
 
 
-// ====================================================================================================
-// Structure Editor
-// ====================================================================================================
-
-#if UNITY_EDITOR
-	[CustomEditor(typeof(Structure)), CanEditMultipleObjects]
-	public class StructureEditor : ExtendedEditor {
-
-		Structure I => target as Structure;
-
-		public override void OnInspectorGUI() {
-			serializedObject.Update();
-			Undo.RecordObject(target, "Change Structure Properties");
-
-			LabelField("Structure", EditorStyles.boldLabel);
-			I.StructureType = EnumField  ("Structure Type", I.StructureType);
-			I.AttributeType = FlagField  ("Attribute Type", I.AttributeType);
-			I.Mesh          = ObjectField("Mesh",           I.Mesh);
-			Space();
-
-			LabelField("Rigidbody", EditorStyles.boldLabel);
-			I.Velocity       = Vector3Field("Velocity",        I.Velocity);
-			I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
-			I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
-			I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
-			Space();
-			
-			serializedObject.ApplyModifiedProperties();
-			if (GUI.changed) EditorUtility.SetDirty(target);
-		}
-	}
-#endif
-
-
-
-// ====================================================================================================
-// Structure
-// ====================================================================================================
-
 public class Structure : MonoBehaviour {
-
-	// Constants
 
 	const string PrefabPath = "Prefabs/Structure";
 	const string MeshPath   = "Prefabs/StructureMeshes/";
 
 
 
+	// ================================================================================================
 	// Fields
+	// ================================================================================================
 
 	[SerializeField] StructureType m_StructureType = StructureType.None;
 	[SerializeField] AttributeType m_AttributeType = 0;
@@ -78,8 +39,6 @@ public class Structure : MonoBehaviour {
 	[SerializeField] Vector3 m_GravitVelocity = Vector3.zero;
 
 
-
-	// Properties
 
 	public StructureType StructureType {
 		get => m_StructureType;
@@ -95,15 +54,7 @@ public class Structure : MonoBehaviour {
 
 	public GameObject Mesh {
 		get => m_Mesh;
-		set {
-			if (!value && m_Mesh) Destroy(m_Mesh);
-			m_Mesh = value;
-			if (m_Mesh) {
-				m_Mesh.transform.SetParent(transform);
-				m_Mesh.transform.localPosition = Vector3.zero;
-				m_Mesh.transform.localRotation = Quaternion.identity;
-			}
-		}
+		set => m_Mesh = value;
 	}
 
 	Rigidbody body;
@@ -160,7 +111,35 @@ public class Structure : MonoBehaviour {
 
 
 
+	#if UNITY_EDITOR
+	[CustomEditor(typeof(Structure))] class StructureEditor : ExtendedEditor {
+			Structure I => target as Structure;
+			public override void OnInspectorGUI() {
+				Begin("Structure");
+
+				LabelField("Structure", EditorStyles.boldLabel);
+				I.StructureType = EnumField  ("Structure Type", I.StructureType);
+				I.AttributeType = FlagField  ("Attribute Type", I.AttributeType);
+				I.Mesh          = ObjectField("Mesh",           I.Mesh);
+				Space();
+
+				LabelField("Rigidbody", EditorStyles.boldLabel);
+				I.Velocity       = Vector3Field("Velocity",        I.Velocity);
+				I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
+				I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
+				I.GravitVelocity = Vector3Field("Gravit Velocity", I.GravitVelocity);
+				Space();
+				
+				End();
+			}
+		}
+	#endif
+
+
+
+	// ================================================================================================
 	// Methods
+	// ================================================================================================
 
 	static List<Structure> structureList = new List<Structure>();
 	static List<Structure> structurePool = new List<Structure>();
@@ -267,7 +246,9 @@ public class Structure : MonoBehaviour {
 
 
 
-	// Physics
+	// ================================================================================================
+	// Lifecycle
+	// ================================================================================================
 
 	int            layer           = 0;
 
@@ -344,8 +325,6 @@ public class Structure : MonoBehaviour {
 
 
 
-	// Interact
-
 	public bool IsInteractable() => (AttributeType & (AttributeType)(-1 & ~0xFFFF)) != 0;
 
 	public AttributeType GetInteractableType() {
@@ -360,8 +339,6 @@ public class Structure : MonoBehaviour {
 	}
 
 
-
-	// Lifecycle
 
 	Action<Creature> OnInteract;
 	Action OnUpdate;
@@ -389,7 +366,9 @@ public class Structure : MonoBehaviour {
 
 
 
+	// ------------------------------------------------------------------------------------------------
 	// Structure
+	// ------------------------------------------------------------------------------------------------
 
 	static Dictionary<StructureType, GameObject> mesh = new Dictionary<StructureType, GameObject>();
 
@@ -402,12 +381,34 @@ public class Structure : MonoBehaviour {
 
 	void Initialize() {
 		if (!mesh.ContainsKey(StructureType)) mesh.Add(StructureType, null);
-		if (mesh[StructureType] ??= Resources.Load<GameObject>(MeshPath + StructureType.ToString())) {
-			Mesh = Instantiate(mesh[StructureType], transform);
-			SetLayer(Mesh, layer);
+
+		if (!Mesh || !mesh[StructureType] || !Mesh.name.Equals(mesh[StructureType].name)) {
+			if (Mesh) {
+				if (Application.isPlaying) Destroy(Mesh);
+				else DestroyImmediate(Mesh);
+			}
+			int layer = Utility.GetLayerAtPoint(transform.position, transform);
+			if (mesh[StructureType] ??= Resources.Load<GameObject>(MeshPath + StructureType.ToString())) {
+				Mesh = Instantiate(mesh[StructureType], transform);
+				Mesh.transform.name = mesh[StructureType].name;
+				Mesh.transform.SetParent(transform);
+				Mesh.transform.localPosition = Vector3.zero;
+				Mesh.transform.localRotation = Quaternion.identity;
+				SetLayer(Mesh, layer);
+			}
 		}
+
 		switch (StructureType) {
 			case StructureType.None:
+				break;
+			case StructureType.Table:
+				AttributeType = AttributeType.Pinned;
+				break;
+			case StructureType.Chair:
+				AttributeType = AttributeType.Pinned;
+				break;
+			case StructureType.Chest:
+				AttributeType = AttributeType.Pinned;
 				break;
 		}
 	}

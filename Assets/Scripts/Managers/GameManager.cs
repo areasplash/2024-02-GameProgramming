@@ -1,11 +1,7 @@
 using UnityEngine;
 
-using System.Collections.Generic;
-
 #if UNITY_EDITOR
 	using UnityEditor;
-	using static UnityEditor.EditorGUILayout;
-	using static GameManager;
 #endif
 
 
@@ -32,8 +28,8 @@ using System.Collections.Generic;
 			serializedObject.Update();
 
 			LabelField("Client", EditorStyles.boldLabel);
-			PropertyField(m_ClientSpawnPoint);
-			PropertyField(m_SpawnPeriod);
+			EditorGUILayout.PropertyField(m_ClientSpawnPoint);
+			EditorGUILayout.PropertyField(m_SpawnPeriod);
 			Space();
 
 			serializedObject.ApplyModifiedProperties();
