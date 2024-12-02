@@ -118,11 +118,16 @@ public class Creature : MonoBehaviour {
 	[SerializeField] Vector3 m_GroundVelocity = Vector3.zero;
 	[SerializeField] Vector3 m_GravitVelocity = Vector3.zero;
 
+	[SerializeField] Creature m_HeldCreature  = null; // item이 structure인 경우 고려하지 않음
+	[SerializeField] Transform m_HeldPosition = null;
+	[SerializeField] CreatureType m_WantedFood = CreatureType.None;
+
 
 
 	public CreatureType CreatureType {
 		get => m_CreatureType;
 		set {
+			if (m_CreatureType == value) return;
 			m_CreatureType = value;
 			#if UNITY_EDITOR
 				bool pooled = value == CreatureType.None;
@@ -239,6 +244,23 @@ public class Creature : MonoBehaviour {
 	public Vector3 GravitVelocity {
 		get => m_GravitVelocity;
 		set => m_GravitVelocity = value;
+	}
+
+
+
+	public Creature HeldCreature {
+		get => m_HeldCreature;
+		set => m_HeldCreature = value;
+	}
+
+	public Transform HeldPosition {
+		get => m_HeldPosition;
+		set => m_HeldPosition = value;
+	}
+
+	public CreatureType WantedFood {
+		get => m_WantedFood;
+		set => m_WantedFood = value;
 	}
 
 
@@ -532,6 +554,7 @@ public class Creature : MonoBehaviour {
 	void Update() {
 		if (link) {
 			link = false;
+			Initialize();
 			LinkAction();
 		}
 		Offset += Time.deltaTime;
@@ -644,8 +667,13 @@ public class Creature : MonoBehaviour {
 	// ------------------------------------------------------------------------------------------------
 
 	void InitializeAsPlayer() {
+		GameObject heldObj = new GameObject("HoldPosition"); // 새로운 빈 게임 오브젝트 생성
+        heldObj.transform.parent = this.transform;           // 플레이어의 자식으로 설정
+        heldObj.transform.localPosition = new Vector3(0f, 0.3f, 1f); // 플레이어 기준 상대 위치(일단 머리 위)
+		m_HeldPosition = heldObj.transform;
+
 		HitboxType = HitboxType.Humanoid;
-		SenseRange = 2.5f;
+		SenseRange = 1.5f;
 
 		queue.Clear();
 		targetCreature  = null;
@@ -669,8 +697,9 @@ public class Creature : MonoBehaviour {
 			input.Normalize();
 			
 			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
-				if (CameraManager.TryRaycast(InputManager.PointPosition, out Vector3 hit)) {
-					FindPath(hit, ref queue);
+				Ray ray = CameraManager.ScreenPointToRay(InputManager.PointPosition);
+				if (Physics.Raycast(ray, out RaycastHit hit)) {
+					FindPath(hit.point, ref queue);
 				}
 			}
 			if (InputManager.GetKeyDown(KeyAction.RightClick)) {
@@ -713,9 +742,23 @@ public class Creature : MonoBehaviour {
 		Utility.GetMatched(transform.position, SenseRange, creatureMatch,  ref targetCreature );
 		Utility.GetMatched(transform.position, SenseRange, structureMatch, ref targetStructure);
 
+		if (targetCreature != null && targetCreature.CreatureType == CreatureType.Player) targetCreature = null; //Player가 Player을 타겟 지정 방지
+		if (targetCreature && targetStructure) targetStructure = null;
+		if (HeldCreature) {
+			if (/*InputManager.GetKeyDown(KeyAction.Interact)*/Input.GetKeyDown(KeyCode.Z)) { // 주석처리한 방식으로 수정 필요
+				creatureMatch  = (Creature  creature ) => creature .IsInteractable() && creature.CreatureType == CreatureType.Client;
+				Utility.GetMatched(transform.position, SenseRange, creatureMatch,  ref targetCreature );
+				if (targetCreature && targetCreature.CreatureType == CreatureType.Client) {
+					targetCreature .Interact(this);
+				}
+				else DropItem();
+			}
+			return; // 무언가를 들고 있다면 상호작용 불가
+		}
 		if (targetCreature || targetStructure) {
-			if (targetCreature && targetStructure) targetStructure = null;
-			if (InputManager.GetKeyDown(KeyAction.Interact)) {
+			//print(targetCreature);
+			//print(targetStructure);
+			if (/*InputManager.GetKeyDown(KeyAction.Interact)*/Input.GetKeyDown(KeyCode.Z)) { // 주석처리한 방식으로 수정 필요
 				if (targetCreature ) targetCreature .Interact(this);
 				if (targetStructure) targetStructure.Interact(this);
 			}
@@ -732,12 +775,22 @@ public class Creature : MonoBehaviour {
 	int   state = 0;
 
 	void InitializeClient() {
+		if(!transform.Find("HoldPosition")) {
+			GameObject heldObj = new GameObject("HoldPosition"); // 새로운 빈 게임 오브젝트 생성
+        	heldObj.transform.parent = this.transform;           // 플레이어의 자식으로 설정
+        	heldObj.transform.localPosition = new Vector3(0f, 0.3f, 1f); // 플레이어 기준 상대 위치(일단 머리 위)
+			m_HeldPosition = heldObj.transform;
+		}
+
 		HitboxType = HitboxType.Humanoid;
 		SenseRange = 1.5f;
 
 		queue.Clear();
 		targetCreature  = null;
 		targetStructure = null;
+
+		Array enumValues = Enum.GetValues(typeof(CreatureType));
+		m_WantedFood = (CreatureType) enumValues.GetValue(UnityEngine.Random.Range(12, enumValues.Length));
 
 		delay = 0;
 		state = 0;
@@ -750,10 +803,10 @@ public class Creature : MonoBehaviour {
 		for (int i = 0; i < array.Length - 1; i++) {
 			Debug.DrawLine(array[i], array[i + 1], Color.red);
 		}
-
 		switch (state) {
 			// Search Chair
 			case 0:
+				//print("search");
 				if (AnimationType != AnimationType.Idle) Offset = 0;
 				AnimationType = AnimationType.Idle;
 
@@ -764,6 +817,7 @@ public class Creature : MonoBehaviour {
 						(chair.AttributeType & AttributeType.Interact) != 0;
 					if (Utility.GetMatched(transform.position, 128f, structureMatch, ref targetStructure)) {
 						FindPath(targetStructure.transform.position, ref queue);
+						targetStructure.AttributeType &= ~AttributeType.Interact; // 앉으려는 자리가 겹치지 않도록 수정
 						delay = 0;
 						state = 1;
 					}
@@ -771,20 +825,21 @@ public class Creature : MonoBehaviour {
 				break;
 			// Move
 			case 1:
+				//print("move");
 				if (AnimationType != AnimationType.Move) Offset = 0;
 				AnimationType = AnimationType.Move;
 
-				if (!targetStructure || (targetStructure.AttributeType & AttributeType.Interact) == 0) {
+				if (!targetStructure/* || (targetStructure.AttributeType & AttributeType.Interact) == 0*/) { // 앉으려는 자리가 겹치지 않도록 수정
 					Velocity = Vector3.zero;
 					delay = 0;
 					state = 0;
 					break;
 				}
-				if (queue.Count == 0) {
+				if (Vector3.Distance(transform.position, targetStructure.transform.position) < 1.5f) {
 					Velocity = Vector3.zero;
 					transform.position = targetStructure.transform.position + Vector3.up;
-					targetStructure.AttributeType &= ~AttributeType.Interact;
-					delay = 0;
+					//targetStructure.AttributeType &= ~AttributeType.Interact; // 앉으려는 자리가 겹치지 않도록 수정
+					delay = UnityEngine.Random.Range(10f, 16f);
 					state = 2;
 					break;
 				}
@@ -795,28 +850,80 @@ public class Creature : MonoBehaviour {
 				break;
 			// Wait
 			case 2:
+				//print("wait");
+
 				if (AnimationType != AnimationType.Idle) Offset = 0;
 				AnimationType = AnimationType.Idle;
+				AttributeType = AttributeType.Serve;
+				
+				OnInteract = (Creature player) => {
+					if (player.HeldCreature && player.HeldCreature.CreatureType == WantedFood) {
+						//target(player)의 요리 받아오기
+						player.HeldCreature.HoldThisItem(this);
+						player.HeldCreature = null;
+						HeldCreature.AttributeType = 0;
+    					delay = UnityEngine.Random.Range(10f, 16f);
+						state = 3;
+						AttributeType = 0;
+					}
+				};
+				
+
+				if (delay < 0) { // 시간 내 상호작용 실패
+					delay = 0;
+					state = 5;
+					GameManager.UpdateReputation(-0.3f);
+				}
+				break;
+			// Eat
+			case 3:
+				//print("eating!");
+				OnInteract = null;
+				if (AnimationType != AnimationType.Idle) Offset = 0; // 식사 애니메이션 추가 시 수정
+				AnimationType = AnimationType.Idle;
+				AttributeType = 0;
 
 				if (delay < 0) {
-					delay = UnityEngine.Random.Range(8f, 12f);
-					state = 3;
+					Destroy(HeldCreature);
+					HeldCreature = null;
+					delay = 0;
+					state = 5;
+					GameManager.UpdateReputation(0.1f);
+				}
+				break;
+			// Drink
+			case 4:
+				//print("drink");
+				OnInteract = null;
+				if (AnimationType != AnimationType.Idle) Offset = 0; // 마시기 애니메이션 추가 시 수정
+				AnimationType = AnimationType.Idle;
+				AttributeType = 0;
+
+				if (delay < 0) {
+					Destroy(HeldCreature);
+					delay = 0;
+					state = 5;
+					GameManager.UpdateReputation(0.1f);
 				}
 				break;
 			// Search Exit
-			case 3:
+			case 5:
+				//print("exit search");
+				OnInteract = null;
 				if (AnimationType != AnimationType.Idle) Offset = 0;
 				AnimationType = AnimationType.Idle;
+				AttributeType = 0;
 
 				if (delay < 0) {
 					FindPath(GameManager.ClientSpawnPoint, ref queue);
 					targetStructure.AttributeType |= AttributeType.Interact;
 					delay = 0;
-					state = 4;
+					state = 6;
 				}
 				break;
 				// Move
-			case 4:
+			case 6:
+				//print("exit");
 				if (AnimationType != AnimationType.Move) Offset = 0;
 				AnimationType = AnimationType.Move;
 
@@ -830,5 +937,22 @@ public class Creature : MonoBehaviour {
 				if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
 				break;
 		}
+	}
+	public void HoldThisItem(Creature creature) { // Structure에 대해 대응불가 creature는 아이템을 집을 대상
+		creatureMatch = (creature) =>
+			creature.CreatureType == CreatureType.Player || creature.CreatureType == CreatureType.Client;
+		if (Utility.GetMatched(transform.position, 1.5f, creatureMatch, ref targetCreature)) {
+			//집기
+			targetCreature.HeldCreature = this;
+			GetComponent<Rigidbody>().isKinematic = true; // 물리 효과 제거
+			transform.position = targetCreature.HeldPosition.position; // 집기
+			transform.parent = targetCreature.HeldPosition; // 플레이어의 자식 컴포넌트로
+		}
+	}
+
+	public void DropItem() {
+		HeldCreature.GetComponent<Rigidbody>().isKinematic = false; // 물리 효과 복원
+        HeldCreature.transform.parent = null;                       // 부모-자식 관계 해제
+        HeldCreature = null;
 	}
 }

@@ -43,6 +43,7 @@ public class Structure : MonoBehaviour {
 	public StructureType StructureType {
 		get => m_StructureType;
 		set {
+			if (m_StructureType == value) return;
 			m_StructureType = value;
 			#if UNITY_EDITOR
 				bool pooled = value == StructureType.None;
@@ -405,7 +406,7 @@ public class Structure : MonoBehaviour {
 				AttributeType = AttributeType.Pinned;
 				break;
 			case StructureType.Chair:
-				AttributeType = AttributeType.Pinned;
+				AttributeType = AttributeType.Pinned | AttributeType.Interact;
 				break;
 			case StructureType.Chest:
 				AttributeType = AttributeType.Pinned;
