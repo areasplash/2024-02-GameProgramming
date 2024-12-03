@@ -26,7 +26,7 @@ public class GameMoneyUI : MonoBehaviour {
 
 	int money = -1;
 
-	void Update() {
+	void LateUpdate() {
 		if (money == GameManager.Money) return;
 		money = GameManager.Money;
 

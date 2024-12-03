@@ -90,9 +90,12 @@ public class GameManager : MonoSingleton<GameManager> {
 	[SerializeField, Range(0f, MaxReputation)] float m_Reputation = 3f;
 	//[SerializeField, Range(0.02f, 0.15f)] float m_MultiSpawnProb = 0.03f;
 
-	[SerializeField] int m_Hour = 9;
-	[SerializeField] int m_Minute = 0;
-	[SerializeField] int m_OpenHour = 9;
+	[SerializeField] int m_Day       =  1;
+	[SerializeField] int m_DayEnd    = 30;
+
+	[SerializeField] int m_Hour      =  9;
+	[SerializeField] int m_Minute    =  0;
+	[SerializeField] int m_OpenHour  =  9;
 	[SerializeField] int m_CloseHour = 22;
 
 	[SerializeField] int m_Money = 0;
@@ -108,7 +111,6 @@ public class GameManager : MonoSingleton<GameManager> {
 		get           =>  Instance? Instance.m_RepBias : default;
         private set { if (Instance) Instance.m_RepBias = value; }
 	}
-
 	public static float Reputation {
 		get           =>  Instance? Instance.m_Reputation : default;
         private set { if (Instance) Instance.m_Reputation = value; }
@@ -116,21 +118,27 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 
+	public static int Day {
+		get           =>  Instance? Instance.m_Day : default;
+		private set { if (Instance) Instance.m_Day = value; }
+	}
+	public static int DayEnd {
+		get           =>  Instance? Instance.m_DayEnd : default;
+		private set { if (Instance) Instance.m_DayEnd = value; }
+	}
+
 	public static int Hour {
 		get           =>  Instance? Instance.m_Hour : default;
 		private set { if (Instance) Instance.m_Hour = value; }
 	}
-
 	public static int Minute {
 		get           =>  Instance? Instance.m_Minute : default;
 		private set { if (Instance) Instance.m_Minute = value; }
 	}
-
 	public static int OpenHour {
 		get           =>  Instance? Instance.m_OpenHour : default;
 		private set { if (Instance) Instance.m_OpenHour = value; }
 	}
-
 	public static int CloseHour {
 		get           =>  Instance? Instance.m_CloseHour : default;
 		private set { if (Instance) Instance.m_CloseHour = value; }
@@ -176,8 +184,10 @@ public class GameManager : MonoSingleton<GameManager> {
 				Space();
 
 				LabelField("InGameTime", EditorStyles.boldLabel);
-				PropertyField("m_Hour");
-				PropertyField("m_Minute");
+				Day       = IntField("Day",        Day      );
+				DayEnd    = IntField("DayEnd",     DayEnd   );
+				Hour      = IntField("Hour",       Hour     );
+				Minute    = IntField("Minute",     Minute   );
 				OpenHour  = IntField("Open Hour",  OpenHour );
 				CloseHour = IntField("Close Hour", CloseHour);
 				Space();
@@ -205,7 +215,7 @@ public class GameManager : MonoSingleton<GameManager> {
 	public static void UpdateReputation(float delta) {
 		RepBias += delta;
 
-		Reputation = 20f / (1f + Mathf.Exp(-0.4f * (RepBias-4.34f))); //sigmoid function
+		Reputation = MaxReputation / (1f + Mathf.Exp(-0.4f * (RepBias-4.34f))); //sigmoid function
 		//SpawnPeriod = Mathf.Lerp(20f, 3f, Mathf.Log(1f + Mathf.InverseLerp(0f, 10f, Reputation) * 99f) / Mathf.Log(100f)); // 최소 3초 ~ 최대 20초
 		MultiSpawnProb = Mathf.Lerp(0.02f, 0.15f, (Mathf.Exp(Mathf.InverseLerp(0f, 20f, Reputation) * 1.2f) - 1) / (Mathf.Exp(1.2f) - 1));
 	}

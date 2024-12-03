@@ -3,9 +3,8 @@ using UnityEngine.UI;
 
 
 
-public class GameReputationUI : MonoBehaviour {
-    
-	[SerializeField] RectTransform gage;
+public class GameDayUI : MonoBehaviour {
+
 	[SerializeField] RectTransform anchor;
 
 	[Space]
@@ -20,23 +19,17 @@ public class GameReputationUI : MonoBehaviour {
 	[SerializeField] Sprite character7;
 	[SerializeField] Sprite character8;
 	[SerializeField] Sprite character9;
-	[SerializeField] Sprite characterPoint;
 
 
 
-	float reputation = -1;
+	int day = -1;
 
 	void LateUpdate() {
-		if (reputation == GameManager.Reputation) return;
-		reputation = GameManager.Reputation;
-
-		if (gage) {
-			float ratio = Mathf.Clamp01(reputation / GameManager.MaxReputation);
-			gage.localScale = new Vector3(ratio, 1, 1);
-		}
+		if (day == GameManager.Day) return;
+		day = GameManager.Day;
 
 		if (anchor) {
-			string text = reputation.ToString("F2");
+			string text = day.ToString();
 
 			int length = Mathf.Max(text.Length, anchor.childCount); 
 			for (int i = 0; i < length; i++) {
@@ -66,7 +59,6 @@ public class GameReputationUI : MonoBehaviour {
 					'7' => character7,
 					'8' => character8,
 					'9' => character9,
-					'.' => characterPoint,
 					_ => null
 				};
 				if (sprite) {

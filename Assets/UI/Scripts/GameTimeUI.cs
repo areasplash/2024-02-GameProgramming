@@ -27,7 +27,7 @@ public class GameTimeUI : MonoBehaviour {
 	int hh = 0;
 	int mm = 0;
 
-	void Update() {
+	void LateUpdate() {
 		if (hh == GameManager.Hour && mm == GameManager.Minute) return;
 		hh = GameManager.Hour;
 		mm = GameManager.Minute;
