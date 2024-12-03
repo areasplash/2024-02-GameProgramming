@@ -20,24 +20,27 @@ using System.Collections.Generic;
 	Priest,
 	Wizard,
 
+	Money,
+
 	ItemPlatter,
-	ItemPotato,
 	ItemFlour,
-	ItemCheese,
 	ItemButter,
-	ItemTomato,
-	ItemCabbage,
+	ItemCheese,
 	ItemBlueberry,
+	ItemTomato,
+	ItemPotato,
+	ItemCabbage,
 	ItemMeat,
 
-	FoodSoup,
-	FoodSpaghetti,
+	FoodFancake,
 	FoodCheeseCake,
-	FoodSalad,
+	FoodSpaghetti,
+	FoodSoup,
 	FoodSandwich,
+	FoodSalad,
 	FoodSteak,
-	FoodBeer,
 	FoodWine,
+	FoodBeer,
 }
 
 [Serializable] public enum AnimationType {
@@ -425,7 +428,7 @@ public class Creature : MonoBehaviour {
 	// Lifecycle
 	// ================================================================================================
 
-	public float TransitionOpacity { get; set; }
+	public float Opacity { get; set; }
 
 	List<Collider> layers          = new List<Collider>();
 	bool           layerChanged    = false;
@@ -442,7 +445,7 @@ public class Creature : MonoBehaviour {
 		layerChanged = true;
 		layerMask = Utility.GetLayerMaskAtPoint(transform.position, transform);
 		if (layerMask == 0) layerMask |= CameraManager.ExteriorLayer;
-		TransitionOpacity = ((CameraManager.CullingMask | layerMask) != 0) ? 1 : 0;
+		Opacity = ((CameraManager.CullingMask | layerMask) != 0) ? 1 : 0;
 
 		grounds.Clear();
 		groundChanged = true;
@@ -497,9 +500,9 @@ public class Creature : MonoBehaviour {
 		EndTrigger();
 
 		bool visible = (CameraManager.CullingMask & layerMask) != 0;
-		if ((visible && TransitionOpacity < 1) || (!visible && 0 < TransitionOpacity)) {
-			TransitionOpacity += (visible? 1 : -1) * Time.deltaTime / CameraManager.TransitionTime;
-			TransitionOpacity = Mathf.Clamp01(TransitionOpacity);
+		if ((visible && Opacity < 1) || (!visible && 0 < Opacity)) {
+			Opacity += (visible? 1 : -1) * Time.deltaTime / CameraManager.TransitionTime;
+			Opacity = Mathf.Clamp01(Opacity);
 		}
 
 		if ((AttributeType & AttributeType.Pinned) != 0) return;
@@ -702,9 +705,8 @@ public class Creature : MonoBehaviour {
 			input.Normalize();
 			
 			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
-				Ray ray = CameraManager.ScreenPointToRay(InputManager.PointPosition);
-				if (Physics.Raycast(ray, out RaycastHit hit)) {
-					FindPath(hit.point, ref queue);
+				if (CameraManager.TryRaycast(InputManager.PointPosition, out Vector3 hit)) {
+					FindPath(hit, ref queue);
 				}
 			}
 			if (InputManager.GetKeyDown(KeyAction.RightClick)) {

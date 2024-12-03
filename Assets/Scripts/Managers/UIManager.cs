@@ -60,7 +60,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	};
 
 	[SerializeField] string m_Language         = "";
-	[SerializeField] bool   m_PixelPerfect     = true;
+	[SerializeField] bool   m_PixelPerfect     = false;
 	[SerializeField] float  m_Music            = 1f;
 	[SerializeField] float  m_SoundFX          = 1f;
 	[SerializeField] float  m_MouseSensitivity = 1f;

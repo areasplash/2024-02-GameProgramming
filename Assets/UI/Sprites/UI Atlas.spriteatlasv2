@@ -7,9 +7,43 @@ SpriteAtlasAsset:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 
-  serializedVersion: 2
   m_MasterAtlas: {fileID: 0}
   m_ImporterData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 0
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
     packables:
     - {fileID: 21300000, guid: 4b8ab37624d30f24cbf91f1a9459db12, type: 3}
     - {fileID: 21300000, guid: 401672986860f5347a8578ed7de7246c, type: 3}
@@ -22,5 +56,20 @@ SpriteAtlasAsset:
     - {fileID: 21300000, guid: f5bfcc7a8233ca444ae9f75a39de8751, type: 3}
     - {fileID: 21300000, guid: 17f895a75915b084b994fb929989f27d, type: 3}
     - {fileID: 21300000, guid: 93031f6f7e66c7948aaae7f8083fae0d, type: 3}
+    - {fileID: 21300000, guid: 3bf9f0b7606ab954e8536b25f13467ca, type: 3}
+    - {fileID: 21300000, guid: e27f7c93986e2674d92f13f69af1b164, type: 3}
+    - {fileID: 21300000, guid: 0057770323065904889cc74505ac15de, type: 3}
+    - {fileID: 21300000, guid: 13d54b5a4ac8c6541a90834fd28269f9, type: 3}
+    - {fileID: 21300000, guid: 92357191fbe85524d917ff6ed4684fa4, type: 3}
+    - {fileID: 21300000, guid: dd4da5713821cd44b9579755d77d02a2, type: 3}
+    - {fileID: 21300000, guid: c569cda5352a82848bb4214848040ac6, type: 3}
+    - {fileID: 21300000, guid: d00c517717fb81846ad2ad68a43d40ff, type: 3}
+    - {fileID: 21300000, guid: 3cc07e5eb093b83439a3bb90a55a2e60, type: 3}
+    - {fileID: 21300000, guid: 3992152f4f0c8b54d976da77bceb9ae5, type: 3}
+    - {fileID: 21300000, guid: 4f5d5f769e3d06344b49715b8763826a, type: 3}
+    - {fileID: 21300000, guid: 7ee88214f495c6b4fadae35ba8b3de30, type: 3}
+    - {fileID: 21300000, guid: fe53bce5f0f03ee4381df7a9263aa883, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
   m_IsVariant: 0
-  m_ScriptablePacker: {fileID: 0}

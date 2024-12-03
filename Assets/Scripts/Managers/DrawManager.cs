@@ -357,7 +357,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 				data.offset.x += data.tiling.x;
 				data.tiling.x *= -1;
 			}
-			data.color.a  = creature.TransitionOpacity;
+			data.color.a  = creature.Opacity;
 
 			creatureBatcher.Add(data);
 			HitboxData hitbox = NavMeshManager.GetHitboxData(creature.HitboxType);
@@ -375,7 +375,7 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 	static void DrawParticle() {
 		float cameraYaw = GetYaw(CameraManager.Rotation);
-		foreach (Particle particle in Particle.GetList()) {
+		foreach (Particle particle in ParticleManager.GetList()) {
 			ParticleType particleType = particle.ParticleType;
 
 			int count = GetParticleSize(particleType);
@@ -385,9 +385,9 @@ public class DrawManager : MonoSingleton<DrawManager> {
 			int index = GetIndex(count, value, func);
 
 			ParticleData data = GetParticleData(particleType, index);
-			data.position = particle.transform.position;
+			data.position = particle.Position;
 			data.rotation = CameraManager.Rotation;
-			data.color.a  = particle.TransitionOpacity;
+			data.color.a  = particle.Opacity;
 
 			particleBatcher.Add(data);
 		}

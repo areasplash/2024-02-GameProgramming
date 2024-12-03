@@ -14,6 +14,7 @@ using System.Collections.Generic;
 	Table,
 	Chair,
 	Chest,
+	Furnace,
 }
 
 
