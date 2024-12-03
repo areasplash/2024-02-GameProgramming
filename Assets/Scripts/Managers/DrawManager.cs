@@ -10,10 +10,10 @@ using System.Runtime.InteropServices;
 
 
 
-[Serializable] struct CreatureData {
-	public Vector3    position;
-	public Quaternion rotation;
-	public Vector3    scale;
+[Serializable] struct EntityDrawData {
+	public Vector3 position;
+	public Vector4 rotation;
+	public Vector3 scale;
 
 	public Vector2 tiling;
 	public Vector2 offset;
@@ -21,18 +21,7 @@ using System.Runtime.InteropServices;
 	public float   intensity;
 }
 
-[Serializable] struct ParticleData {
-	public Vector3    position;
-	public Quaternion rotation;
-	public Vector3    scale;
-
-	public Vector2 tiling;
-	public Vector2 offset;
-	public Color   color;
-	public float   intensity;
-}
-
-[Serializable] struct ShadowOnlyData {
+[Serializable] struct ShadowDrawData {
 	public Vector3 position;
 	public Vector4 rotation;
 	public Vector3 scale;
@@ -46,49 +35,35 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	// Fields
 	// ================================================================================================
 
-	[SerializeField] Mesh       m_QuadMesh;
-	[SerializeField] Material   m_CreatureMaterial;
-	[SerializeField] Material   m_ParticleMaterial;
-	[SerializeField] AtlasMapSO m_CreatureAtlasMap;
-	[SerializeField] AtlasMapSO m_ParticleAtlasMap;
+	[SerializeField] Mesh       m_EntityMesh;
+	[SerializeField] Material   m_EntityMaterial;
+	[SerializeField] AtlasMapSO m_EntityAtlasMap;
 
-	[SerializeField] Mesh     m_SphereMesh;
-	[SerializeField] Material m_ShadowOnlyMaterial;
+	[SerializeField] Mesh       m_ShadowMesh;
+	[SerializeField] Material   m_ShadowMaterial;
 
 
 
-	static Mesh QuadMesh {
-		get   =>  Instance? Instance.m_QuadMesh : default;
-		set { if (Instance) Instance.m_QuadMesh = value; }
+	static Mesh EntityMesh {
+		get   =>  Instance? Instance.m_EntityMesh : default;
+		set { if (Instance) Instance.m_EntityMesh = value; }
+	}
+	static Material EntityMaterial {
+		get   =>  Instance? Instance.m_EntityMaterial : default;
+		set { if (Instance) Instance.m_EntityMaterial = value; }
+	}
+	static AtlasMapSO EntityAtlasMap {
+		get   =>  Instance? Instance.m_EntityAtlasMap : default;
+		set { if (Instance) Instance.m_EntityAtlasMap = value; }
 	}
 
-	static Material CreatureMaterial {
-		get   =>  Instance? Instance.m_CreatureMaterial : default;
-		set { if (Instance) Instance.m_CreatureMaterial = value; }
+	static Mesh ShadowMesh {
+		get   =>  Instance? Instance.m_ShadowMesh : default;
+		set { if (Instance) Instance.m_ShadowMesh = value; }
 	}
-	static Material ParticleMaterial {
-		get   =>  Instance? Instance.m_ParticleMaterial : default;
-		set { if (Instance) Instance.m_ParticleMaterial = value; }
-	}
-
-	static AtlasMapSO CreatureAtlasMap {
-		get   =>  Instance? Instance.m_CreatureAtlasMap : default;
-		set { if (Instance) Instance.m_CreatureAtlasMap = value; }
-	}
-	static AtlasMapSO ParticleAtlasMap {
-		get   =>  Instance? Instance.m_ParticleAtlasMap : default;
-		set { if (Instance) Instance.m_ParticleAtlasMap = value; }
-	}
-
-
-
-	static Mesh SphereMesh {
-		get   =>  Instance? Instance.m_SphereMesh : default;
-		set { if (Instance) Instance.m_SphereMesh = value; }
-	}
-	static Material ShadowOnlyMaterial {
-		get   =>  Instance? Instance.m_ShadowOnlyMaterial : default;
-		set { if (Instance) Instance.m_ShadowOnlyMaterial = value; }
+	static Material ShadowMaterial {
+		get   =>  Instance? Instance.m_ShadowMaterial : default;
+		set { if (Instance) Instance.m_ShadowMaterial = value; }
 	}
 
 
@@ -98,17 +73,15 @@ public class DrawManager : MonoSingleton<DrawManager> {
 			public override void OnInspectorGUI() {
 				Begin("Draw Manager");
 
-				LabelField("Material", EditorStyles.boldLabel);
-				QuadMesh         = ObjectField("Quad Mesh",          QuadMesh);
-				CreatureMaterial = ObjectField("Creature Material",  CreatureMaterial);
-				ParticleMaterial = ObjectField("Particle Material",  ParticleMaterial);
-				CreatureAtlasMap = ObjectField("Creature Atlas Map", CreatureAtlasMap);
-				ParticleAtlasMap = ObjectField("Particle Atlas Map", ParticleAtlasMap);
+				LabelField("Entity", EditorStyles.boldLabel);
+				EntityMesh     = ObjectField("Entity Mesh",      EntityMesh);
+				EntityMaterial = ObjectField("Entity Material",  EntityMaterial);
+				EntityAtlasMap = ObjectField("Entity Atlas Map", EntityAtlasMap);
 				Space();
 
 				LabelField("Shadow", EditorStyles.boldLabel);
-				SphereMesh         = ObjectField("Sphere Mesh",          SphereMesh);
-				ShadowOnlyMaterial = ObjectField("Shadow Only Material", ShadowOnlyMaterial);
+				ShadowMesh     = ObjectField("Shadow Mesh",     ShadowMesh);
+				ShadowMaterial = ObjectField("Shadow Material", ShadowMaterial);
 				Space();
 
 				End();
@@ -121,6 +94,72 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	// ================================================================================================
 	// Methods
 	// ================================================================================================
+
+	static HashMap<int, int        > entitySizeMap = new HashMap<int, int        >();
+	static HashMap<int, TextureData> entityDataMap = new HashMap<int, TextureData>();
+
+	static void ReadEntityAtlasMap() {
+		if (!EntityAtlasMap) return;
+		entitySizeMap.Clear();
+		entityDataMap.Clear();
+		float pixelPerUnit = UIManager.PixelPerUnit;
+
+		foreach (var pair in EntityAtlasMap.AtlasMap) {
+			// EntityType_MotionType_Direction_Index_Duration
+			string[] split = pair.Key.Split('_');
+			if (split.Length != 5) continue;
+
+			bool match = true;
+			match &= Enum.TryParse(split[0], out EntityType entityType);
+			match &= Enum.TryParse(split[1], out MotionType motionType);
+			match &=  int.TryParse(split[2], out int direction);
+			match &=  int.TryParse(split[3], out int index);
+			match &=  int.TryParse(split[4], out int duration);
+			if (!match) continue;
+
+			int[] key = new int[5];
+			key[0] = 0;
+			key[1] = key[0] + ((((int)entityType + 1) & 0xFF) << 24);
+			key[2] = key[1] + ((((int)motionType + 1) & 0xFF) << 16);
+			key[3] = key[2] + ((((int)direction  + 1) & 0xFF) <<  8);
+			key[4] = key[3] + ((((int)index      + 1) & 0xFF) <<  0);
+			
+			for (int k = 4 - 1; -1 < k; k--) {
+				if (!entitySizeMap.ContainsKey(key[k])) entitySizeMap.Add(key[k], 0);
+				entitySizeMap[key[k]]++;
+				if (k == 0 || entitySizeMap.ContainsKey(key[k - 1])) break;
+			}
+			if (!entitySizeMap.ContainsKey(key[4])) entitySizeMap[key[4]] = duration;
+			if (1 < entitySizeMap[key[3]]) entitySizeMap[key[4]] += entitySizeMap[key[4] - 1];
+			entityDataMap.Add(key[4], pair.Value);
+		}
+	}
+
+	static int GetEntitySize(
+		EntityType entityType = (EntityType)(-1),
+		MotionType motionType = (MotionType)(-1),
+		int        direction  = -1,
+		int         index     = -1
+	) => entitySizeMap.TryGetValue(
+		((((int)entityType + 1) & 0xFF) << 24) |
+		((((int)motionType + 1) & 0xFF) << 16) |
+		((((int)direction  + 1) & 0xFF) <<  8) |
+		((((int)index      + 1) & 0xFF) <<  0),
+		out int count) ? count : 0;
+	
+	static TextureData GetEntityData(
+		EntityType entityType,
+		MotionType motionType,
+		int        direction,
+		int        index
+	) => entityDataMap.TryGetValue(
+		((((int)entityType + 1) & 0xFF) << 24) |
+		((((int)motionType + 1) & 0xFF) << 16) |
+		((((int)direction  + 1) & 0xFF) <<  8) |
+		((((int)index      + 1) & 0xFF) <<  0),
+		out TextureData data) ? data : new TextureData();
+
+
 
 	static float GetYaw(Quaternion quaternion) {
 		float y = 0.0f + 2.0f * (quaternion.y * quaternion.w + quaternion.x * quaternion.z);
@@ -168,231 +207,85 @@ public class DrawManager : MonoSingleton<DrawManager> {
 
 
 
-	static HashMap<int, int>          creatureSizeMap = new HashMap<int, int>();
-	static HashMap<int, int>          particleSizeMap = new HashMap<int, int>();
-	static HashMap<int, CreatureData> creatureDataMap = new HashMap<int, CreatureData>();
-	static HashMap<int, ParticleData> particleDataMap = new HashMap<int, ParticleData>();
+	public static void DrawEntity(Vector3 position,
+		EntityType entityType) {
+		DrawEntity(position, entityType, Time.time, Color.white, 0f);
+	}
+	public static void DrawEntity(Vector3 position,
+		EntityType entityType, float offset) {
+		DrawEntity(position, entityType, offset, Color.white, 0f);
+	}
+	public static void DrawEntity(Vector3 position,
+		EntityType entityType, float offset, Color color, float intensity = 0f) {
+		Quaternion camera = CameraManager.Rotation;
 
-	static int GetCreatureSize(
-		CreatureType  creatureType  = (CreatureType )(-1),
-		AnimationType animationType = (AnimationType)(-1),
-		int           direction     = -1,
-		int           index         = -1
-	) => creatureSizeMap.TryGetValue(
-		((((int)creatureType  + 1) & 0xFF) << 24) |
-		((((int)animationType + 1) & 0xFF) << 16) |
-		((((int)direction     + 1) & 0xFF) <<  8) |
-		((((int)index         + 1) & 0xFF) <<  0),
-		out int count) ? count : 0;
-	
-	static CreatureData GetCreatureData(
-		CreatureType  creatureType,
-		AnimationType animationType,
-		int           direction,
-		int           index
-	) => creatureDataMap.TryGetValue(
-		((((int)creatureType  + 1) & 0xFF) << 24) |
-		((((int)animationType + 1) & 0xFF) << 16) |
-		((((int)direction     + 1) & 0xFF) <<  8) |
-		((((int)index         + 1) & 0xFF) <<  0),
-		out CreatureData data) ? data : new CreatureData();
+		int count = GetEntitySize(entityType, default, default);
+		int total = GetEntitySize(entityType, default, default, count - 1);
+		int value = (int)(offset * 1000) % (total == 0 ? 1 : total);
+		int index = GetIndex(count, value, i => GetEntitySize(entityType, default, default, i));
 
-	static int GetParticleSize(
-		ParticleType particleType = (ParticleType)(-1),
-		int          index        = -1
-	) => particleSizeMap.TryGetValue(
-		((((int)particleType + 1) & 0xFF) << 24) |
-		((((int)index        + 1) & 0xFF) << 16),
-		out int count) ? count : 0;
-	
-	static ParticleData GetParticleData(
-		ParticleType particleType,
-		int          index
-	) => particleDataMap.TryGetValue(
-		((((int)particleType + 1) & 0xFF) << 24) |
-		((((int)index        + 1) & 0xFF) << 16),
-		out ParticleData data) ? data : new ParticleData();
+		TextureData data = GetEntityData(entityType, default, default, index);
+		float pixel = 1f / UIManager.PixelPerUnit;
+		entityBatcher.Add(new EntityDrawData() {
+			position = position,
+			rotation = new Vector4(camera.x, camera.y, camera.z, camera.w),
+			scale    = new Vector3(data.size.x * pixel, data.size.y * pixel, 1),
 
-
-
-	static void LoadCreatureMap() {
-		if (!CreatureAtlasMap) return;
-		creatureSizeMap.Clear();
-		creatureDataMap.Clear();
-		float pixelPerUnit = UIManager.PixelPerUnit;
-
-		if (CreatureAtlasMap) foreach (var pair in CreatureAtlasMap.AtlasMap) {
-			// CreatureType_AnimationType_Direction_Index_Duration
-			string[] split = pair.Key.Split('_');
-			if (split.Length != 5) continue;
-
-			bool match = true;
-			match &= Enum.TryParse(split[0], out CreatureType creatureType);
-			match &= Enum.TryParse(split[1], out AnimationType animationType);
-			match &=  int.TryParse(split[2], out int direction);
-			match &=  int.TryParse(split[3], out int index);
-			match &=  int.TryParse(split[4], out int duration);
-			if (!match) continue;
-
-			int[] key = new int[5];
-			key[0] = 0;
-			key[1] = key[0] + ((((int)creatureType  + 1) & 0xFF) << 24);
-			key[2] = key[1] + ((((int)animationType + 1) & 0xFF) << 16);
-			key[3] = key[2] + ((((int)direction     + 1) & 0xFF) <<  8);
-			key[4] = key[3] + ((((int)index         + 1) & 0xFF) <<  0);
-			
-			for (int k = 4 - 1; -1 < k; k--) {
-				if (!creatureSizeMap.ContainsKey(key[k])) creatureSizeMap.Add(key[k], 0);
-				creatureSizeMap[key[k]]++;
-				if (k == 0 || creatureSizeMap.ContainsKey(key[k - 1])) break;
-			}
-			if (!creatureSizeMap.ContainsKey(key[4])) creatureSizeMap[key[4]] = duration;
-			if (1 < creatureSizeMap[key[3]]) creatureSizeMap[key[4]] += creatureSizeMap[key[4] - 1];
-
-			creatureDataMap.Add(key[4], new CreatureData() {
-				position  = new Vector3(0, 0, 0),
-				rotation  = new Quaternion(0, 0, 0, 1),
-				scale     = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / pixelPerUnit,
-
-				tiling    = new Vector2(pair.Value.tiling.x, pair.Value.tiling.y),
-				offset    = new Vector2(pair.Value.offset.x, pair.Value.offset.y),
-				color     = Color.white,
-				intensity = 0f,
-			});
-		}
+			tiling    = data.tiling,
+			offset    = data.offset,
+			color     = color,
+			intensity = intensity,
+		});
 	}
 
-	static void LoadParticleMap() {
-		if (!ParticleAtlasMap) return;
-		particleSizeMap.Clear();
-		particleDataMap.Clear();
-		float pixelPerUnit = UIManager.PixelPerUnit;
+	public static void DrawEntity(Vector3 position, Quaternion rotation,
+		EntityType entityType, MotionType motionType) {
+		DrawEntity(position, rotation, entityType, motionType, Time.time, Color.white, 0f);
+	}
+	public static void DrawEntity(Vector3 position, Quaternion rotation,
+		EntityType entityType, MotionType motionType, float offset) {
+		DrawEntity(position, rotation, entityType, motionType, offset, Color.white, 0f);
+	}
+	public static void DrawEntity(Vector3 position, Quaternion rotation,
+		EntityType entityType, MotionType motionType, float offset,
+		Color color, float intensity = 0f) {
+		Quaternion camera = CameraManager.Rotation;
 
-		if (ParticleAtlasMap) foreach (var pair in ParticleAtlasMap.AtlasMap) {
-			// ParticleType_Index_Duration
-			string[] split = pair.Key.Split('_');
-			if (split.Length != 3) continue;
+		float relativeYaw   = GetYaw(rotation) - GetYaw(camera);
+		int   numDirections = GetEntitySize(entityType, motionType);
+		GetDirection(relativeYaw, numDirections, out int direction, out bool xflip);
 
-			bool match = true;
-			match &= Enum.TryParse(split[0], out ParticleType particleType);
-			match &=  int.TryParse(split[1], out int index);
-			match &=  int.TryParse(split[2], out int duration);
-			if (!match) continue;
+		int count = GetEntitySize(entityType, motionType, direction);
+		int total = GetEntitySize(entityType, motionType, direction, count - 1);
+		int value = (int)(offset * 1000) % (total == 0 ? 1 : total);
+		int index = GetIndex(count, value, i => GetEntitySize(entityType, motionType, direction, i));
 
-			int[] key = new int[3];
-			key[0] = 0;
-			key[1] = key[0] + ((((int)particleType + 1) & 0xFF) << 24);
-			key[2] = key[1] + ((((int)index        + 1) & 0xFF) << 16);
+		TextureData data = GetEntityData(entityType, motionType, direction, index);
+		float pixel = 1f / UIManager.PixelPerUnit;
+		entityBatcher.Add(new EntityDrawData() {
+			position = position,
+			rotation = new Vector4(camera.x, camera.y, camera.z, camera.w),
+			scale    = new Vector3(data.size.x * pixel, data.size.y * pixel, 1),
 
-			for (int k = 2 - 1; -1 < k; k--) {
-				if (!particleSizeMap.ContainsKey(key[k])) particleSizeMap.Add(key[k], 0);
-				particleSizeMap[key[k]]++;
-				if (k == 0 || particleSizeMap.ContainsKey(key[k - 1])) break;
-			}
-			if (!particleSizeMap.ContainsKey(key[2])) particleSizeMap[key[2]] = duration;
-			if (1 < particleSizeMap[key[1]]) particleSizeMap[key[2]] += particleSizeMap[key[2] - 1];
-
-			particleDataMap.Add(key[2], new ParticleData() {
-				position  = new Vector3(0, 0, 0),
-				rotation  = new Quaternion(0, 0, 0, 1),
-				scale     = new Vector3(pair.Value.size.x, pair.Value.size.y, 1) / pixelPerUnit,
-
-				tiling    = new Vector2(pair.Value.tiling.x, pair.Value.tiling.y),
-				offset    = new Vector2(pair.Value.offset.x, pair.Value.offset.y),
-				color     = Color.white,
-				intensity = 0f,
-			});
-		}
+			tiling    = data.tiling * (xflip ? new Vector2(-1, 1) : Vector2.one),
+			offset    = data.offset + (xflip ? new Vector2(data.tiling.x, 0) : Vector2.zero),
+			color     = color,
+			intensity = intensity,
+		});
 	}
 
-
-
-	static GPUBatcher<CreatureData>   creatureBatcher;
-	static GPUBatcher<ParticleData>   particleBatcher;
-	static GPUBatcher<ShadowOnlyData> shadowOnlyBatcher;
-
-	static void ConstructGPUBatcher() {
-		creatureBatcher   = new GPUBatcher<CreatureData  >(CreatureMaterial,   QuadMesh,   0);
-		particleBatcher   = new GPUBatcher<ParticleData  >(ParticleMaterial,   QuadMesh,   0);
-		shadowOnlyBatcher = new GPUBatcher<ShadowOnlyData>(ShadowOnlyMaterial, SphereMesh, 0);
-		creatureBatcher  .param.layer = LayerMask.NameToLayer("Entity");
-		particleBatcher  .param.layer = LayerMask.NameToLayer("Entity");
-		shadowOnlyBatcher.param.layer = LayerMask.NameToLayer("Entity");
-		creatureBatcher  .param.receiveShadows = false;
-		particleBatcher  .param.receiveShadows = false;
-		shadowOnlyBatcher.param.receiveShadows = false;
-		creatureBatcher  .param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		particleBatcher  .param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		shadowOnlyBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+	public static void DrawShadow(Vector3 position) {
+		DrawShadow(position, Quaternion.identity, Vector3.one);
 	}
-
-	static void DestructGPUBatcher() {
-		creatureBatcher  ?.Dispose();
-		particleBatcher  ?.Dispose();
-		shadowOnlyBatcher?.Dispose();
+	public static void DrawShadow(Vector3 position, Quaternion rotation) {
+		DrawShadow(position, rotation, Vector3.one);
 	}
-
-	static Func<int, int> func;
-
-	static void DrawCreature() {
-		float cameraYaw = GetYaw(CameraManager.Rotation);
-		foreach (Creature creature in Creature.GetList()) {
-			CreatureType  creatureType  = creature.CreatureType;
-			AnimationType animationType = creature.AnimationType;
-
-			float relativeYaw   = GetYaw(creature.transform.rotation) - cameraYaw;
-			int   numDirections = GetCreatureSize(creatureType, animationType);
-			GetDirection(relativeYaw, numDirections, out int direction, out bool xflip);
-
-			int count = GetCreatureSize(creatureType, animationType, direction);
-			int total = GetCreatureSize(creatureType, animationType, direction, count - 1);
-			int value = (int)(creature.Offset * 1000) % total;
-			func = i => GetCreatureSize(creatureType, animationType, direction, i);
-			int index = GetIndex(count, value, func);
-
-			CreatureData data = GetCreatureData(creatureType, animationType, direction, index);
-			data.position = creature.transform.position;
-			data.rotation = CameraManager.Rotation;
-			if (xflip) {
-				data.offset.x += data.tiling.x;
-				data.tiling.x *= -1;
-			}
-			data.color.a  = creature.Opacity;
-
-			creatureBatcher.Add(data);
-			HitboxData hitbox = NavMeshManager.GetHitboxData(creature.HitboxType);
-			shadowOnlyBatcher.Add(new ShadowOnlyData() {
-				position = creature.transform.position,
-				rotation = new Vector4(0, 0, 0, 1),
-				scale    = new Vector3(hitbox.radius * 2, hitbox.height, hitbox.radius * 2),
-			});
-		}
-		creatureBatcher  ?.Draw ();
-		shadowOnlyBatcher?.Draw ();
-		creatureBatcher  ?.Clear();
-		shadowOnlyBatcher?.Clear();
-	}
-
-	static void DrawParticle() {
-		float cameraYaw = GetYaw(CameraManager.Rotation);
-		foreach (Particle particle in ParticleManager.GetList()) {
-			ParticleType particleType = particle.ParticleType;
-
-			int count = GetParticleSize(particleType);
-			int total = GetParticleSize(particleType, count - 1);
-			int value = (int)(particle.Offset * 1000) % total;
-			func = i => GetParticleSize(particleType, i);
-			int index = GetIndex(count, value, func);
-
-			ParticleData data = GetParticleData(particleType, index);
-			data.position = particle.Position;
-			data.rotation = CameraManager.Rotation;
-			data.color.a  = particle.Opacity;
-
-			particleBatcher.Add(data);
-		}
-		particleBatcher?.Draw ();
-		particleBatcher?.Clear();
+	public static void DrawShadow(Vector3 position, Quaternion rotation, Vector3 scale) {
+		shadowBatcher.Add(new ShadowDrawData() {
+			position = position,
+			rotation = new Vector4(rotation.x, rotation.y, rotation.z, rotation.w),
+			scale    = scale,
+		});
 	}
 
 
@@ -401,17 +294,32 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	// Lifecycle
 	// ================================================================================================
 
-	void OnEnable () => ConstructGPUBatcher();
-	void OnDisable() =>  DestructGPUBatcher();
+	void Start() => ReadEntityAtlasMap();
 
-	void Start() {
-		LoadCreatureMap();
-		LoadParticleMap();
+	static GPUBatcher<EntityDrawData> entityBatcher;
+	static GPUBatcher<ShadowDrawData> shadowBatcher;
+
+	void OnEnable () {
+		entityBatcher = new GPUBatcher<EntityDrawData>(EntityMaterial, EntityMesh, 0);
+		shadowBatcher = new GPUBatcher<ShadowDrawData>(ShadowMaterial, ShadowMesh, 0);
+		entityBatcher.param.layer = LayerMask.NameToLayer("Entity");
+		shadowBatcher.param.layer = LayerMask.NameToLayer("Entity");
+		entityBatcher.param.receiveShadows = false;
+		shadowBatcher.param.receiveShadows = false;
+		entityBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		shadowBatcher.param.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+	}
+
+	void OnDisable() {
+		entityBatcher.Dispose();
+		shadowBatcher.Dispose();
 	}
 
 	void LateUpdate() {
-		DrawCreature();
-		DrawParticle();
+		entityBatcher.Draw ();
+		entityBatcher.Clear();
+		shadowBatcher.Draw ();
+		shadowBatcher.Clear();
 	}
 }
 

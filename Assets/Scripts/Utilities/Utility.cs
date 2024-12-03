@@ -126,13 +126,11 @@ public static class Utility {
 
 	static RaycastHit[] hits = new RaycastHit[256];
 
-	static Collider collider;
-
 	public static int GetLayerAtPoint(Vector3 point, Transform ignore = null) {
 		int result = 0;
 		int length = Physics.SphereCastNonAlloc(point, 0.5f, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) {
-			collider = hits[i].collider;
+			Collider collider = hits[i].collider;
 			if (collider.isTrigger) {
 				if (ignore && IsIncluded(ignore, collider.transform)) continue;
 				int layer = collider.gameObject.layer;
@@ -146,7 +144,7 @@ public static class Utility {
 		int result = 0;
 		int length = Physics.SphereCastNonAlloc(point, 0.5f, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) {
-			collider = hits[i].collider;
+			Collider collider = hits[i].collider;
 			if (collider.isTrigger) {
 				if (ignore && IsIncluded(ignore, collider.transform)) continue;
 				int layer = collider.gameObject.layer;
@@ -156,19 +154,17 @@ public static class Utility {
 		return result;
 	}
 	
-	static Creature creature;
-
-	public static bool GetMatched(Vector3 point, float range, Predicate<Creature> match,
-	ref Creature result) {
+	public static bool GetMatched(Vector3 point, float range, Predicate<Entity> match,
+	ref Entity result) {
 		result = null;
 		float distance = float.MaxValue;
 		int length = Physics.SphereCastNonAlloc(point, range, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) if (!hits[i].collider.isTrigger) {
 			if (hits[i].distance < distance) {
-				if (TryGetComponentInParent(hits[i].collider.transform, out creature)) {
-					if (match(creature)) {
+				if (TryGetComponentInParent(hits[i].collider.transform, out Entity entity)) {
+					if (match(entity)) {
 						distance = hits[i].distance;
-						result = creature;
+						result = entity;
 					}
 				}
 			}
@@ -176,49 +172,14 @@ public static class Utility {
 		return distance < float.MaxValue;
 	}
 
-	public static int GetAllMatched(Vector3 point, float range, Predicate<Creature> match,
-	ref List<Creature> result) {
+	public static int GetAllMatched(Vector3 point, float range, Predicate<Entity> match,
+	ref List<Entity> result) {
 		int count = 0;
 		int length = Physics.SphereCastNonAlloc(point, range, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) if (!hits[i].collider.isTrigger) {
-			if (TryGetComponentInParent(hits[i].collider.transform, out creature)) {
-				if (match(creature)) {
-					result.Add(creature);
-					count++;
-				}
-			}
-		}
-		return count;
-	}
-
-	static Structure structure;
-
-	public static bool GetMatched(Vector3 point, float range, Predicate<Structure> match,
-	ref Structure result) {
-		result = null;
-		float distance = float.MaxValue;
-		int length = Physics.SphereCastNonAlloc(point, range, Vector3.up, hits, 0.0f);
-		for (int i = 0; i < length; i++) if (!hits[i].collider.isTrigger) {
-			if (hits[i].distance < distance) {
-				if (TryGetComponentInParent(hits[i].collider.transform, out structure)) {
-					if (match(structure)) {
-						distance = hits[i].distance;
-						result = structure;
-					}
-				}
-			}
-		}
-		return distance < float.MaxValue;
-	}
-
-	public static int GetAllMatched(Vector3 point, float range, Predicate<Structure> match,
-	ref List<Structure> result) {
-		int count = 0;
-		int length = Physics.SphereCastNonAlloc(point, range, Vector3.up, hits, 0.0f);
-		for (int i = 0; i < length; i++) if (!hits[i].collider.isTrigger) {
-			if (TryGetComponentInParent(hits[i].collider.transform, out structure)) {
-				if (match(structure)) {
-					result.Add(structure);
+			if (TryGetComponentInParent(hits[i].collider.transform, out Entity entity)) {
+				if (match(entity)) {
+					result.Add(entity);
 					count++;
 				}
 			}

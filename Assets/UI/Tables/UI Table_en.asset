@@ -161,32 +161,60 @@ MonoBehaviour:
     m_Localized: 'Apply: Enter'
     m_Metadata:
       m_Items: []
-  - m_Id: 8823404370976768
-    m_Localized: Open
+  - m_Id: 12236552176263168
+    m_Localized: Collect
     m_Metadata:
       m_Items: []
-  - m_Id: 8823797016551424
-    m_Localized: Close
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823861214568448
-    m_Localized: Retrieve
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823917288218624
-    m_Localized: Discard
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823960531492864
-    m_Localized: Cook
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823995377770496
+  - m_Id: 12236453815640064
     m_Localized: Serve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12236414296907776
+    m_Localized: Cook
     m_Metadata:
       m_Items: []
   - m_Id: 11263634432712704
     m_Localized: Pixel Perfect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12236107319992320
+    m_Localized: Add
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12236064651337728
+    m_Localized: Retrieve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12249855036350464
+    m_Localized: Chest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12249954445549568
+    m_Localized: Pot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12251147997667328
+    m_Localized: Client
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12251232269623296
+    m_Localized: Money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12251258920230912
+    m_Localized: Money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12251272987926528
+    m_Localized: Money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12251287462469632
+    m_Localized: Money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12251298074058752
+    m_Localized: Money
     m_Metadata:
       m_Items: []
   references:

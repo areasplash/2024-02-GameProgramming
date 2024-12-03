@@ -1,0 +1,470 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c48826a48f46154789ee28959030465, type: 3}
+  m_Name: EntityAtlasMap
+  m_EditorClassIdentifier: 
+  m_TexturePath: Assets/Textures/Entities
+  m_NavMeshPrefabPath: Assets/Resources/Prefabs/Entities
+  m_MaximumAtlasSize: 8192
+  m_Padding: 0
+  m_TargetTexture: {fileID: 2800000, guid: 38fd27fa361f59f4faa57cdcd7452769, type: 3}
+  m_AtlasMap:
+    m_Keys:
+    - Adventurer_Idle_0_0_0500
+    - Adventurer_Idle_0_1_0500
+    - Adventurer_Idle_0_2_0500
+    - Adventurer_Idle_0_3_0500
+    - Adventurer_Move_0_0_0100
+    - Adventurer_Move_0_1_0100
+    - Adventurer_Move_0_2_0100
+    - Adventurer_Move_0_3_0100
+    - Adventurer_Move_0_4_0100
+    - Adventurer_Move_0_5_0100
+    - Client_Idle_0_0_1000
+    - Client_Idle_0_1_0500
+    - Client_Idle_0_2_1000
+    - Client_Idle_0_3_0500
+    - Client_Move_0_0_100
+    - Client_Move_0_1_100
+    - Client_Move_0_2_100
+    - Client_Move_0_3_100
+    - Client_Move_0_4_100
+    - Client_Move_0_5_100
+    - FoodBeer_Idle_0_0_1000
+    - FoodCheeseCake_Idle_0_0_1000
+    - FoodFancake_Idle_0_0_1000
+    - FoodSalad_Idle_0_0_1000
+    - FoodSandwich_Idle_0_0_1000
+    - FoodSoup_Idle_0_0_1000
+    - FoodSpaghetti_Idle_0_0_1000
+    - FoodSteak_Idle_0_0_1000
+    - FoodWine_Idle_0_0_1000
+    - ItemBlueberry_Idle_0_0_1000
+    - ItemButter_Idle_0_0_1000
+    - ItemCabbage_Idle_0_0_1000
+    - ItemCheese_Idle_0_0_1000
+    - ItemFlour_Idle_0_0_1000
+    - ItemMeat_Idle_0_0_1000
+    - ItemPlatter_Idle_0_0_1000
+    - ItemPotato_Idle_0_0_1000
+    - ItemTomato_Idle_0_0_1000
+    - Knight_Idle_0_0_0500
+    - Knight_Idle_0_1_0500
+    - Knight_Idle_0_2_0500
+    - Knight_Idle_0_3_0500
+    - Knight_Move_0_0_0100
+    - Knight_Move_0_1_0100
+    - Knight_Move_0_2_0100
+    - Knight_Move_0_3_0100
+    - Knight_Move_0_4_0100
+    - Knight_Move_0_5_0100
+    - Money1_None_0_0_1000
+    - Money2_None_0_0_1000
+    - Money2_None_0_1_1000
+    - Money2_None_0_2_1000
+    - Money2_None_0_3_1000
+    - Money3_None_0_0_1000
+    - Money3_None_0_1_1000
+    - Money3_None_0_2_1000
+    - Money3_None_0_3_1000
+    - Money4_None_0_0_1000
+    - Money4_None_0_1_1000
+    - Money4_None_0_2_1000
+    - Money4_None_0_3_1000
+    - Money5_None_0_0_1000
+    - Necromancer_Idle_0_0_0500
+    - Necromancer_Idle_0_1_0500
+    - Necromancer_Idle_0_2_0500
+    - Necromancer_Idle_0_3_0500
+    - Necromancer_Move_0_0_0100
+    - Necromancer_Move_0_1_0100
+    - Necromancer_Move_0_2_0100
+    - Necromancer_Move_0_3_0100
+    - Necromancer_Move_0_4_0100
+    - Necromancer_Move_0_5_0100
+    - None_Idle_0_0_1000
+    - None_Idle_0_1_0500
+    - None_Idle_0_2_1000
+    - None_Idle_0_3_0500
+    - None_Move_0_0_100
+    - None_Move_0_1_100
+    - None_Move_0_2_100
+    - None_Move_0_3_100
+    - None_Move_0_4_100
+    - None_Move_0_5_100
+    - Player_Idle_0_0_1000
+    - Player_Idle_0_1_0500
+    - Player_Idle_0_2_1000
+    - Player_Idle_0_3_0500
+    - Player_Move_0_0_100
+    - Player_Move_0_1_100
+    - Player_Move_0_2_100
+    - Player_Move_0_3_100
+    - Player_Move_0_4_100
+    - Player_Move_0_5_100
+    - Priest_Idle_0_0_0500
+    - Priest_Idle_0_1_0500
+    - Priest_Idle_0_2_0500
+    - Priest_Idle_0_3_0500
+    - Priest_Move_0_0_0100
+    - Priest_Move_0_1_0100
+    - Priest_Move_0_2_0100
+    - Priest_Move_0_3_0100
+    - Priest_Move_0_4_0100
+    - Priest_Move_0_5_0100
+    - Wizard_Idle_0_0_0500
+    - Wizard_Idle_0_1_0500
+    - Wizard_Idle_0_2_0500
+    - Wizard_Idle_0_3_0500
+    - Wizard_Move_0_0_0100
+    - Wizard_Move_0_1_0100
+    - Wizard_Move_0_2_0100
+    - Wizard_Move_0_3_0100
+    - Wizard_Move_0_4_0100
+    - Wizard_Move_0_5_0100
+    m_Values:
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.0625, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.125, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.1875, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.25, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.3125, y: 0.875}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.4375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.5}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.5625}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.625}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.6875}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.75}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.8125}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.875}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.65625, y: 0.4375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.65625, y: 0.5}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.65625, y: 0.5625}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.625, y: 0.9375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.0625}
+      offset: {x: 0.65625, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.4375, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.625, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.6875, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.75, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.8125, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.875, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.9375, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.625, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.6875, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.75, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.8125, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.875, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.9375, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.5625, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.625, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.6875, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.75, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.8125, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.875, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.9375, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0.125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0.25}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.125}
+      offset: {x: 0.375, y: 0.875}

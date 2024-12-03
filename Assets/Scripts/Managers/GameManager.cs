@@ -11,69 +11,30 @@ using System.Collections.Generic;
 
 public class GameManager : MonoSingleton<GameManager> {
 
-	public static Dictionary<CreatureType, List<CreatureType>> Recipe { get; } = new() {
+	public static Dictionary<EntityType, List<EntityType>> Recipe { get; } = new() {
 		{
-			CreatureType.FoodFancake,
-			new List<CreatureType>() {
-				CreatureType.ItemFlour,
-				CreatureType.ItemButter
-			}
+			EntityType.Fancake,
+			new() { EntityType.Flour, EntityType.Butter }
 		}, {
-			CreatureType.FoodCheeseCake,
-			new List<CreatureType>() {
-				CreatureType.ItemFlour,
-				CreatureType.ItemCheese,
-				CreatureType.ItemBlueberry
-			}
+			EntityType.CheeseCake,
+			new() { EntityType.Flour, EntityType.Cheese, EntityType.Blueberry }
 		}, {
-			CreatureType.FoodSpaghetti,
-			new List<CreatureType>() {
-				CreatureType.ItemFlour,
-				CreatureType.ItemCheese,
-				CreatureType.ItemTomato
-			}
+			EntityType.Spaghetti,
+			new() { EntityType.Flour, EntityType.Cheese, EntityType.Tomato }
 		}, {
-			CreatureType.FoodSoup,
-			new List<CreatureType>() {
-				CreatureType.ItemFlour,
-				CreatureType.ItemPotato,
-				CreatureType.ItemButter
-			}
+			EntityType.Soup,
+			new() { EntityType.Flour, EntityType.Potato, EntityType.Butter }
 		}, {
-			CreatureType.FoodSandwich,
-			new List<CreatureType>() {
-				CreatureType.ItemFlour,
-				CreatureType.ItemCabbage,
-				CreatureType.ItemTomato
-			}
+			EntityType.Sandwich,
+			new() { EntityType.Flour, EntityType.Cabbage, EntityType.Tomato }
 		}, {
-			CreatureType.FoodSalad,
-			new List<CreatureType>() {
-				CreatureType.ItemCabbage,
-				CreatureType.ItemTomato
-			}
+			EntityType.Salad,
+			new() { EntityType.Cabbage, EntityType.Tomato }
 		}, {
-			CreatureType.FoodSteak,
-			new List<CreatureType>() {
-				CreatureType.ItemMeat
-			}
+			EntityType.Steak,
+			new() { EntityType.Meat }
 		},
 	};
-
-	public static CreatureType GetFoodFromRecipe(List<CreatureType> items) {
-		foreach (var recipe in Recipe) {
-			if (items.Count != recipe.Value.Count) continue;
-			bool match = true;
-			for (int i = 0; i < items.Count; i++) {
-				if (items[i] != recipe.Value[i]) {
-					match = false;
-					break;
-				}
-			}
-			if (match) return recipe.Key;
-		}
-		return CreatureType.None;
-	}
 
 
 
@@ -84,6 +45,7 @@ public class GameManager : MonoSingleton<GameManager> {
 	public const float MoneyThreshold = 10000f;
 	public const float MaxReputation  =    20f;
 
+	[SerializeField] GameObject m_ClientPrefab;
 	[SerializeField] Transform m_ClientSpawnPoint;
 	[SerializeField, Range(0f, 20f)] float m_SpawnPeriod = 5f;
 	[SerializeField] float m_RepBias = 0f;
@@ -101,6 +63,11 @@ public class GameManager : MonoSingleton<GameManager> {
 	[SerializeField] int m_Money = 0;
 
 
+
+	static GameObject ClientPrefab {
+		get   =>  Instance? Instance.m_ClientPrefab : default;
+		set { if (Instance) Instance.m_ClientPrefab = value; }
+	}
 
 	public static Vector3 ClientSpawnPoint =>
 		Instance && Instance.m_ClientSpawnPoint ?
@@ -172,6 +139,7 @@ public class GameManager : MonoSingleton<GameManager> {
 				Begin("GameManager");
 
 				LabelField("Client", EditorStyles.boldLabel);
+				ClientPrefab = ObjectField("m_ClientPrefab", ClientPrefab);
 				PropertyField("m_ClientSpawnPoint");
 				PropertyField("m_SpawnPeriod");
 				Space();
@@ -235,6 +203,23 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 
+	public static EntityType GetFoodFromRecipe(List<EntityType> items) {
+		foreach (var recipe in Recipe) {
+			if (items.Count != recipe.Value.Count) continue;
+			bool match = true;
+			for (int i = 0; i < items.Count; i++) {
+				if (items[i] != recipe.Value[i]) {
+					match = false;
+					break;
+				}
+			}
+			if (match) return recipe.Key;
+		}
+		return EntityType.None;
+	}
+
+
+
 	// ================================================================================================
 	// Lifecycle
 	// ================================================================================================
@@ -262,10 +247,10 @@ public class GameManager : MonoSingleton<GameManager> {
 							0,
 							UnityEngine.Random.Range(0f, 0.8f)
 						);
-						Creature.Spawn(CreatureType.Client, m_ClientSpawnPoint.position + randPosition); // 다중 스폰
+						Instantiate(ClientPrefab, m_ClientSpawnPoint.position + randPosition, Quaternion.identity); // 다중 스폰
 					}
 				}
-				else Creature.Spawn(CreatureType.Client, m_ClientSpawnPoint.position); // 단일 스폰
+				else Instantiate(ClientPrefab, m_ClientSpawnPoint.position, Quaternion.identity); // 단일 스폰
 			}
 		}
 		else {

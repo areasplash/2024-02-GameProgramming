@@ -65,6 +65,10 @@ using System;
 			return EditorGUILayout.Slider(label, value, min, max);
 		}
 
+		public int IntSlider(string label, int value, int min, int max) {
+			return EditorGUILayout.IntSlider(label, value, min, max);
+		}
+
 		public bool Toggle(string label, bool value) {
 			return EditorGUILayout.Toggle(label, value);
 		}
@@ -87,6 +91,10 @@ using System;
 
 		public Vector2Int Vector2IntField(string label, Vector2Int value) {
 			return EditorGUILayout.Vector2IntField(label, value);
+		}
+
+		public Color ColorField(string label, Color value) {
+			return EditorGUILayout.ColorField(label, value);
 		}
 
 		public string TextField(string label, string value) {

@@ -15,20 +15,92 @@ MonoBehaviour:
   m_TableCollectionName: UI Table
   m_TableCollectionNameGuidString: c742f1f458ace7e44813c5aae998306c
   m_Entries:
-  - m_Id: 11892854784
-    m_Key: Start
+  - m_Id: 12236107319992320
+    m_Key: Add
+    m_Metadata:
+      m_Items: []
+  - m_Id: 692800360448
+    m_Key: Advanced
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2179381604552704
+    m_Key: Apply Binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 195087470592
+    m_Key: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1872011284353024
+    m_Key: Binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1872402461921280
+    m_Key: Binding Message
+    m_Metadata:
+      m_Items: []
+  - m_Id: 928005914267648
+    m_Key: Cancel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2179268467396608
+    m_Key: Cancel Binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1989887584538624
+    m_Key: Cancel or Open Menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12249855036350464
+    m_Key: Chest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12251147997667328
+    m_Key: Client
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12236552176263168
+    m_Key: Collect
     m_Metadata:
       m_Items: []
   - m_Id: 47561216000
     m_Key: Continue
     m_Metadata:
       m_Items: []
-  - m_Id: 88828973056
-    m_Key: Settings
+  - m_Id: 418757120000
+    m_Key: Controls
     m_Metadata:
       m_Items: []
-  - m_Id: 127081025536
-    m_Key: Quit
+  - m_Id: 12236414296907776
+    m_Key: Cook
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1995861284261888
+    m_Key: Delete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 732394590208
+    m_Key: Delete All Data
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1995620086616064
+    m_Key: Delete All Data Message
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153830291312640
+    m_Key: Full Screen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 231456280576
+    m_Key: General
+    m_Metadata:
+      m_Items: []
+  - m_Id: 634134630400
+    m_Key: Interact
+    m_Metadata:
+      m_Items: []
+  - m_Id: 260677996544
+    m_Key: Language
     m_Metadata:
       m_Items: []
   - m_Id: 162816495616
@@ -39,48 +111,32 @@ MonoBehaviour:
     m_Key: "Menu\t"
     m_Metadata:
       m_Items: []
-  - m_Id: 195087470592
-    m_Key: Back
+  - m_Id: 12251232269623296
+    m_Key: Money1
     m_Metadata:
       m_Items: []
-  - m_Id: 154919816302592
-    m_Key: On
+  - m_Id: 12251258920230912
+    m_Key: Money2
     m_Metadata:
       m_Items: []
-  - m_Id: 154966578597888
-    m_Key: Off
+  - m_Id: 12251272987926528
+    m_Key: Money3
     m_Metadata:
       m_Items: []
-  - m_Id: 231456280576
-    m_Key: General
+  - m_Id: 12251287462469632
+    m_Key: Money4
     m_Metadata:
       m_Items: []
-  - m_Id: 260677996544
-    m_Key: Language
-    m_Metadata:
-      m_Items: []
-  - m_Id: 153830291312640
-    m_Key: Full Screen
-    m_Metadata:
-      m_Items: []
-  - m_Id: 292655370240
-    m_Key: Screen Resolution
-    m_Metadata:
-      m_Items: []
-  - m_Id: 334690684928
-    m_Key: Music
-    m_Metadata:
-      m_Items: []
-  - m_Id: 375148941312
-    m_Key: Sound FX
-    m_Metadata:
-      m_Items: []
-  - m_Id: 418757120000
-    m_Key: Controls
+  - m_Id: 12251298074058752
+    m_Key: Money5
     m_Metadata:
       m_Items: []
   - m_Id: 1463730225188864
     m_Key: Mouse Sensitivity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 580447539200
+    m_Key: Move Down
     m_Metadata:
       m_Items: []
   - m_Id: 450197622784
@@ -95,92 +151,72 @@ MonoBehaviour:
     m_Key: Move Up
     m_Metadata:
       m_Items: []
-  - m_Id: 580447539200
-    m_Key: Move Down
+  - m_Id: 334690684928
+    m_Key: Music
     m_Metadata:
       m_Items: []
-  - m_Id: 634134630400
-    m_Key: Interact
+  - m_Id: 12251330055626752
+    m_Key: New Entry
     m_Metadata:
       m_Items: []
-  - m_Id: 1989887584538624
-    m_Key: Cancel or Open Menu
+  - m_Id: 12251384388640768
+    m_Key: New Entry 1
     m_Metadata:
       m_Items: []
-  - m_Id: 692800360448
-    m_Key: Advanced
-    m_Metadata:
-      m_Items: []
-  - m_Id: 732394590208
-    m_Key: Delete All Data
-    m_Metadata:
-      m_Items: []
-  - m_Id: 987133344911360
-    m_Key: Quit Message
-    m_Metadata:
-      m_Items: []
-  - m_Id: 927899748044800
-    m_Key: Yes
+  - m_Id: 12251403472723968
+    m_Key: New Entry 2
     m_Metadata:
       m_Items: []
   - m_Id: 927956203376640
     m_Key: No
     m_Metadata:
       m_Items: []
-  - m_Id: 928005914267648
-    m_Key: Cancel
+  - m_Id: 154966578597888
+    m_Key: Off
     m_Metadata:
       m_Items: []
-  - m_Id: 1872011284353024
-    m_Key: Binding
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1872402461921280
-    m_Key: Binding Message
-    m_Metadata:
-      m_Items: []
-  - m_Id: 2179268467396608
-    m_Key: Cancel Binding
-    m_Metadata:
-      m_Items: []
-  - m_Id: 2179381604552704
-    m_Key: Apply Binding
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1995620086616064
-    m_Key: Delete All Data Message
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1995861284261888
-    m_Key: Delete
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823404370976768
-    m_Key: Open
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823797016551424
-    m_Key: Close
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823861214568448
-    m_Key: Retrieve
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823917288218624
-    m_Key: Discard
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823960531492864
-    m_Key: Cook
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8823995377770496
-    m_Key: Serve
+  - m_Id: 154919816302592
+    m_Key: On
     m_Metadata:
       m_Items: []
   - m_Id: 11263634432712704
     m_Key: Pixel Perfect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12249954445549568
+    m_Key: Pot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 127081025536
+    m_Key: Quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 987133344911360
+    m_Key: Quit Message
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12236064651337728
+    m_Key: Retrieve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 292655370240
+    m_Key: Screen Resolution
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12236453815640064
+    m_Key: Serve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 88828973056
+    m_Key: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 375148941312
+    m_Key: Sound FX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11892854784
+    m_Key: Start
     m_Metadata:
       m_Items: []
   m_Metadata:
