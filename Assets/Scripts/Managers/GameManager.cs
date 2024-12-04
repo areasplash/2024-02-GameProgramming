@@ -13,26 +13,26 @@ public class GameManager : MonoSingleton<GameManager> {
 
 	public static Dictionary<EntityType, List<EntityType>> Recipe { get; } = new() {
 		{
-			EntityType.Fancake,
-			new() { EntityType.Flour, EntityType.Butter }
+			EntityType.FoodPancake,
+			new() { EntityType.ItemFlour, EntityType.ItemButter }
 		}, {
-			EntityType.CheeseCake,
-			new() { EntityType.Flour, EntityType.Cheese, EntityType.Blueberry }
+			EntityType.FoodCheeseCake,
+			new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemBlueberry }
 		}, {
-			EntityType.Spaghetti,
-			new() { EntityType.Flour, EntityType.Cheese, EntityType.Tomato }
+			EntityType.FoodSpaghetti,
+			new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemTomato }
 		}, {
-			EntityType.Soup,
-			new() { EntityType.Flour, EntityType.Potato, EntityType.Butter }
+			EntityType.FoodSoup,
+			new() { EntityType.ItemFlour, EntityType.ItemPotato, EntityType.ItemButter }
 		}, {
-			EntityType.Sandwich,
-			new() { EntityType.Flour, EntityType.Cabbage, EntityType.Tomato }
+			EntityType.FoodSandwich,
+			new() { EntityType.ItemFlour, EntityType.ItemCabbage, EntityType.ItemTomato }
 		}, {
-			EntityType.Salad,
-			new() { EntityType.Cabbage, EntityType.Tomato }
+			EntityType.FoodSalad,
+			new() { EntityType.ItemCabbage, EntityType.ItemTomato }
 		}, {
-			EntityType.Steak,
-			new() { EntityType.Meat }
+			EntityType.FoodSteak,
+			new() { EntityType.ItemMeat }
 		},
 	};
 

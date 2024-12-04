@@ -337,7 +337,10 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		if (layerChanged) {
 			layerChanged = false;
 			layerMask = 0;
-			for (int i = 0; i < layers.Count; i++) layerMask |= 1 << layers[i].gameObject.layer;
+			for(int i = layers.Count - 1; -1 < i; i--) {
+				if (layers[i] == null) layers.RemoveAt(i);
+				else layerMask |= 1 << layers[i].gameObject.layer;
+			}
 			layerMask &= ~AbsoluteLayer;
 			if (layerMask == 0) layerMask |= ExteriorLayer;
 			CullingMask = layerMask | AbsoluteLayer;

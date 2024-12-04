@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class GameReputationUI : MonoBehaviour {
     
-	[SerializeField] RectTransform gage;
+	[SerializeField] RectTransform fill;
 	[SerializeField] RectTransform anchor;
 
 	[Space]
@@ -30,9 +30,9 @@ public class GameReputationUI : MonoBehaviour {
 		if (reputation == GameManager.Reputation) return;
 		reputation = GameManager.Reputation;
 
-		if (gage) {
+		if (fill) {
 			float ratio = Mathf.Clamp01(reputation / GameManager.MaxReputation);
-			gage.localScale = new Vector3(ratio, 1, 1);
+			fill.localScale = new Vector3(ratio, 1, 1);
 		}
 
 		if (anchor) {

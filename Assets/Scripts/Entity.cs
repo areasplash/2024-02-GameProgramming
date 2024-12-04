@@ -25,26 +25,26 @@ using System.Collections.Generic;
 		Money5,
 
 	Item,
-		Platter,
-		Flour,
-		Butter,
-		Cheese,
-		Blueberry,
-		Tomato,
-		Potato,
-		Cabbage,
-		Meat,
+		ItemPlatter,
+		ItemFlour,
+		ItemButter,
+		ItemCheese,
+		ItemBlueberry,
+		ItemTomato,
+		ItemPotato,
+		ItemCabbage,
+		ItemMeat,
 
 	Food,
-		Fancake,
-		CheeseCake,
-		Spaghetti,
-		Soup,
-		Sandwich,
-		Salad,
-		Steak,
-		Wine,
-		Beer,
+		FoodPancake,
+		FoodCheeseCake,
+		FoodSpaghetti,
+		FoodSoup,
+		FoodSandwich,
+		FoodSalad,
+		FoodSteak,
+		FoodWine,
+		FoodBeer,
 
 	Particle,
 	
@@ -53,6 +53,12 @@ using System.Collections.Generic;
 		Chair,
 		Chest,
 		Pot,
+	
+	UI,
+		UIBubble,
+		UILoading,
+		UIBarBorder,
+		UIBarFill,
 }
 
 [Serializable] public enum MotionType {
@@ -107,7 +113,8 @@ using System.Collections.Generic;
 [Serializable] public enum InteractionType {
 	None,
 	Interact,
-	Retrieve,
+	TakeOut,
+	PutIn,
 	Add,
 	Cook,
 	Cancel,
@@ -133,6 +140,7 @@ using System.Collections.Generic;
 	[SerializeField] AttributeType   m_AttributeType = 0;
 	[SerializeField] float           m_SenseRange    = 0f;
 
+	[SerializeField] float   m_Speed          = 0f;
 	[SerializeField] Vector3 m_Velocity       = Vector3.zero;
 	[SerializeField] Vector3 m_ForcedVelocity = Vector3.zero;
 	[SerializeField] Vector3 m_GroundVelocity = Vector3.zero;
@@ -232,6 +240,10 @@ using System.Collections.Generic;
 
 
 
+	public float Speed {
+		get           => m_Speed;
+		protected set => m_Speed = value;
+	}
 	public Vector3 Velocity {
 		get           => m_Velocity;
 		protected set => m_Velocity = value;
@@ -322,15 +334,21 @@ using System.Collections.Generic;
 		if (layerChanged) {
 			layerChanged = false;
 			layerMask = 0;
-			for(int i = 0; i < layers.Count; i++) layerMask |= 1 << layers[i].gameObject.layer;
+			for(int i = layers.Count - 1; -1 < i; i--) {
+				if (layers[i] == null) layers.RemoveAt(i);
+				else layerMask |= 1 << layers[i].gameObject.layer;
+			}
 			if (layerMask == 0) layerMask |= CameraManager.ExteriorLayer;
 		}
 		if (groundChanged) {
 			groundChanged = false;
+			for (int i = grounds.Count - 1; -1 < i; i--) {
+				if (grounds[i] == null) grounds.RemoveAt(i);
+			}
 			if (0 < grounds.Count) {
-				int i = grounds.Count - 1;
-				Utility.TryGetComponentInParent(grounds[i].transform, out groundRigidbody);
-				groundRotation  = grounds[i].transform.localRotation;
+				int j = grounds.Count - 1;
+				Utility.TryGetComponentInParent(grounds[j].transform, out groundRigidbody);
+				groundRotation  = grounds[j].transform.localRotation;
 				IsGrounded      = true;
 			}
 			else {

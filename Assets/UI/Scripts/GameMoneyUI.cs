@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class GameMoneyUI : MonoBehaviour {
     
-	[SerializeField] RectTransform gage;
+	[SerializeField] RectTransform fill;
 	[SerializeField] RectTransform anchor;
 
 	[Space]
@@ -30,9 +30,9 @@ public class GameMoneyUI : MonoBehaviour {
 		if (money == GameManager.Money) return;
 		money = GameManager.Money;
 
-		if (gage) {
+		if (fill) {
 			float ratio = Mathf.Clamp01(money / GameManager.MoneyThreshold);
-			gage.localScale = new Vector3(ratio, 1, 1);
+			fill.localScale = new Vector3(ratio, 1, 1);
 		}
 
 		if (anchor) {

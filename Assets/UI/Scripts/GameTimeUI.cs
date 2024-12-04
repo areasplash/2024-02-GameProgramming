@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class GameTimeUI : MonoBehaviour {
     
-	[SerializeField] RectTransform gage;
+	[SerializeField] RectTransform fill;
 	[SerializeField] RectTransform anchor;
 
 	[Space]
@@ -32,10 +32,10 @@ public class GameTimeUI : MonoBehaviour {
 		hh = GameManager.Hour;
 		mm = GameManager.Minute;
 
-		if (gage) {
+		if (fill) {
 			float ratio = hh - GameManager.OpenHour + mm / 60f;
 			ratio = Mathf.Clamp01(ratio / (GameManager.CloseHour - GameManager.OpenHour));
-			gage.localScale = new Vector3(ratio, 1, 1);
+			fill.localScale = new Vector3(ratio, 1, 1);
 		}
 
 		if (anchor) {

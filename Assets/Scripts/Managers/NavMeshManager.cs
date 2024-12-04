@@ -13,7 +13,6 @@ using System.Collections.Generic;
 
 [Serializable] public enum HitboxType {
 	Humanoid,
-	Item,
 }
 
 [Serializable] public struct HitboxData {
@@ -31,7 +30,6 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 	// ================================================================================================
 
 	[SerializeField] NavMeshSurface m_HumanoidMesh;
-	[SerializeField] NavMeshSurface m_ItemMesh;
 
 	[SerializeField] float m_SampleDistance = 1f;
 
@@ -40,10 +38,6 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 	static NavMeshSurface HumanoidMesh {
 		get   =>  Instance? Instance.m_HumanoidMesh : default;
 		set { if (Instance) Instance.m_HumanoidMesh = value; }
-	}
-	static NavMeshSurface ItemMesh {
-		get   =>  Instance? Instance.m_ItemMesh : default;
-		set { if (Instance) Instance.m_ItemMesh = value; }
 	}
 
 	public static float SampleDistance {
@@ -60,7 +54,6 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
 				LabelField("NavMesh", EditorStyles.boldLabel);
 				HumanoidMesh = ObjectField("Humanoid Mesh", HumanoidMesh);
-				ItemMesh     = ObjectField("Item Mesh",     ItemMesh);
 				BeginHorizontal();
 				PrefixLabel("Bake NavMesh");
 				if (GUILayout.Button("Bake" )) Bake ();
@@ -85,12 +78,10 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 
 	public static void Bake() {
 		if (HumanoidMesh) HumanoidMesh.BuildNavMesh();
-		if (ItemMesh)     ItemMesh    .BuildNavMesh();
 	}
 
 	public static void Clear() {
 		if (HumanoidMesh) HumanoidMesh.RemoveData();
-		if (ItemMesh)     ItemMesh    .RemoveData();
 	}
 
 
@@ -103,11 +94,6 @@ public class NavMeshManager : MonoSingleton<NavMeshManager> {
 					agentTypeID = HumanoidMesh.agentTypeID,
 					radius      = HumanoidMesh.GetBuildSettings().agentRadius,
 					height      = HumanoidMesh.GetBuildSettings().agentHeight,
-				} : default,
-			HitboxType.Item => ItemMesh? new HitboxData() {
-					agentTypeID = ItemMesh.agentTypeID,
-					radius      = ItemMesh.GetBuildSettings().agentRadius,
-					height      = ItemMesh.GetBuildSettings().agentHeight,
 				} : default,
 			_ => throw new NotImplementedException(),
 		};

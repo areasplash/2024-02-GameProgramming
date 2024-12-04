@@ -271,12 +271,14 @@ MonoBehaviour:
   m_HitboxType: 0
   m_AttributeType: 0
   m_SenseRange: 3
+  m_Speed: 6
   m_Velocity: {x: 0, y: 0, z: 0}
   m_ForcedVelocity: {x: 0, y: 0, z: 0}
   m_GroundVelocity: {x: 0, y: 0, z: 0}
   m_GravitVelocity: {x: 0, y: 0, z: 0}
   m_WorldText1: {fileID: 6247533859004523219}
   m_WorldText2: {fileID: 8347056174883282024}
+  m_Holdings: 
 --- !u!54 &6269516478181930173
 Rigidbody:
   m_ObjectHideFlags: 0

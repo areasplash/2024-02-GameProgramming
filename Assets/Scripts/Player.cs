@@ -18,6 +18,8 @@ public class Player : Entity {
 	[SerializeField] LocalizeStringEvent m_WorldText1;
 	[SerializeField] LocalizeStringEvent m_WorldText2;
 
+	[SerializeField] List<EntityType> m_Holdings = new List<EntityType>();
+
 
 
 	LocalizeStringEvent WorldText1 {
@@ -29,16 +31,10 @@ public class Player : Entity {
 		set => m_WorldText2 = value;
 	}
 
-	string WorldText1String {
-		get => m_WorldText1.StringReference.ToString();
-		set => m_WorldText1.StringReference.SetReference("UI Table", value);
+	public List<EntityType> Holdings {
+		get => m_Holdings;
+		set => m_Holdings = value;
 	}
-	string WorldText2String {
-		get => m_WorldText2.StringReference.ToString();
-		set => m_WorldText2.StringReference.SetReference("UI Table", value);
-	}
-
-	
 
 
 
@@ -61,6 +57,7 @@ public class Player : Entity {
 				Space();
 
 				LabelField("Rigidbody", EditorStyles.boldLabel);
+				I.Speed          = Slider      ("Speed",           I.Speed, 0, 20);
 				I.Velocity       = Vector3Field("Velocity",        I.Velocity);
 				I.ForcedVelocity = Vector3Field("Forced Velocity", I.ForcedVelocity);
 				I.GroundVelocity = Vector3Field("Ground Velocity", I.GroundVelocity);
@@ -70,6 +67,8 @@ public class Player : Entity {
 				LabelField("Player", EditorStyles.boldLabel);
 				I.WorldText1 = ObjectField("World Text 1", I.WorldText1);
 				I.WorldText2 = ObjectField("World Text 2", I.WorldText2);
+				Space();
+				PropertyField("m_Holdings");
 				End();
 			}
 		}
@@ -134,12 +133,12 @@ public class Player : Entity {
 			if (MotionType != MotionType.Move) Offset = 0;
 			MotionType = MotionType.Move;
 			if (input != Vector3.zero) {
-				Velocity = input * 5;
+				Velocity = input * Speed;
 				if (0 < queue.Count) queue.Clear();
 			}
 			else {
 				Vector3 delta = queue.Peek() - transform.position;
-				Velocity = new Vector3(delta.x, 0, delta.z).normalized * 5;
+				Velocity = new Vector3(delta.x, 0, delta.z).normalized * Speed;
 				if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.02f) queue.Dequeue();
 			}
 			if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
@@ -156,8 +155,10 @@ public class Player : Entity {
 			WorldText1.gameObject.SetActive(interactable);
 			WorldText2.gameObject.SetActive(interactable);
 			if (interactable) {
-				WorldText1String = interactable.GetType().Name;
-				WorldText2String = interactable.Interactable(this).ToString();
+				string text1 = interactable.GetType().Name;
+				string text2 = interactable.Interactable(this).ToString();
+				WorldText1.StringReference.SetReference("UI Table", text1);
+				WorldText2.StringReference.SetReference("UI Table", text2);
 			}
 		}
 		if (interactable) {
@@ -166,6 +167,13 @@ public class Player : Entity {
 			WorldText2.transform.position = Vector3.Lerp(transform.position, interactable.transform.position, 0.5f);
 			WorldText1.transform.rotation = CameraManager.Rotation;
 			WorldText2.transform.rotation = CameraManager.Rotation;
+		}
+
+		if (0 < Holdings.Count) {
+			Vector3 position = transform.position + transform.forward * 0.5f;
+			for (int i = 0; i < Holdings.Count; i++) {
+				DrawManager.DrawEntity(position + Vector3.up * i * 0.5f, Holdings[i]);
+			}
 		}
 	}
 }

@@ -70,7 +70,6 @@ public class Chair : Entity {
 		if (entity is Client) {
 			if (Occupant == null) {
 				Occupant = entity;
-				entity.transform.position = transform.position + Vector3.up;
 			}
 			else if (Occupant == entity) {
 				Occupant = null;

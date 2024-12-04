@@ -59,13 +59,27 @@ public class Chest : Entity {
 	// ================================================================================================
 
 	public override InteractionType Interactable(Entity entity) {
-		if (entity is Player || entity is Staff) return InteractionType.Retrieve;
+		if (entity is Player) {
+			bool exist = (entity as Player).Holdings.Exists(x => x == ItemType);
+			return exist ? InteractionType.PutIn : InteractionType.TakeOut;
+		}
+		else if (entity is Staff) {
+			bool exist = (entity as Staff).Holdings.Exists(x => x == ItemType);
+			return exist ? InteractionType.PutIn : InteractionType.TakeOut;
+		}
 		return InteractionType.None;
 	}
 
 	public override void Interact(Entity entity) {
-		if (entity is Player || entity is Staff) {
-			// Retrieve Item
+		if (entity is Player) {
+			bool exist = (entity as Player).Holdings.Exists(x => x == ItemType);
+			if (exist) (entity as Player).Holdings.Remove(ItemType);
+			else       (entity as Player).Holdings.Add   (ItemType);
+		}
+		else if (entity is Staff) {
+			bool exist = (entity as Staff).Holdings.Exists(x => x == ItemType);
+			if (exist) (entity as Staff).Holdings.Remove(ItemType);
+			else       (entity as Staff).Holdings.Add   (ItemType);
 		}
 	}
 
@@ -88,5 +102,9 @@ public class Chest : Entity {
 		}
 	}
 
-	protected override void LateUpdate() {}
+	protected override void LateUpdate() {
+		Vector3 position = transform.position + new Vector3(0, 3f, 0);
+		DrawManager.DrawEntity(position, EntityType.UIBubble);
+		DrawManager.DrawEntity(position, ItemType);
+	}
 }
