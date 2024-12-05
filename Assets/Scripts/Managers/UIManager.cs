@@ -40,6 +40,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	[SerializeField] Canvas m_Settings;
 	[SerializeField] Canvas m_Confirmation;
 	[SerializeField] Canvas m_Fade;
+	[SerializeField] Canvas m_Interact;
 
 	[SerializeField] GameObject m_MainMenuFS;
 	[SerializeField] GameObject m_GameFS;

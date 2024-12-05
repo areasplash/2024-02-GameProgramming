@@ -150,7 +150,7 @@ public class Player : Entity {
 		Utility.GetMatched(transform.position, SenseRange, (Entity entity) => {
 			return entity != this && entity.Interactable(this) != InteractionType.None;
 		}, ref interactable);
-
+		/* =========== InteractionText.cs로 기능 이전 ===========
 		if (interactablePrev != interactable) {
 			WorldText1.gameObject.SetActive(interactable);
 			WorldText2.gameObject.SetActive(interactable);
@@ -161,12 +161,15 @@ public class Player : Entity {
 				WorldText2.StringReference.SetReference("UI Table", text2);
 			}
 		}
+		*/
 		if (interactable) {
 			if (InputManager.GetKeyDown(KeyAction.Interact)) interactable.Interact(this);
+			/* =========== InteractionText.cs로 기능 이전 ===========
 			WorldText1.transform.position = interactable.transform.position + Vector3.up * 2;
 			WorldText2.transform.position = Vector3.Lerp(transform.position, interactable.transform.position, 0.5f);
 			WorldText1.transform.rotation = CameraManager.Rotation;
 			WorldText2.transform.rotation = CameraManager.Rotation;
+			*/
 		}
 
 		if (0 < Holdings.Count) {
