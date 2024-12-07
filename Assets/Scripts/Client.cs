@@ -66,20 +66,43 @@ public class Client : Entity {
 	// ================================================================================================
 
 	public override InteractionType Interactable(Entity entity) {
-		// if waiting for food
-		if (entity is Player || entity is Staff) {
-			if (state == State.MenuWaiting && true) return InteractionType.Serve;
+		if (state == State.MenuWaiting) {
+			if (entity is Player) {
+				for (int i = 0; i < (entity as Player).Holdings.Count; i++) {
+					if (menu == (entity as Player).Holdings[i]) return InteractionType.Serve;
+				}
+			}
+			else if (entity is Staff) {
+				for (int i = 0; i < (entity as Staff).Holdings.Count; i++) {
+					if (menu == (entity as Staff).Holdings[i]) return InteractionType.Serve;
+				}
+			}
 		}
 		return InteractionType.None;
 	}
 
 	public override void Interact(Entity entity) {
-		// if waiting for food
-		if (entity is Player || entity is Staff) {
-			if (state == State.MenuWaiting && true) {
-				state = State.Eating;
-				Offset = 0f;
-			} 
+		if (state == State.MenuWaiting) {
+			if (entity is Player) {
+				for (int i = 0; i < (entity as Player).Holdings.Count; i++) {
+					if (menu == (entity as Player).Holdings[i]) {
+						(entity as Player).Holdings.RemoveAt(i);
+						state = State.Eating;
+						Offset = 0f;
+						break;
+					}
+				}
+			}
+			else if (entity is Staff) {
+				for (int i = 0; i < (entity as Staff).Holdings.Count; i++) {
+					if (menu == (entity as Staff).Holdings[i]) {
+						(entity as Staff).Holdings.RemoveAt(i);
+						state = State.Eating;
+						Offset = 0f;
+						break;
+					}
+				}
+			}
 		}
 	}
 
@@ -114,11 +137,11 @@ public class Client : Entity {
 
 
 
-	const float EntryWaitingTime        = 10.0f;
-	const float MinimumMenuChoosingTime =  3.0f;
-	const float MenuWaitingTime         = 21.0f;
-	const float EatingTime              = 10.0f;
-	const float EatAgainProb            =  0.3f;
+	const float EntryWaitingTime        =  5.0f;
+	const float MinimumMenuChoosingTime =  2.0f;
+	const float MenuWaitingTime         = 30.0f;
+	const float EatingTime              =  5.0f;
+	const float EatAgainProb            =  0.2f;
 
 	enum State {
 		EntryWaiting,
@@ -134,6 +157,7 @@ public class Client : Entity {
 
 	Entity chair;
 	EntityType menu;
+	float reputationWeight;
 	int moneyToPay;
 
 	void Update() {
@@ -160,6 +184,8 @@ public class Client : Entity {
 					Offset = 0f;
 				}
 				if (EntryWaitingTime < Offset) {
+					reputationWeight = -0.1f;
+					GameManager.UpdateReputation(reputationWeight);
 					Destroy(gameObject);
 				}
 				break;
@@ -201,7 +227,9 @@ public class Client : Entity {
 						4 => EntityType.FoodSandwich,
 						5 => EntityType.FoodSalad,
 						6 => EntityType.FoodSteak,
-						_ => EntityType.FoodSteak,
+						7 => EntityType.FoodBeer,
+						8 => EntityType.FoodWine,
+						_ => EntityType.FoodWine,
 					};
 					state = State.MenuWaiting;
 					Offset = 0f;
@@ -216,22 +244,31 @@ public class Client : Entity {
 				DrawManager.DrawEntity(bubblePosition2, menu);
 
 				if (MenuWaitingTime < Offset) {
-					// if (0 < MoneyToPay) spawn money.value = moneyToPay;
+					if (0 < moneyToPay) {
+						moneyToPay = Random.Range(1, 6);
+						Instantiate(GameManager.PrefabMoney, transform.position, Quaternion.identity).TryGetComponent(out Money money);
+						money.Value = moneyToPay;
+					}
 					chair.Interact(this);
 					transform.position = queue.Peek();
 					FindPath(GameManager.ClientSpawnPoint, ref queue);
 					AttributeType &= ~AttributeType.Pinned;
 					state = State.Exiting;
 					Offset = 0f;
+					reputationWeight -= 0.4f;
 				}
 				break;
 			case State.Eating:
 				MotionType = MotionType.Idle;
 
+				float y3 = NavMeshManager.GetHitboxData(HitboxType).height * 0.5f + 2f;
+				Vector3 bubblePosition3 = transform.position + new Vector3(0, y3, 0);
+				DrawManager.DrawEntity(bubblePosition3, EntityType.UIBubble);
+				DrawManager.DrawEntity(bubblePosition3, EntityType.UIEating);
 				DrawManager.DrawEntity(transform.position + transform.forward * 0.5f, menu);
 				if (EatingTime < Offset) {
 					if (Random.value < EatAgainProb) {
-						menu = Random.Range(0, 7) switch {
+						menu = Random.Range(0, 9) switch {
 							0 => EntityType.FoodPancake,
 							1 => EntityType.FoodCheeseCake,
 							2 => EntityType.FoodSpaghetti,
@@ -239,13 +276,20 @@ public class Client : Entity {
 							4 => EntityType.FoodSandwich,
 							5 => EntityType.FoodSalad,
 							6 => EntityType.FoodSteak,
-							_ => EntityType.FoodSteak,
+							7 => EntityType.FoodBeer,
+							8 => EntityType.FoodWine,
+							_ => EntityType.FoodWine,
 						};
 						state = State.MenuWaiting;
 						Offset = 0f;
+						reputationWeight += 0.1f;
 					}
 					else {
-						// if (0 < MoneyToPay) spawn money.value = moneyToPay;
+						if (0 < moneyToPay) {
+							moneyToPay = Random.Range(1, 6);
+							Instantiate(GameManager.PrefabMoney, transform.position, Quaternion.identity).TryGetComponent(out Money money);
+							money.Value = moneyToPay;
+						}
 						chair.Interact(this);
 						transform.position = queue.Peek();
 						FindPath(GameManager.ClientSpawnPoint, ref queue);
@@ -266,6 +310,7 @@ public class Client : Entity {
 				}
 
 				else {
+					GameManager.UpdateReputation(reputationWeight);
 					Destroy(gameObject);
 				}
 				break;

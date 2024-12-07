@@ -53,10 +53,12 @@ using System.Collections.Generic;
 		Chair,
 		Chest,
 		Pot,
+		Trashcan,
 	
 	UI,
 		UIBubble,
 		UILoading,
+		UIEating,
 		UIBarBorder,
 		UIBarFill,
 }
@@ -118,6 +120,7 @@ using System.Collections.Generic;
 	Add,
 	Cook,
 	Cancel,
+	Drop,
 	Serve,
 	Collect,
 }

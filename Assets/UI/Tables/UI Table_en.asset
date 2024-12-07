@@ -182,7 +182,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 12236064651337728
-    m_Localized: Retrieve
+    m_Localized: Take Out
     m_Metadata:
       m_Items: []
   - m_Id: 12249855036350464
@@ -215,6 +215,18 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 12251298074058752
     m_Localized: Money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12359899979571200
+    m_Localized: Put In
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12380704553689088
+    m_Localized: Drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12381490511732736
+    m_Localized: Trashcan
     m_Metadata:
       m_Items: []
   references:

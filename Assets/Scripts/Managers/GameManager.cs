@@ -62,6 +62,12 @@ public class GameManager : MonoSingleton<GameManager> {
 
 	[SerializeField] int m_Money = 0;
 
+	[SerializeField] GameObject m_PrefabMoney;
+	[SerializeField] GameObject m_PrefabTable;
+	[SerializeField] GameObject m_PrefabChair;
+	[SerializeField] GameObject m_PrefabChest;
+	[SerializeField] GameObject m_PrefabPot;
+
 
 
 	static GameObject ClientPrefab {
@@ -131,6 +137,27 @@ public class GameManager : MonoSingleton<GameManager> {
 	}
 	*/
 
+	public static GameObject PrefabMoney {
+		get           =>  Instance? Instance.m_PrefabMoney : default;
+		private set { if (Instance) Instance.m_PrefabMoney = value; }
+	}
+	public static GameObject PrefabTable {
+		get           =>  Instance? Instance.m_PrefabTable : default;
+		private set { if (Instance) Instance.m_PrefabTable = value; }
+	}
+	public static GameObject PrefabChair {
+		get           =>  Instance? Instance.m_PrefabChair : default;
+		private set { if (Instance) Instance.m_PrefabChair = value; }
+	}
+	public static GameObject PrefabChest {
+		get           =>  Instance? Instance.m_PrefabChest : default;
+		private set { if (Instance) Instance.m_PrefabChest = value; }
+	}
+	public static GameObject PrefabPot {
+		get           =>  Instance? Instance.m_PrefabPot : default;
+		private set { if (Instance) Instance.m_PrefabPot = value; }
+	}
+
 
 
 	#if UNITY_EDITOR
@@ -162,6 +189,14 @@ public class GameManager : MonoSingleton<GameManager> {
 
 				LabelField("Money", EditorStyles.boldLabel);
 				Money = IntField("Money", Money);
+				Space();
+
+				LabelField("Prefab", EditorStyles.boldLabel);
+				PrefabMoney = ObjectField("Prefab Money", PrefabMoney);
+				PrefabTable = ObjectField("Prefab Table", PrefabTable);
+				PrefabChair = ObjectField("Prefab Chair", PrefabChair);
+				PrefabChest = ObjectField("Prefab Chest", PrefabChest);
+				PrefabPot   = ObjectField("Prefab Pot",   PrefabPot  );
 				Space();
 
 				End();
@@ -203,17 +238,13 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 
+	static HashSet<EntityType> hashset = new HashSet<EntityType>();
+
 	public static EntityType GetFoodFromRecipe(List<EntityType> items) {
 		foreach (var recipe in Recipe) {
-			if (items.Count != recipe.Value.Count) continue;
-			bool match = true;
-			for (int i = 0; i < items.Count; i++) {
-				if (items[i] != recipe.Value[i]) {
-					match = false;
-					break;
-				}
-			}
-			if (match) return recipe.Key;
+			hashset.Clear();
+			foreach (var item in items) hashset.Add(item);
+			if (hashset.SetEquals(recipe.Value)) return recipe.Key;
 		}
 		return EntityType.None;
 	}

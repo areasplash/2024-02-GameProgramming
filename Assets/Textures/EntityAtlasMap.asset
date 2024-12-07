@@ -154,6 +154,8 @@ MonoBehaviour:
     - UIBarFill_None_0_29_0033
     - UIBarFill_None_0_30_0033
     - UIBubble_None_0_0_1000
+    - UIEating_None_0_0_0100
+    - UIEating_None_0_1_0100
     - UILoading_None_0_0_0100
     - UILoading_None_0_1_0100
     - UILoading_None_0_2_0100
@@ -317,34 +319,7 @@ MonoBehaviour:
       offset: {x: 0.0625, y: 0.1875}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.4375, y: 0.3125}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.4375, y: 0.34375}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.46875, y: 0.3125}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.46875, y: 0.34375}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.5, y: 0.3125}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.5, y: 0.34375}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.53125, y: 0.3125}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.53125, y: 0.34375}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
       offset: {x: 0.5625, y: 0.3125}
-    - size: {x: 16, y: 16}
-      tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.625, y: 0.34375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
       offset: {x: 0.5625, y: 0.34375}
@@ -357,6 +332,33 @@ MonoBehaviour:
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
       offset: {x: 0.625, y: 0.3125}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.625, y: 0.34375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.65625, y: 0.3125}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.65625, y: 0.34375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.6875, y: 0.3125}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.75, y: 0.34375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.6875, y: 0.34375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.71875, y: 0.3125}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.71875, y: 0.34375}
+    - size: {x: 16, y: 16}
+      tiling: {x: 0.03125, y: 0.03125}
+      offset: {x: 0.75, y: 0.3125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.25, y: 0.125}
@@ -398,10 +400,10 @@ MonoBehaviour:
       offset: {x: 0.125, y: 0.1875}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
-      offset: {x: 0.0625, y: 0.8125}
+      offset: {x: 0.125, y: 0.25}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
-      offset: {x: 0.125, y: 0.3125}
+      offset: {x: 0.0625, y: 0.8125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.125, y: 0.375}
@@ -452,13 +454,13 @@ MonoBehaviour:
       offset: {x: 0.5, y: 0.1875}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
-      offset: {x: 0.125, y: 0.25}
-    - size: {x: 32, y: 32}
-      tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.5625, y: 0.1875}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.625, y: 0.1875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.125, y: 0.3125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.6875, y: 0.1875}
@@ -585,6 +587,12 @@ MonoBehaviour:
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.375, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.4375, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.5, y: 0.3125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.0625, y: 0.25}
