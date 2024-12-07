@@ -229,6 +229,10 @@ MonoBehaviour:
     m_Localized: Trashcan
     m_Metadata:
       m_Items: []
+  - m_Id: 13478057972981760
+    m_Localized: Money
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

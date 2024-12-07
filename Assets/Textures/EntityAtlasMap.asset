@@ -121,6 +121,20 @@ MonoBehaviour:
     - Priest_Move_0_3_0100
     - Priest_Move_0_4_0100
     - Priest_Move_0_5_0100
+    - Staff_Idle_0_0_1000
+    - Staff_Idle_0_1_0500
+    - Staff_Idle_0_2_1000
+    - Staff_Idle_0_3_0500
+    - Staff_Move_0_0_100
+    - Staff_Move_0_1_100
+    - Staff_Move_0_2_100
+    - Staff_Move_0_3_100
+    - Staff_Move_0_4_100
+    - Staff_Move_0_5_100
+    - UIBad_None_0_0_0100
+    - UIBad_None_0_1_0100
+    - UIBad_None_0_2_0100
+    - UIBad_None_0_3_0100
     - UIBarBorder_None_0_0_1000
     - UIBarFill_None_0_0_0010
     - UIBarFill_None_0_1_0033
@@ -154,8 +168,13 @@ MonoBehaviour:
     - UIBarFill_None_0_29_0033
     - UIBarFill_None_0_30_0033
     - UIBubble_None_0_0_1000
-    - UIEating_None_0_0_0100
-    - UIEating_None_0_1_0100
+    - UIDrinking_None_0_0_1000
+    - UIDrinking_None_0_1_0200
+    - UIDrinking_None_0_2_1000
+    - UIDrinking_None_0_3_0200
+    - UIEating_None_0_0_0200
+    - UIEating_None_0_1_0200
+    - UIGood_None_0_0_1000
     - UILoading_None_0_0_0100
     - UILoading_None_0_1_0100
     - UILoading_None_0_2_0100
@@ -319,46 +338,46 @@ MonoBehaviour:
       offset: {x: 0.0625, y: 0.1875}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.5625, y: 0.3125}
+      offset: {x: 0.5, y: 0.375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.5625, y: 0.34375}
+      offset: {x: 0.5, y: 0.40625}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.59375, y: 0.3125}
+      offset: {x: 0.53125, y: 0.375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.59375, y: 0.34375}
+      offset: {x: 0.53125, y: 0.40625}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.625, y: 0.3125}
+      offset: {x: 0.5625, y: 0.375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.625, y: 0.34375}
+      offset: {x: 0.5625, y: 0.40625}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.65625, y: 0.3125}
+      offset: {x: 0.59375, y: 0.375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.65625, y: 0.34375}
+      offset: {x: 0.59375, y: 0.40625}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.6875, y: 0.3125}
+      offset: {x: 0.625, y: 0.375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.75, y: 0.34375}
+      offset: {x: 0.625, y: 0.40625}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.6875, y: 0.34375}
+      offset: {x: 0.65625, y: 0.375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.71875, y: 0.3125}
+      offset: {x: 0.65625, y: 0.40625}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.71875, y: 0.34375}
+      offset: {x: 0.6875, y: 0.375}
     - size: {x: 16, y: 16}
       tiling: {x: 0.03125, y: 0.03125}
-      offset: {x: 0.75, y: 0.3125}
+      offset: {x: 0.6875, y: 0.40625}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.25, y: 0.125}
@@ -403,7 +422,7 @@ MonoBehaviour:
       offset: {x: 0.125, y: 0.25}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
-      offset: {x: 0.0625, y: 0.8125}
+      offset: {x: 0.125, y: 0.3125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.125, y: 0.375}
@@ -458,9 +477,6 @@ MonoBehaviour:
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.625, y: 0.1875}
-    - size: {x: 32, y: 32}
-      tiling: {x: 0.0625, y: 0.0625}
-      offset: {x: 0.125, y: 0.3125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.6875, y: 0.1875}
@@ -595,6 +611,63 @@ MonoBehaviour:
       offset: {x: 0.5, y: 0.3125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.5625, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.625, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.6875, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.75, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.8125, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.875, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.9375, y: 0.3125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.4375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.5}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.5625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.625}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.6875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.8125}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.875}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.3125, y: 0.9375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.375, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.4375, y: 0.375}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.0625, y: 0.25}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
@@ -620,6 +693,9 @@ MonoBehaviour:
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.0625, y: 0.75}
+    - size: {x: 32, y: 32}
+      tiling: {x: 0.0625, y: 0.0625}
+      offset: {x: 0.0625, y: 0.8125}
     - size: {x: 32, y: 32}
       tiling: {x: 0.0625, y: 0.0625}
       offset: {x: 0.0625, y: 0.875}

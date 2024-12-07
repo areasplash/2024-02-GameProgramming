@@ -48,10 +48,12 @@ public class Trashcan : Entity {
 
 	public override InteractionType Interactable(Entity entity) {
 		if (entity is Player) {
-			if (0 < (entity as Player).Holdings.Count) return InteractionType.Drop;
+			Player player = entity as Player;
+			if (0 < player.Holdings.Count) return InteractionType.Drop;
 		}
-		else if (entity is Staff) {
-			if (0 < (entity as Staff).Holdings.Count) return InteractionType.Drop;
+		if (entity is Staff) {
+			Staff staff = entity as Staff;
+			if (0 < staff.Holdings.Count) return InteractionType.Drop;
 		}
 		return InteractionType.None;
 	}
@@ -59,15 +61,11 @@ public class Trashcan : Entity {
 	public override void Interact(Entity entity) {
 		if (entity is Player) {
 			Player player = entity as Player;
-			if (0 < player.Holdings.Count) {
-				player.Holdings.RemoveAt(player.Holdings.Count - 1);
-			}
+			if (0 < player.Holdings.Count) player.Holdings.RemoveAt(player.Holdings.Count - 1);
 		}
-		else if (entity is Staff) {
+		if (entity is Staff) {
 			Staff staff = entity as Staff;
-			if (0 < staff.Holdings.Count) {
-				staff.Holdings.RemoveAt(staff.Holdings.Count - 1);
-			}
+			if (0 < staff.Holdings.Count) staff.Holdings.RemoveAt(staff.Holdings.Count - 1);
 		}
 	}
 
@@ -77,18 +75,8 @@ public class Trashcan : Entity {
 	// Lifecycle
 	// ================================================================================================
 
-	protected override void Awake() {
+	void Start() {
 		int layer = Utility.GetLayerAtPoint(transform.position, transform);
-		Stack<GameObject> stack = new Stack<GameObject>();
-		stack.Push(gameObject);
-		while (0 < stack.Count) {
-			GameObject go = stack.Pop();
-			go.layer = layer;
-			for (int i = 0; i < go.transform.childCount; i++) {
-				stack.Push(go.transform.GetChild(i).gameObject);
-			}
-		}
+		Utility.SetLayer(transform, layer);
 	}
-
-	protected override void LateUpdate() {}
 }

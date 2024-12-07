@@ -14,13 +14,45 @@ public class Client : Entity {
 	// Fields
 	// ================================================================================================
 	
-	[SerializeField, Range(0f, 1f)] float m_UniqueProb = 0.2f;
+	[SerializeField] float m_UniqueClientProb =  0.2f;
+
+	[SerializeField] float m_ChairSearchFreq  = 10.0f;
+	[SerializeField] float m_EntryWaitingTime =  5.0f;
+	[SerializeField] float m_MenuChoosingTime =  2.0f;
+	[SerializeField] float m_MenuWaitingTime  = 30.0f;
+	[SerializeField] float m_EatingTime       = 10.0f;
+	[SerializeField] float m_EatAgainProb     =  0.1f;
 
 
 
-	float UniqueProb {
-		get => m_UniqueProb;
-		set => m_UniqueProb = value;
+	float UniqueClientProb {
+		get => m_UniqueClientProb;
+		set => m_UniqueClientProb = value;
+	}
+
+	public float ChairSearchFreq {
+		get => m_ChairSearchFreq;
+		set => m_ChairSearchFreq = value;
+	}
+	float EntryWaitingTime {
+		get => m_EntryWaitingTime;
+		set => m_EntryWaitingTime = value;
+	}
+	float MenuChoosingTime {
+		get => m_MenuChoosingTime;
+		set => m_MenuChoosingTime = value;
+	}
+	float MenuWaitingTime {
+		get => m_MenuWaitingTime;
+		set => m_MenuWaitingTime = value;
+	}
+	float EatingTime {
+		get => m_EatingTime;
+		set => m_EatingTime = value;
+	}
+	float EatAgainProb {
+		get => m_EatAgainProb;
+		set => m_EatAgainProb = value;
 	}
 
 
@@ -52,12 +84,18 @@ public class Client : Entity {
 				Space();
 
 				LabelField("Client", EditorStyles.boldLabel);
-				I.UniqueProb = Slider("Unique Probability", I.UniqueProb, 0, 1);
-
+				I.UniqueClientProb = FloatField("Unique Client Probability", I.UniqueClientProb);
+				Space();
+				I.ChairSearchFreq  = FloatField("Chair Search Frequency",    I.ChairSearchFreq);
+				I.EntryWaitingTime = FloatField("Entry Waiting Time",        I.EntryWaitingTime);
+				I.MenuChoosingTime = FloatField("Menu Choosing Time",        I.MenuChoosingTime);
+				I.MenuWaitingTime  = FloatField("Menu Waiting Time",         I.MenuWaitingTime);
+				I.EatingTime       = FloatField("Eating Time",               I.EatingTime);
+				I.EatAgainProb     = FloatField("Eat Again Probability",     I.EatAgainProb);
 				End();
 			}
 		}
-#endif
+	#endif
 
 
 
@@ -68,14 +106,14 @@ public class Client : Entity {
 	public override InteractionType Interactable(Entity entity) {
 		if (state == State.MenuWaiting) {
 			if (entity is Player) {
-				for (int i = 0; i < (entity as Player).Holdings.Count; i++) {
-					if (menu == (entity as Player).Holdings[i]) return InteractionType.Serve;
-				}
+				Player player = entity as Player;
+				int index = player.Holdings.IndexOf(order);
+				if (index != -1) return InteractionType.Serve;
 			}
-			else if (entity is Staff) {
-				for (int i = 0; i < (entity as Staff).Holdings.Count; i++) {
-					if (menu == (entity as Staff).Holdings[i]) return InteractionType.Serve;
-				}
+			if (entity is Staff) {
+				Staff staff = entity as Staff;
+				int index = staff.Holdings.IndexOf(order);
+				if (index != -1) return InteractionType.Serve;
 			}
 		}
 		return InteractionType.None;
@@ -84,24 +122,24 @@ public class Client : Entity {
 	public override void Interact(Entity entity) {
 		if (state == State.MenuWaiting) {
 			if (entity is Player) {
-				for (int i = 0; i < (entity as Player).Holdings.Count; i++) {
-					if (menu == (entity as Player).Holdings[i]) {
-						(entity as Player).Holdings.RemoveAt(i);
-						state = State.Eating;
-						Offset = 0f;
-						break;
-					}
+				Player player = entity as Player;
+				int index = player.Holdings.IndexOf(order);
+				if (index != -1) {
+					player.Holdings.RemoveAt(index);
+					state = State.Eating;
+					Offset = 0f;
 				}
+				pay += GameManager.Price[order];
 			}
-			else if (entity is Staff) {
-				for (int i = 0; i < (entity as Staff).Holdings.Count; i++) {
-					if (menu == (entity as Staff).Holdings[i]) {
-						(entity as Staff).Holdings.RemoveAt(i);
-						state = State.Eating;
-						Offset = 0f;
-						break;
-					}
+			if (entity is Staff) {
+				Staff staff = entity as Staff;
+				int index = staff.Holdings.IndexOf(order);
+				if (index != -1) {
+					staff.Holdings.RemoveAt(index);
+					state = State.Eating;
+					Offset = 0f;
 				}
+				pay += GameManager.Price[order];
 			}
 		}
 	}
@@ -112,14 +150,22 @@ public class Client : Entity {
 	// Lifecycle
 	// ================================================================================================
 
+	static List<Client> list = new List<Client>();
+	public static List<Client> List => list;
+
+	void OnEnable () => list.Add   (this);
+	void OnDisable() => list.Remove(this);
+
+
+
 	static Client adventurer;
 	static Client knight;
 	static Client necromancer;
 	static Client priest;
-	static Client wizard;	
+	static Client wizard;
 
 	void Start() {
-		if (UniqueProb < Random.value) switch ((int)(Random.value * 5)) {
+		if (UniqueClientProb <= Random.value) switch ((int)(Random.value * 5)) {
 			case 0: if (!adventurer ) EntityType = EntityType.Adventurer;  break;
 			case 1: if (!knight     ) EntityType = EntityType.Knight;      break;
 			case 2: if (!necromancer) EntityType = EntityType.Necromancer; break;
@@ -137,89 +183,69 @@ public class Client : Entity {
 
 
 
-	const float EntryWaitingTime        =  5.0f;
-	const float MinimumMenuChoosingTime =  2.0f;
-	const float MenuWaitingTime         = 30.0f;
-	const float EatingTime              =  5.0f;
-	const float EatAgainProb            =  0.2f;
-
-	enum State {
+	public enum State {
 		EntryWaiting,
 		Seating,
 		MenuChoosing,
 		MenuWaiting,
 		Eating,
+		BeginExiting,
 		Exiting,
 	}
-	State state = State.EntryWaiting;
+	public State state = State.EntryWaiting;
 
 	Queue<Vector3> queue = new Queue<Vector3>();
+	Vector3 positionTemp;
 
 	Entity chair;
-	EntityType menu;
+	public EntityType order;
 	float reputationWeight;
-	int moneyToPay;
+	int pay;
 
 	void Update() {
-		#if UNITY_EDITOR
-			Vector3[] array = queue.ToArray();
-			for (int i = 0; i < array.Length - 1; i++) {
-				Debug.DrawLine(array[i], array[i + 1], Color.red);
-			}
-		#endif
+		if (!UIManager.IsGameRunning) return;
+		Offset += Time.deltaTime;
+
+		float y = NavMeshManager.GetHitboxData(HitboxType).height * 0.5f;
+		Vector3 bubblePosition = transform.position + new Vector3(0, y + 2f, 0);
+
+		// State
 
 		switch (state) {
 			case State.EntryWaiting:
-				MotionType = MotionType.Idle;
-
-				bool flag0 = (int)(Offset * 10) != (int)((Offset - Time.deltaTime) * 10);
-				if (flag0) Utility.GetMatched(transform.position, 128f, (Entity entity) => {
+				bool flag = Utility.Flag(Offset, ChairSearchFreq); 
+				if (flag) Utility.GetMatched(transform.position, 128f, (Entity entity) => {
 					return entity is Chair && entity.Interactable(this) == InteractionType.Interact;
 				}, ref chair);
-
-				if (chair) {
+				if (EntryWaitingTime < Offset) {
+					state = State.BeginExiting;
+					Offset = 0f;
+				}
+				else if (chair) {
 					chair.Interact(this);
 					FindPath(chair.transform.position, ref queue);
 					state = State.Seating;
 					Offset = 0f;
 				}
-				if (EntryWaitingTime < Offset) {
-					reputationWeight = -0.1f;
-					GameManager.UpdateReputation(reputationWeight);
-					Destroy(gameObject);
-				}
 				break;
+
 			case State.Seating:
-				MotionType = MotionType.Move;
-
-				if (SenseRange < Vector3.Distance(chair.transform.position, transform.position)) {
-					Vector3 delta = queue.Peek() - transform.position;
-					Velocity = new Vector3(delta.x, 0, delta.z).normalized * Speed;
-					if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.02f) queue.Dequeue();
-					if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
-				}
-
-				else {
+				if (Vector3.Distance(chair.transform.position, transform.position) < SenseRange) {
 					queue.Clear();
-					queue.Enqueue(transform.position);
-					float y0 = NavMeshManager.GetHitboxData(HitboxType).height * 0.5f + 0.5f;
-					transform.position = chair.transform.position + new Vector3(0, y0, 0);
+					positionTemp = transform.position;
+					transform.position = chair.transform.position + new Vector3(0, 0.5f + y, 0);
+					transform.rotation = chair.transform.rotation;
 					AttributeType |= AttributeType.Pinned;
 					state = State.MenuChoosing;
 					Offset = 0f;
 				}
 				break;
+
 			case State.MenuChoosing:
-				MotionType = MotionType.Idle;
-
-				float y1 = NavMeshManager.GetHitboxData(HitboxType).height * 0.5f + 2f;
-				Vector3 bubblePosition1 = transform.position + new Vector3(0, y1, 0);
-				DrawManager.DrawEntity(bubblePosition1, EntityType.UIBubble);
-				DrawManager.DrawEntity(bubblePosition1, EntityType.UILoading, Offset);
-
-				bool flag1 = (int)(Offset * 10) != (int)((Offset - Time.deltaTime) * 10);
-				if (MinimumMenuChoosingTime < Offset && flag1 && Random.value < 0.1f) {
-					menu = Random.Range(0, 7) switch {
+				DrawManager.DrawEntity(bubblePosition, EntityType.UIBubble);
+				DrawManager.DrawEntity(bubblePosition, EntityType.UILoading, Offset);
+				if (MenuChoosingTime < Offset) {
+					order = Random.Range(0, 9) switch {
 						0 => EntityType.FoodPancake,
 						1 => EntityType.FoodCheeseCake,
 						2 => EntityType.FoodSpaghetti,
@@ -227,93 +253,136 @@ public class Client : Entity {
 						4 => EntityType.FoodSandwich,
 						5 => EntityType.FoodSalad,
 						6 => EntityType.FoodSteak,
-						7 => EntityType.FoodBeer,
-						8 => EntityType.FoodWine,
-						_ => EntityType.FoodWine,
+						7 => EntityType.FoodWine,
+						8 => EntityType.FoodBeer,
+						_ => EntityType.FoodBeer,
 					};
 					state = State.MenuWaiting;
 					Offset = 0f;
 				}
 				break;
+
 			case State.MenuWaiting:
-				MotionType = MotionType.Idle;
-
-				float y2 = NavMeshManager.GetHitboxData(HitboxType).height * 0.5f + 2f;
-				Vector3 bubblePosition2 = transform.position + new Vector3(0, y2, 0);
-				DrawManager.DrawEntity(bubblePosition2, EntityType.UIBubble);
-				DrawManager.DrawEntity(bubblePosition2, menu);
-
+				DrawManager.DrawEntity(bubblePosition, EntityType.UIBubble);
+				DrawManager.DrawEntity(bubblePosition, order);
 				if (MenuWaitingTime < Offset) {
-					if (0 < moneyToPay) {
-						moneyToPay = Random.Range(1, 6);
-						Instantiate(GameManager.PrefabMoney, transform.position, Quaternion.identity).TryGetComponent(out Money money);
-						money.Value = moneyToPay;
-					}
-					chair.Interact(this);
-					transform.position = queue.Peek();
-					FindPath(GameManager.ClientSpawnPoint, ref queue);
-					AttributeType &= ~AttributeType.Pinned;
-					state = State.Exiting;
+					reputationWeight -= 0.5f;
+					state = State.BeginExiting;
 					Offset = 0f;
-					reputationWeight -= 0.4f;
 				}
 				break;
-			case State.Eating:
-				MotionType = MotionType.Idle;
 
-				float y3 = NavMeshManager.GetHitboxData(HitboxType).height * 0.5f + 2f;
-				Vector3 bubblePosition3 = transform.position + new Vector3(0, y3, 0);
-				DrawManager.DrawEntity(bubblePosition3, EntityType.UIBubble);
-				DrawManager.DrawEntity(bubblePosition3, EntityType.UIEating);
-				DrawManager.DrawEntity(transform.position + transform.forward * 0.5f, menu);
+			case State.Eating:
+				bool isDrinking = order == EntityType.FoodWine || order == EntityType.FoodBeer;
+				EntityType UI = isDrinking ? EntityType.UIDrinking : EntityType.UIEating;
+				DrawManager.DrawEntity(bubblePosition, EntityType.UIBubble);
+				DrawManager.DrawEntity(bubblePosition, UI, Offset);
+				DrawManager.DrawEntity(transform.position + transform.forward * 0.5f, order);
 				if (EatingTime < Offset) {
 					if (Random.value < EatAgainProb) {
-						menu = Random.Range(0, 9) switch {
-							0 => EntityType.FoodPancake,
-							1 => EntityType.FoodCheeseCake,
-							2 => EntityType.FoodSpaghetti,
-							3 => EntityType.FoodSoup,
-							4 => EntityType.FoodSandwich,
-							5 => EntityType.FoodSalad,
-							6 => EntityType.FoodSteak,
-							7 => EntityType.FoodBeer,
-							8 => EntityType.FoodWine,
-							_ => EntityType.FoodWine,
-						};
-						state = State.MenuWaiting;
+						state = State.MenuChoosing;
 						Offset = 0f;
-						reputationWeight += 0.1f;
 					}
 					else {
-						if (0 < moneyToPay) {
-							moneyToPay = Random.Range(1, 6);
-							Instantiate(GameManager.PrefabMoney, transform.position, Quaternion.identity).TryGetComponent(out Money money);
-							money.Value = moneyToPay;
-						}
-						chair.Interact(this);
-						transform.position = queue.Peek();
-						FindPath(GameManager.ClientSpawnPoint, ref queue);
-						AttributeType &= ~AttributeType.Pinned;
-						state = State.Exiting;
+						reputationWeight += 0.5f;
+						state = State.BeginExiting;
 						Offset = 0f;
 					}
 				}
 				break;
-			case State.Exiting:
-				MotionType = MotionType.Move;
-
-				if (0 < queue.Count) {
-					Vector3 delta = queue.Peek() - transform.position;
-					Velocity = new Vector3(delta.x, 0, delta.z).normalized * Speed;
-					if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.02f) queue.Dequeue();
-					if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
+			
+			case State.BeginExiting:
+				Vector3 position = transform.position;
+				if (chair) {
+					chair.Interact(this);
+					transform.position = positionTemp;
+					AttributeType &= ~AttributeType.Pinned;
+					position = (chair as Chair).table.transform.position + Vector3.up * 1.5f;
+					float r = Random.value * 360f * Mathf.Deg2Rad;
+					float d = Random.value;
+					position += new Vector3(Mathf.Cos(r) * d, 0, Mathf.Sin(r) * d);
 				}
+				if (0 < pay) GameManager.SpawnMoney(position).Value = pay;
+				FindPath(GameManager.ClientSpawnPoint, ref queue);
+				state = State.Exiting;
+				Offset = 0f;
+				break;
 
-				else {
+			case State.Exiting:
+				if (reputationWeight < 0) {
+					DrawManager.DrawEntity(bubblePosition, EntityType.UIBubble);
+					DrawManager.DrawEntity(bubblePosition, EntityType.UIBad);
+				}
+				if (queue.Count == 0) {
 					GameManager.UpdateReputation(reputationWeight);
 					Destroy(gameObject);
 				}
 				break;
 		}
+
+		if (GameManager.CloseHour <= GameManager.Hour) switch (state) {
+			case State.EntryWaiting:
+			case State.Seating:
+			case State.MenuChoosing:
+			case State.MenuWaiting:
+			case State.Eating:
+				state = State.BeginExiting;
+				Offset = 0f;
+				break;
+		}
+
+		// Movement
+
+		if (queue.Count == 0) {
+			if (MotionType != MotionType.Idle) {
+				MotionType  = MotionType.Idle;
+				Offset = 0;
+			}
+		}
+		else {
+			if (MotionType != MotionType.Move) {
+				MotionType  = MotionType.Move;
+				Offset = 0;
+			}
+			Vector3 delta = queue.Peek() - transform.position;
+			Velocity = new Vector3(delta.x, 0, delta.z).normalized * Speed;
+			if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.02f) queue.Dequeue();
+			if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
+
+			float radius = NavMeshManager.GetHitboxData(HitboxType).radius;
+			if (Vector3.Distance(transform.position, positionTemp) < Speed * 0.5f * Time.deltaTime) {
+				Hitbox.radius = Mathf.Max(0.05f, Hitbox.radius - 0.02f * Time.deltaTime);
+				Ground.center = new Vector3(0, -(Hitbox.height / 2 - Hitbox.radius) - 0.08f, 0);
+				Ground.radius = Hitbox.radius - 0.04f;
+			}
+			else if (Hitbox.radius < radius) {
+				Hitbox.radius = Mathf.Min(radius, Hitbox.radius + 0.02f * Time.deltaTime);
+				Ground.center = new Vector3(0, -(Hitbox.height / 2 - Hitbox.radius) - 0.08f, 0);
+				Ground.radius = Hitbox.radius - 0.04f;
+			}
+			positionTemp = transform.position;
+
+			#if UNITY_EDITOR
+				Vector3[] array = queue.ToArray();
+				for (int i = 0; i < array.Length - 1; i++) {
+					Debug.DrawLine(array[i], array[i + 1], Color.red);
+				}
+			#endif
+		}
+
+		// Draw
+
+		DrawManager.DrawEntity(
+			transform.position,
+			transform.rotation,
+			EntityType,
+			MotionType,
+			Offset,
+			new Color(Color.r, Color.g, Color.b, Color.a * Opacity),
+			Intensity);
+		DrawManager.DrawShadow(
+			transform.position,
+			transform.rotation,
+			new Vector3(Hitbox.radius * 2f, Hitbox.height * 0.5f, Hitbox.radius * 2f));
 	}
 }

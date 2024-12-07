@@ -14,9 +14,16 @@ public class Chair : Entity {
 	// Fields
 	// ================================================================================================
 	
+	[SerializeField] float m_TableSearchFreq = 1f;
+
 	[SerializeField] Entity m_Occupant;
 
 
+
+	public float TableSearchFreq {
+		get => m_TableSearchFreq;
+		set => m_TableSearchFreq = value;
+	}
 
 	public Entity Occupant {
 		get         => m_Occupant;
@@ -45,6 +52,8 @@ public class Chair : Entity {
 				Space();
 
 				LabelField("Chair", EditorStyles.boldLabel);
+				I.TableSearchFreq = FloatField("Table Search Frequency", I.TableSearchFreq);
+				Space();
 				I.Occupant = ObjectField("Occupant", I.Occupant);
 
 				End();
@@ -60,7 +69,7 @@ public class Chair : Entity {
 
 	public override InteractionType Interactable(Entity entity) {
 		if (entity is Client) {
-			if (Occupant == null) return InteractionType.Interact;
+			if      (table && !Occupant) return InteractionType.Interact;
 			else if (Occupant == entity) return InteractionType.Cancel;
 		}
 		return InteractionType.None;
@@ -68,12 +77,8 @@ public class Chair : Entity {
 
 	public override void Interact(Entity entity) {
 		if (entity is Client) {
-			if (Occupant == null) {
-				Occupant = entity;
-			}
-			else if (Occupant == entity) {
-				Occupant = null;
-			}
+			if      (table && !Occupant) Occupant = entity;
+			else if (Occupant == entity) Occupant = null;
 		}
 	}
 
@@ -83,18 +88,27 @@ public class Chair : Entity {
 	// Lifecycle
 	// ================================================================================================
 
-	protected override void Awake() {
+	void Start() {
 		int layer = Utility.GetLayerAtPoint(transform.position, transform);
-		Stack<GameObject> stack = new Stack<GameObject>();
-		stack.Push(gameObject);
-		while (0 < stack.Count) {
-			GameObject go = stack.Pop();
-			go.layer = layer;
-			for (int i = 0; i < go.transform.childCount; i++) {
-				stack.Push(go.transform.GetChild(i).gameObject);
+		Utility.SetLayer(transform, layer);
+	}
+
+	public Entity table;
+
+	void Update() {
+		if (!UIManager.IsGameRunning) return;
+		Offset += Time.deltaTime;
+		
+		if (!table) {
+			bool flag = Utility.Flag(Offset, TableSearchFreq);
+			if (flag) Utility.GetMatched(transform.position, 1f, (Entity entity) => {
+				return entity is Table;
+			}, ref table);
+			if (table) {
+				Vector3 delta = table.transform.position - transform.position;
+				delta = Quaternion.LookRotation(delta).eulerAngles;
+				transform.rotation = Quaternion.Euler(0, delta.y, 0);
 			}
 		}
 	}
-
-	protected override void LateUpdate() {}
 }

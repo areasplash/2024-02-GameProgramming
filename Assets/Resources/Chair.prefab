@@ -143,7 +143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: debb1eba183c8a643a7451156ba52518, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_EntityType: 37
+  m_EntityType: 38
   m_MotionType: 0
   m_Offset: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -151,11 +151,14 @@ MonoBehaviour:
   m_HitboxType: 0
   m_AttributeType: 1
   m_SenseRange: 0
+  m_Speed: 0
   m_Velocity: {x: 0, y: 0, z: 0}
   m_ForcedVelocity: {x: 0, y: 0, z: 0}
   m_GroundVelocity: {x: 0, y: 0, z: 0}
   m_GravitVelocity: {x: 0, y: 0, z: 0}
+  m_TableSearchFreq: 1
   m_Occupant: {fileID: 0}
+  table: {fileID: 0}
 --- !u!54 &4402596632686053462
 Rigidbody:
   m_ObjectHideFlags: 0

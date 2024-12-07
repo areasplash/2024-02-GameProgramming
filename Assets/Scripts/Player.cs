@@ -78,6 +78,8 @@ public class Player : Entity {
 	Entity interactable;
 
 	void Update() {
+		if (!UIManager.IsGameRunning) return;
+		Offset += Time.deltaTime;
 
 		// Input
 
@@ -158,5 +160,20 @@ public class Player : Entity {
 				DrawManager.DrawEntity(position + Vector3.up * i * 0.5f, Holdings[i]);
 			}
 		}
+
+		// Draw
+
+		DrawManager.DrawEntity(
+			transform.position,
+			transform.rotation,
+			EntityType,
+			MotionType,
+			Offset,
+			new Color(Color.r, Color.g, Color.b, Color.a * Opacity),
+			Intensity);
+		DrawManager.DrawShadow(
+			transform.position,
+			transform.rotation,
+			new Vector3(Hitbox.radius * 2f, Hitbox.height * 0.5f, Hitbox.radius * 2f));
 	}
 }

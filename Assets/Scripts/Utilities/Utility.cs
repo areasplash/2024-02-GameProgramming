@@ -151,6 +151,13 @@ public static class Utility {
 		}
 		return result;
 	}
+
+	public static void SetLayer(Transform transform, int layer) {
+		for (int i = 0; i < transform.childCount; i++) SetLayer(transform.GetChild(i), layer);
+		transform.gameObject.layer = layer;
+	}
+
+
 	
 	public static bool GetMatched(Vector3 point, float range, Predicate<Entity> match,
 	ref Entity result) {
@@ -183,5 +190,11 @@ public static class Utility {
 			}
 		}
 		return count;
+	}
+
+
+
+	public static bool Flag(float offset, float frequency) {
+		return Mathf.Floor(offset * frequency) != Mathf.Floor((offset - Time.deltaTime) * frequency); 
 	}
 }

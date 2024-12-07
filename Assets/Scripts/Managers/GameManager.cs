@@ -12,28 +12,24 @@ using System.Collections.Generic;
 public class GameManager : MonoSingleton<GameManager> {
 
 	public static Dictionary<EntityType, List<EntityType>> Recipe { get; } = new() {
-		{
-			EntityType.FoodPancake,
-			new() { EntityType.ItemFlour, EntityType.ItemButter }
-		}, {
-			EntityType.FoodCheeseCake,
-			new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemBlueberry }
-		}, {
-			EntityType.FoodSpaghetti,
-			new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemTomato }
-		}, {
-			EntityType.FoodSoup,
-			new() { EntityType.ItemFlour, EntityType.ItemPotato, EntityType.ItemButter }
-		}, {
-			EntityType.FoodSandwich,
-			new() { EntityType.ItemFlour, EntityType.ItemCabbage, EntityType.ItemTomato }
-		}, {
-			EntityType.FoodSalad,
-			new() { EntityType.ItemCabbage, EntityType.ItemTomato }
-		}, {
-			EntityType.FoodSteak,
-			new() { EntityType.ItemMeat }
-		},
+		{ EntityType.FoodPancake,    new() { EntityType.ItemFlour, EntityType.ItemButter, }},
+		{ EntityType.FoodCheeseCake, new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemBlueberry, }},
+		{ EntityType.FoodSpaghetti,  new() { EntityType.ItemFlour, EntityType.ItemTomato, }},
+		{ EntityType.FoodSoup,       new() { EntityType.ItemPotato, }},
+		{ EntityType.FoodSandwich,   new() { EntityType.ItemFlour, EntityType.ItemCabbage, EntityType.ItemTomato, }},
+		{ EntityType.FoodSalad,      new() { EntityType.ItemCabbage, EntityType.ItemTomato, }},
+		{ EntityType.FoodSteak,      new() { EntityType.ItemMeat, }},
+	};
+	public static Dictionary<EntityType, int> Price { get; } = new() {
+		{ EntityType.FoodPancake,    100 },
+		{ EntityType.FoodCheeseCake, 180 },
+		{ EntityType.FoodSpaghetti,  120 },
+		{ EntityType.FoodSoup,        80 },
+		{ EntityType.FoodSandwich,   120 },
+		{ EntityType.FoodSalad,       80 },
+		{ EntityType.FoodSteak,      240 },
+		{ EntityType.FoodWine,        80 },
+		{ EntityType.FoodBeer,        40 },
 	};
 
 
@@ -137,25 +133,25 @@ public class GameManager : MonoSingleton<GameManager> {
 	}
 	*/
 
-	public static GameObject PrefabMoney {
-		get           =>  Instance? Instance.m_PrefabMoney : default;
-		private set { if (Instance) Instance.m_PrefabMoney = value; }
+	static GameObject PrefabMoney {
+		get   =>  Instance ? Instance.m_PrefabMoney : default;
+		set { if (Instance)  Instance.m_PrefabMoney = value; }
 	}
-	public static GameObject PrefabTable {
-		get           =>  Instance? Instance.m_PrefabTable : default;
-		private set { if (Instance) Instance.m_PrefabTable = value; }
+	static GameObject PrefabTable {
+		get   =>  Instance ? Instance.m_PrefabTable : default;
+		set { if (Instance)  Instance.m_PrefabTable = value; }
 	}
-	public static GameObject PrefabChair {
-		get           =>  Instance? Instance.m_PrefabChair : default;
-		private set { if (Instance) Instance.m_PrefabChair = value; }
+	static GameObject PrefabChair {
+		get   =>  Instance ? Instance.m_PrefabChair : default;
+		set { if (Instance)  Instance.m_PrefabChair = value; }
 	}
-	public static GameObject PrefabChest {
-		get           =>  Instance? Instance.m_PrefabChest : default;
-		private set { if (Instance) Instance.m_PrefabChest = value; }
+	static GameObject PrefabChest {
+		get   =>  Instance ? Instance.m_PrefabChest : default;
+		set { if (Instance)  Instance.m_PrefabChest = value; }
 	}
-	public static GameObject PrefabPot {
-		get           =>  Instance? Instance.m_PrefabPot : default;
-		private set { if (Instance) Instance.m_PrefabPot = value; }
+	static GameObject PrefabPot {
+		get   =>  Instance ? Instance.m_PrefabPot : default;
+		set { if (Instance)  Instance.m_PrefabPot = value; }
 	}
 
 
@@ -251,6 +247,34 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 
+	public static Money SpawnMoney(Vector3 position) {
+		GameObject prefab = Instantiate(PrefabMoney, position, Quaternion.identity);
+		prefab.TryGetComponent(out Money money);
+		return money;
+	}
+	public static Table SpawnTable(Vector3 position) {
+		GameObject prefab = Instantiate(PrefabTable, position, Quaternion.identity);
+		prefab.TryGetComponent(out Table table);
+		return table;
+	}
+	public static Chair SpawnChair(Vector3 position) {
+		GameObject prefab = Instantiate(PrefabChair, position, Quaternion.identity);
+		prefab.TryGetComponent(out Chair chair);
+		return chair;
+	}
+	public static Chest SpawnChest(Vector3 position) {
+		GameObject prefab = Instantiate(PrefabChest, position, Quaternion.identity);
+		prefab.TryGetComponent(out Chest chest);
+		return chest;
+	}
+	public static Pot SpawnPot(Vector3 position) {
+		GameObject prefab = Instantiate(PrefabPot, position, Quaternion.identity);
+		prefab.TryGetComponent(out Pot pot);
+		return pot;
+	}
+
+
+
 	// ================================================================================================
 	// Lifecycle
 	// ================================================================================================
@@ -258,12 +282,15 @@ public class GameManager : MonoSingleton<GameManager> {
 	float spawnTimer = 0f;
 
 	void Start() {
+		NavMeshManager.Bake();
 		m_Minute = 0;
 		m_Hour = m_OpenHour;
 		timer = minuteToRealTime;
 		TimeHandle += UpdateGameTime;
 	}
 	void Update() {
+		if (!UIManager.IsGameRunning) return;
+		
 		spawnTimer -= Time.deltaTime;
 		
 		if (m_Hour < m_CloseHour) {

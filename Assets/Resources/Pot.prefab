@@ -50,7 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3ab2c087de30ad43aebd6b57cbef59d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_EntityType: 39
+  m_EntityType: 40
   m_MotionType: 0
   m_Offset: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -63,7 +63,8 @@ MonoBehaviour:
   m_ForcedVelocity: {x: 0, y: 0, z: 0}
   m_GroundVelocity: {x: 0, y: 0, z: 0}
   m_GravitVelocity: {x: 0, y: 0, z: 0}
-  m_List: 
+  m_CookingTime: 3
+  m_Holdings: 
 --- !u!54 &-6556292824667068030
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -60,8 +60,6 @@ MonoBehaviour:
   m_ForcedVelocity: {x: 0, y: 0, z: 0}
   m_GroundVelocity: {x: 0, y: 0, z: 0}
   m_GravitVelocity: {x: 0, y: 0, z: 0}
-  m_WorldText1: {fileID: 0}
-  m_WorldText2: {fileID: 0}
   m_Holdings: 
 --- !u!54 &6269516478181930173
 Rigidbody:

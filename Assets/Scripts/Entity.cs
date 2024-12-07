@@ -59,6 +59,8 @@ using System.Collections.Generic;
 		UIBubble,
 		UILoading,
 		UIEating,
+		UIDrinking,
+		UIBad,
 		UIBarBorder,
 		UIBarFill,
 }
@@ -154,7 +156,6 @@ using System.Collections.Generic;
 	public EntityType EntityType {
 		get => m_EntityType;
 		protected set {
-			if (m_EntityType == value) return;
 			m_EntityType = value;
 			#if UNITY_EDITOR
 				name = value.ToString();
@@ -182,8 +183,8 @@ using System.Collections.Generic;
 
 	CapsuleCollider hitbox;
 	SphereCollider  ground;
-	protected CapsuleCollider Hitbox => hitbox? hitbox : TryGetComponent(out hitbox)? hitbox : null;
-	protected SphereCollider  Ground => ground? ground : TryGetComponent(out ground)? ground : null;
+	protected CapsuleCollider Hitbox => hitbox ? hitbox : TryGetComponent(out hitbox) ? hitbox : null;
+	protected SphereCollider  Ground => ground ? ground : TryGetComponent(out ground) ? ground : null;
 
 	public HitboxType HitboxType {
 		get => m_HitboxType;
@@ -203,7 +204,7 @@ using System.Collections.Generic;
 	}
 
 	Rigidbody body;
-	protected Rigidbody Body => body? body : TryGetComponent(out body)? body : null;
+	protected Rigidbody Body => body ? body : TryGetComponent(out body) ? body : null;
 
 	public AttributeType AttributeType {
 		get => m_AttributeType;
@@ -300,15 +301,10 @@ using System.Collections.Generic;
 	Rigidbody      groundRigidbody = null;
 	Quaternion     groundRotation  = Quaternion.identity;
 
-	void BeginTrigger() {
-		layers.Clear();
-		layerChanged = true;
+	void Awake() {
 		layerMask = Utility.GetLayerMaskAtPoint(transform.position, transform);
 		if (layerMask == 0) layerMask |= CameraManager.ExteriorLayer;
 		Opacity = ((CameraManager.CullingMask | layerMask) != 0) ? 1f : 0f;
-
-		grounds.Clear();
-		groundChanged = true;
 	}
 
 	void OnTriggerEnter(Collider collider) {
@@ -364,13 +360,14 @@ using System.Collections.Generic;
 
 	void FixedUpdate() {
 		EndTrigger();
+
 		bool visible = (CameraManager.CullingMask & layerMask) != 0;
 		if ((visible && Opacity < 1) || (!visible && 0 < Opacity)) {
 			Opacity += (visible? 1 : -1) * Time.deltaTime / CameraManager.TransitionTime;
 			Opacity = Mathf.Clamp01(Opacity);
 		}
 
-		if ((AttributeType & AttributeType.Pinned) != 0) {
+		if (!UIManager.IsGameRunning || (AttributeType & AttributeType.Pinned) != 0) {
 			Body.velocity = Vector3.zero;
 		}
 		else {
@@ -383,6 +380,7 @@ using System.Collections.Generic;
 			linearVelocity += groundRotation * Velocity;
 			linearVelocity += ForcedVelocity + GroundVelocity + GravitVelocity;
 			Body.velocity = linearVelocity;
+			Velocity = Vector3.zero;
 			
 			if (ForcedVelocity != Vector3.zero) {
 				ForcedVelocity *= !IsGrounded ? 0.97f : 0.91f;
@@ -396,26 +394,7 @@ using System.Collections.Generic;
 				if (IsGrounded) GravitVelocity = Vector3.zero;
 			}
 		}
+
 		if (Body.position.y < -32) Destroy(gameObject);
-	}
-
-
-
-	protected virtual void Awake() => BeginTrigger();
-
-	protected virtual void LateUpdate() {
-		DrawManager.DrawEntity(
-			transform.position,
-			transform.rotation,
-			EntityType,
-			MotionType,
-			Offset,
-			new Color(Color.r, Color.g, Color.b, Color.a * Opacity),
-			Intensity);
-		DrawManager.DrawShadow(
-			transform.position,
-			transform.rotation,
-			new Vector3(Hitbox.radius * 2f, Hitbox.height * 0.5f, Hitbox.radius * 2f));
-		Offset += Time.deltaTime;
 	}
 }
