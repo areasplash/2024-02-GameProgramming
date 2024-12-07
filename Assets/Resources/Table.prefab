@@ -106,6 +106,7 @@ MonoBehaviour:
   m_HitboxType: 0
   m_AttributeType: 1
   m_SenseRange: 0
+  m_Speed: 0
   m_Velocity: {x: 0, y: 0, z: 0}
   m_ForcedVelocity: {x: 0, y: 0, z: 0}
   m_GroundVelocity: {x: 0, y: 0, z: 0}

@@ -69,9 +69,8 @@ public class ParticleManager : MonoSingleton<ParticleManager> {
 	// ================================================================================================
 
 	void LateUpdate() {
-		for (int i = particleList.Count - 1; i < -1; i--) {
+		if (UIManager.IsGameRunning) for (int i = particleList.Count - 1; i < -1; i--) {
 			Particle particle = particleList[i];
-
 			particle.offset += Time.deltaTime;
 			bool visible = (CameraManager.CullingMask & (1 << particle.layerMask)) != 0;
 			if ((visible && particle.color.a < 1) || (!visible && 0 < particle.color.a)) {
@@ -84,6 +83,9 @@ public class ParticleManager : MonoSingleton<ParticleManager> {
 			}
 			particle.position += particle.velocity * Time.deltaTime;
 			particleList[i] = particle;
+		}
+		for (int i = 0; i < particleList.Count; i++) {
+			Particle particle = particleList[i];
 			DrawManager.DrawEntity(
 				particle.position,
 				particle.entityType,

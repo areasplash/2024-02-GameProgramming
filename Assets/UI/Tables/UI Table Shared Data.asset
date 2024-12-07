@@ -155,18 +155,6 @@ MonoBehaviour:
     m_Key: Music
     m_Metadata:
       m_Items: []
-  - m_Id: 12251330055626752
-    m_Key: New Entry
-    m_Metadata:
-      m_Items: []
-  - m_Id: 12251384388640768
-    m_Key: New Entry 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 12251403472723968
-    m_Key: New Entry 2
-    m_Metadata:
-      m_Items: []
   - m_Id: 927956203376640
     m_Key: No
     m_Metadata:
@@ -196,7 +184,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 12236064651337728
-    m_Key: Retrieve
+    m_Key: TakeOut
     m_Metadata:
       m_Items: []
   - m_Id: 292655370240
@@ -217,6 +205,22 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 11892854784
     m_Key: Start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12359899979571200
+    m_Key: PutIn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12380704553689088
+    m_Key: Drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12381490511732736
+    m_Key: Trashcan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13478057972981760
+    m_Key: Money
     m_Metadata:
       m_Items: []
   m_Metadata:

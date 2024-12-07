@@ -1,7 +1,6 @@
 using UnityEngine;
 
 using System.Collections.Generic;
-using UnityEngine.Localization.Components;
 
 #if UNITY_EDITOR
 	using UnityEditor;
@@ -15,21 +14,9 @@ public class Player : Entity {
 	// Fields
 	// ================================================================================================
 	
-	[SerializeField] LocalizeStringEvent m_WorldText1;
-	[SerializeField] LocalizeStringEvent m_WorldText2;
-
 	[SerializeField] List<EntityType> m_Holdings = new List<EntityType>();
 
 
-
-	LocalizeStringEvent WorldText1 {
-		get => m_WorldText1;
-		set => m_WorldText1 = value;
-	}
-	LocalizeStringEvent WorldText2 {
-		get => m_WorldText2;
-		set => m_WorldText2 = value;
-	}
 
 	public List<EntityType> Holdings {
 		get => m_Holdings;
@@ -65,9 +52,6 @@ public class Player : Entity {
 				Space();
 
 				LabelField("Player", EditorStyles.boldLabel);
-				I.WorldText1 = ObjectField("World Text 1", I.WorldText1);
-				I.WorldText2 = ObjectField("World Text 2", I.WorldText2);
-				Space();
 				PropertyField("m_Holdings");
 				End();
 			}
@@ -94,6 +78,8 @@ public class Player : Entity {
 	Entity interactable;
 
 	void Update() {
+		if (!UIManager.IsGameRunning) return;
+		Offset += Time.deltaTime;
 
 		// Input
 
@@ -147,29 +133,25 @@ public class Player : Entity {
 		// Interaction
 
 		Entity interactablePrev = interactable;
+
 		Utility.GetMatched(transform.position, SenseRange, (Entity entity) => {
 			return entity != this && entity.Interactable(this) != InteractionType.None;
 		}, ref interactable);
-		/* =========== InteractionText.cs로 기능 이전 ===========
-		if (interactablePrev != interactable) {
-			WorldText1.gameObject.SetActive(interactable);
-			WorldText2.gameObject.SetActive(interactable);
-			if (interactable) {
-				string text1 = interactable.GetType().Name;
-				string text2 = interactable.Interactable(this).ToString();
-				WorldText1.StringReference.SetReference("UI Table", text1);
-				WorldText2.StringReference.SetReference("UI Table", text2);
-			}
-		}
-		*/
+
+		GameInteractionUI.InteractText0.gameObject.SetActive(interactable);
+		GameInteractionUI.InteractText1.gameObject.SetActive(interactable);
 		if (interactable) {
+			string text0 = interactable.GetType().Name;
+			string text1 = interactable.Interactable(this).ToString();
+			GameInteractionUI.InteractText0.SetLocalizeText("UI Table", text0);
+			GameInteractionUI.InteractText1.SetLocalizeText("UI Table", text1);
+			Vector3 pos0 = interactable.transform.position + Vector3.up * 1.5f;
+			Vector3 pos1 = Vector3.Lerp(transform.position, interactable.transform.position, 0.5f);
+			pos1.y -= 1f;
+			GameInteractionUI.InteractText0.transform.position = CameraManager.WorldToScreen(pos0);
+			GameInteractionUI.InteractText1.transform.position = CameraManager.WorldToScreen(pos1);
+
 			if (InputManager.GetKeyDown(KeyAction.Interact)) interactable.Interact(this);
-			/* =========== InteractionText.cs로 기능 이전 ===========
-			WorldText1.transform.position = interactable.transform.position + Vector3.up * 2;
-			WorldText2.transform.position = Vector3.Lerp(transform.position, interactable.transform.position, 0.5f);
-			WorldText1.transform.rotation = CameraManager.Rotation;
-			WorldText2.transform.rotation = CameraManager.Rotation;
-			*/
 		}
 
 		if (0 < Holdings.Count) {
@@ -178,5 +160,20 @@ public class Player : Entity {
 				DrawManager.DrawEntity(position + Vector3.up * i * 0.5f, Holdings[i]);
 			}
 		}
+
+		// Draw
+
+		DrawManager.DrawEntity(
+			transform.position,
+			transform.rotation,
+			EntityType,
+			MotionType,
+			Offset,
+			new Color(Color.r, Color.g, Color.b, Color.a * Opacity),
+			Intensity);
+		DrawManager.DrawShadow(
+			transform.position,
+			transform.rotation,
+			new Vector3(Hitbox.radius * 2f, Hitbox.height * 0.5f, Hitbox.radius * 2f));
 	}
 }

@@ -21,11 +21,11 @@ public class Money : Entity {
 		set {
 			m_Value = value;
 			EntityType = value switch {
-				1 => EntityType.Money1,
-				2 => EntityType.Money2,
-				3 => EntityType.Money3,
-				4 => EntityType.Money4,
-				_ => EntityType.Money5,
+				_ when value <  40 => EntityType.Money1,
+				_ when value <  80 => EntityType.Money2,
+				_ when value < 120 => EntityType.Money3,
+				_ when value < 160 => EntityType.Money4,
+				_                  => EntityType.Money5,
 			};
 			Offset = EntityType switch {
 				EntityType.Money1 => 0,
@@ -75,12 +75,14 @@ public class Money : Entity {
 	// ================================================================================================
 
 	public override InteractionType Interactable(Entity entity) {
-		return (entity is Player) ? InteractionType.Collect : InteractionType.None;
+		if (entity is Player || entity is Staff) {
+			return InteractionType.Collect;
+		}
+		return InteractionType.None;
 	}
 
 	public override void Interact(Entity entity) {
 		if (entity is Player || entity is Staff) {
-			// * Particle *
 			GameManager.Money += Value;
 			Destroy(gameObject);
 		}
@@ -92,7 +94,11 @@ public class Money : Entity {
 	// Lifecycle
 	// ================================================================================================
 
-	protected override void LateUpdate() {
+	void Update() {
+		if (!UIManager.IsGameRunning) return;
+
+		// Draw
+
 		DrawManager.DrawEntity(
 			transform.position,
 			transform.rotation,
@@ -107,11 +113,5 @@ public class Money : Entity {
 			EntityType != EntityType.Money5 ?
 				new Vector3(Hitbox.radius * 2f, Hitbox.height * 0.5f, Hitbox.radius * 2f) :
 				new Vector3(Hitbox.radius * 4f, Hitbox.height * 0.5f, Hitbox.radius * 4f));	
-	}
-
-
-
-	void Update() {
-		// * Particle *
 	}
 }

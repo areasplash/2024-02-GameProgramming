@@ -14,13 +14,20 @@ public class Pot : Entity {
 	// Fields
 	// ================================================================================================
 
-	[SerializeField] List<EntityType> m_List;
+	[SerializeField] float m_CookingTime = 3.0f;
+
+	[SerializeField] List<EntityType> m_Holdings;
 
 
 
-	public List<EntityType> List {
-		get => m_List;
-		set => m_List = value;
+	public float CookingTime {
+		get => m_CookingTime;
+		set => m_CookingTime = value;
+	}
+
+	public List<EntityType> Holdings {
+		get => m_Holdings;
+		set => m_Holdings = value;
 	}
 
 
@@ -45,7 +52,9 @@ public class Pot : Entity {
 				Space();
 
 				LabelField("Furnace", EditorStyles.boldLabel);
-				PropertyField("m_List");
+				I.CookingTime = FloatField("Cooking Time", I.CookingTime);
+				Space();
+				PropertyField("m_Holdings");
 
 				End();
 			}
@@ -58,28 +67,47 @@ public class Pot : Entity {
 	// Methods
 	// ================================================================================================
 
-	public override InteractionType Interactable(Entity entity) {
+	bool IsItem(EntityType type) => type switch {
+		EntityType.Item          => true,
+		EntityType.ItemPlatter   => true,
+		EntityType.ItemFlour     => true,
+		EntityType.ItemButter    => true,
+		EntityType.ItemCheese    => true,
+		EntityType.ItemBlueberry => true,
+		EntityType.ItemTomato    => true,
+		EntityType.ItemPotato    => true,
+		EntityType.ItemCabbage   => true,
+		EntityType.ItemMeat      => true,
+		_ => false,
+	};
 
+
+
+	public override InteractionType Interactable(Entity entity) {
 		switch (state) {
 			case State.Waiting:
 				if (entity is Player) {
-					bool contains = (entity as Player).Holdings.Contains(EntityType.Food);
-					return contains ? InteractionType.Add : InteractionType.Cook;
+					Player player = entity as Player;
+					int index = player.Holdings.FindIndex((EntityType type)
+						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+					if (index != -1) return InteractionType.Add;
+					else if (0 < Holdings.Count) return InteractionType.Cook;
 				}
-				else if (entity is Staff) {
-					bool contains = (entity as Staff).Holdings.Contains(EntityType.Food);
-					return contains ? InteractionType.Add : InteractionType.Cook;
+				if (entity is Staff) {
+					Staff staff = entity as Staff;
+					int index = staff.Holdings.FindIndex((EntityType type)
+						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+					if (index != -1) return InteractionType.Add;
+					else if (0 < Holdings.Count) return InteractionType.Cook;
 				}
 				break;
 			case State.Cooking:
-				if (entity is Player || entity is Staff) {
-					return InteractionType.Cancel;
-				}
+				if (entity is Player) return InteractionType.Cancel;
+				if (entity is Staff ) return InteractionType.Cancel;
 				break;
-			case State.Complete:
-				if (entity is Player || entity is Staff) {
-					return InteractionType.TakeOut;
-				}
+			case State.Success:
+				if (entity is Player) return InteractionType.TakeOut;
+				if (entity is Staff ) return InteractionType.TakeOut;
 				break;
 		}
 		return InteractionType.None;
@@ -90,34 +118,55 @@ public class Pot : Entity {
 			case State.Waiting:
 				if (entity is Player) {
 					Player player = entity as Player;
-					if (player.Holdings.Contains(EntityType.Food)) {
-						List.Add(EntityType.Food);
-						player.Holdings.Remove(EntityType.Food);
+					int index = player.Holdings.FindIndex((EntityType type)
+						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+					if (index != -1) {
+						Holdings.Add(player.Holdings[index]);
+						player.Holdings.RemoveAt(index);
+					}
+					else if (0 < Holdings.Count) {
+						state = State.Cooking;
+						Offset = 0f;
 					}
 				}
 				else if (entity is Staff) {
 					Staff staff = entity as Staff;
-					if (staff.Holdings.Contains(EntityType.Food)) {
-						List.Add(EntityType.Food);
-						staff.Holdings.Remove(EntityType.Food);
+					int index = staff.Holdings.FindIndex((EntityType type)
+						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+					if (index != -1) {
+						Holdings.Add(staff.Holdings[index]);
+						staff.Holdings.RemoveAt(index);
+					}
+					else if (0 < Holdings.Count) {
+						state = State.Cooking;
+						Offset = 0f;
 					}
 				}
 				break;
 			case State.Cooking:
-				if (entity is Player || entity is Staff) {
-					List.Clear();
+				if (entity is Player) {
+					Holdings.Clear();
+					state = State.Waiting;
+					Offset = 0f;
+				}
+				if (entity is Staff) {
+					Holdings.Clear();
 					state = State.Waiting;
 					Offset = 0f;
 				}
 				break;
-			case State.Complete:
+			case State.Success:
 				if (entity is Player) {
-					(entity as Player).Holdings.Add(result);
+					(entity as Player).Holdings.Add(Holdings[0]);
+					Holdings.Clear();
 					state = State.Waiting;
+					Offset = 0f;
 				}
-				else if (entity is Staff) {
-					(entity as Staff).Holdings.Add(result);
+				if (entity is Staff) {
+					(entity as Staff).Holdings.Add(Holdings[0]);
+					Holdings.Clear();
 					state = State.Waiting;
+					Offset = 0f;
 				}
 				break;
 		}
@@ -129,55 +178,71 @@ public class Pot : Entity {
 	// Lifecycle
 	// ================================================================================================
 
-	protected override void Awake() {
+	static List<Pot> list = new List<Pot>();
+	public static List<Pot> List => list;
+
+	void OnEnable () => list.Add   (this);
+	void OnDisable() => list.Remove(this);
+
+
+
+	void Start() {
 		int layer = Utility.GetLayerAtPoint(transform.position, transform);
-		Stack<GameObject> stack = new Stack<GameObject>();
-		stack.Push(gameObject);
-		while (0 < stack.Count) {
-			GameObject go = stack.Pop();
-			go.layer = layer;
-			for (int i = 0; i < go.transform.childCount; i++) {
-				stack.Push(go.transform.GetChild(i).gameObject);
-			}
-		}
+		Utility.SetLayer(transform, layer);
 	}
 
-	protected override void LateUpdate() {}
 
-
-
-	const float CookingTime = 10.0f;
 
 	enum State {
 		Waiting,
 		Cooking,
-		Complete,
+		Success,
+		Failure,
 	}
 	State state = State.Waiting;
 
-	EntityType result;
-
 	void Update() {
+		if (!UIManager.IsGameRunning) return;
+		Offset += Time.deltaTime;
+
 		switch (state) {
 			case State.Waiting:
-				// draw exists
+				for (int i = 0; i < Holdings.Count; i++) {
+					float distance = (Holdings.Count / Mathf.Sqrt(Holdings.Count) - 1) * 0.4f;
+					float angle = 2 * Mathf.PI * i / Holdings.Count;
+					float x = Mathf.Cos(angle) * distance;
+					float z = Mathf.Sin(angle) * distance;
+					DrawManager.DrawEntity(transform.position + new Vector3(x, 3f, z), Holdings[i]);
+				}
 				break;
-			case State.Cooking:
-				Offset += Time.deltaTime / CookingTime;
-				Vector3 position = transform.position + new Vector3(0, 3f, 0);
-				DrawManager.DrawEntity(position, EntityType.UIBarFill, Mathf.Clamp01(Offset));
-				DrawManager.DrawEntity(position, EntityType.UIBarBorder);
-				/* Particle */
 
-				if (1.0f <= Offset) {
-					result = GameManager.GetFoodFromRecipe(List);
-					List.Clear();
-					state = State.Complete;
+			case State.Cooking:
+				for (int i = 0; i < Holdings.Count; i++) {
+					float distance = (Holdings.Count / Mathf.Sqrt(Holdings.Count) - 1) * 0.4f;
+					float angle = 2 * Mathf.PI * i / Holdings.Count;
+					float x = Mathf.Cos(angle) * distance;
+					float z = Mathf.Sin(angle) * distance;
+					DrawManager.DrawEntity(transform.position + new Vector3(x, 3f, z), Holdings[i]);
+				}
+				Vector3 position = transform.position + new Vector3(0, 4f, 0);
+				DrawManager.DrawEntity(position, EntityType.UIBarFill, Mathf.Clamp01(Offset / CookingTime));
+				DrawManager.DrawEntity(position, EntityType.UIBarBorder);
+				if (CookingTime < Offset) {
+					EntityType result = GameManager.GetFoodFromRecipe(Holdings);
+					Holdings.Clear();
+					Holdings.Add(result);
+					state = (result != EntityType.None) ? State.Success : State.Failure;
 					Offset = 0f;
 				}
 				break;
-			case State.Complete:
-				// draw result
+
+			case State.Success:
+				DrawManager.DrawEntity(transform.position + new Vector3(0, 3f, 0), Holdings[0]);
+				break;
+
+			case State.Failure:
+				state = State.Waiting;
+				Offset = 0f;
 				break;
 		}
 	}

@@ -50,28 +50,8 @@ public class Table : Entity {
 	// Lifecycle
 	// ================================================================================================
 
-	protected override void Awake() {
-		int layer = Utility.GetLayerAtPoint(transform.position, transform);
-		Stack<GameObject> stack = new Stack<GameObject>();
-		stack.Push(gameObject);
-		while (0 < stack.Count) {
-			GameObject go = stack.Pop();
-			go.layer = layer;
-			for (int i = 0; i < go.transform.childCount; i++) {
-				stack.Push(go.transform.GetChild(i).gameObject);
-			}
-		}
-	}
-
-	protected override void LateUpdate() {}
-
-	
-
 	void Start() {
-		
-	}
-
-	void Update() {
-		
+		int layer = Utility.GetLayerAtPoint(transform.position, transform);
+		Utility.SetLayer(transform, layer);
 	}
 }

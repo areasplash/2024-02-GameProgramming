@@ -60,7 +60,15 @@ MonoBehaviour:
   m_ForcedVelocity: {x: 0, y: 0, z: 0}
   m_GroundVelocity: {x: 0, y: 0, z: 0}
   m_GravitVelocity: {x: 0, y: 0, z: 0}
-  m_UniqueProb: 0.2
+  m_UniqueClientProb: 0.2
+  m_ChairSearchFreq: 10
+  m_EntryWaitingTime: 5
+  m_MenuChoosingTime: 2
+  m_MenuWaitingTime: 30
+  m_EatingTime: 10
+  m_EatAgainProb: 0.1
+  state: 0
+  order: 0
 --- !u!54 &6269516478181930173
 Rigidbody:
   m_ObjectHideFlags: 0

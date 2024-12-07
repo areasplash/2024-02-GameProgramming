@@ -316,10 +316,12 @@ public class DrawManager : MonoSingleton<DrawManager> {
 	}
 
 	void LateUpdate() {
-		entityBatcher.Draw ();
-		entityBatcher.Clear();
-		shadowBatcher.Draw ();
-		shadowBatcher.Clear();
+		entityBatcher.Draw();
+		shadowBatcher.Draw();
+		if (UIManager.IsGameRunning) {
+			entityBatcher.Clear();
+			shadowBatcher.Clear();
+		}
 	}
 }
 

@@ -268,6 +268,10 @@ public class UIManager : MonoSingleton<UIManager> {
 		private set { if (Instance) Instance.m_MouseSensitivity = value; }
 	}
 
+	
+
+	public static bool IsGameRunning { get; private set; }
+
 
 
 	#if UNITY_EDITOR
@@ -507,6 +511,8 @@ public class UIManager : MonoSingleton<UIManager> {
 	}
 
 	void Update() {
+		IsGameRunning = HighestCanvas == CanvasType.Game;
+
 		if (InputManager.GetKeyDown(KeyAction.Move)) {
 			if (!Selected) Selected = FS;
 		}

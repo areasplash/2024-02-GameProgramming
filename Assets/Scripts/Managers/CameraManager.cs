@@ -257,20 +257,31 @@ public class CameraManager : MonoSingleton<CameraManager> {
 	// Methods
 	// ================================================================================================
 
-	public static Ray ScreenPointToRay(Vector3 position) {
+	public static Vector3 ScreenToWorld(Vector3 position) {
 		if (MainCamera) {
 			float multiplier = (float)RenderTextureSize.x / Screen.width;
 			Vector3 viewport = MainCameraDirect.ScreenToViewportPoint(position * multiplier);
-			return MainCameraDirect.ViewportPointToRay(viewport);
+			return MainCameraDirect.ViewportToWorldPoint(viewport);
 		}
-		return default;
+		else return position;
+	}
+
+	public static Vector3 WorldToScreen(Vector3 position) {
+		if (MainCamera) {
+			Vector3 viewport = MainCameraDirect.WorldToViewportPoint(position);
+			return new Vector3(viewport.x * Screen.width, viewport.y * Screen.height, viewport.z);
+		}
+		else return position;
 	}
 
 	static RaycastHit[] hits = new RaycastHit[16];
 
 	public static bool TryRaycast(Vector3 position, out Vector3 hit) {
 		if (MainCamera) {
-			Ray ray = ScreenPointToRay(position);
+			float multiplier = (float)RenderTextureSize.x / Screen.width;
+			Vector3 viewport = MainCameraDirect.ScreenToViewportPoint(position * multiplier);
+			Ray ray = MainCameraDirect.ViewportPointToRay(viewport);
+
 			QueryTriggerInteraction query = QueryTriggerInteraction.Ignore;
 			int num = Physics.RaycastNonAlloc(ray, hits, 1000, -5, query);
 			for (int i = 0; i < num; i++) {

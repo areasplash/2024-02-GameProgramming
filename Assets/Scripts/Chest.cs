@@ -14,13 +14,13 @@ public class Chest : Entity {
 	// Fields
 	// ================================================================================================
 	
-	[SerializeField] EntityType m_ItemType;
+	[SerializeField] EntityType m_Item;
 
 
 
-	public EntityType ItemType {
-		get         => m_ItemType;
-		private set => m_ItemType = value;
+	public EntityType Item {
+		get         => m_Item;
+		private set => m_Item = value;
 	}
 
 
@@ -45,7 +45,7 @@ public class Chest : Entity {
 				Space();
 
 				LabelField("Chest", EditorStyles.boldLabel);
-				I.ItemType = EnumField("Item Type", I.ItemType);
+				I.Item = EnumField("Item Type", I.Item);
 
 				End();
 			}
@@ -60,26 +60,28 @@ public class Chest : Entity {
 
 	public override InteractionType Interactable(Entity entity) {
 		if (entity is Player) {
-			bool exist = (entity as Player).Holdings.Exists(x => x == ItemType);
-			return exist ? InteractionType.PutIn : InteractionType.TakeOut;
+			bool exists = (entity as Player).Holdings.Exists(x => x == Item);
+			if (exists) return InteractionType.PutIn;
+			else        return InteractionType.TakeOut;
 		}
-		else if (entity is Staff) {
-			bool exist = (entity as Staff).Holdings.Exists(x => x == ItemType);
-			return exist ? InteractionType.PutIn : InteractionType.TakeOut;
+		if (entity is Staff) {
+			bool exists = (entity as Staff).Holdings.Exists(x => x == Item);
+			if (exists) return InteractionType.PutIn;
+			else        return InteractionType.TakeOut;
 		}
 		return InteractionType.None;
 	}
 
 	public override void Interact(Entity entity) {
 		if (entity is Player) {
-			bool exist = (entity as Player).Holdings.Exists(x => x == ItemType);
-			if (exist) (entity as Player).Holdings.Remove(ItemType);
-			else       (entity as Player).Holdings.Add   (ItemType);
+			bool exist = (entity as Player).Holdings.Exists(x => x == Item);
+			if (exist) (entity as Player).Holdings.Remove(Item);
+			else       (entity as Player).Holdings.Add   (Item);
 		}
-		else if (entity is Staff) {
-			bool exist = (entity as Staff).Holdings.Exists(x => x == ItemType);
-			if (exist) (entity as Staff).Holdings.Remove(ItemType);
-			else       (entity as Staff).Holdings.Add   (ItemType);
+		if (entity is Staff) {
+			bool exist = (entity as Staff).Holdings.Exists(x => x == Item);
+			if (exist) (entity as Staff).Holdings.Remove(Item);
+			else       (entity as Staff).Holdings.Add   (Item);
 		}
 	}
 
@@ -89,22 +91,24 @@ public class Chest : Entity {
 	// Lifecycle
 	// ================================================================================================
 
-	protected override void Awake() {
+	static List<Chest> list = new List<Chest>();
+	public static List<Chest> List => list;
+
+	void OnEnable () => list.Add   (this);
+	void OnDisable() => list.Remove(this);
+
+	
+
+	void Start() {
 		int layer = Utility.GetLayerAtPoint(transform.position, transform);
-		Stack<GameObject> stack = new Stack<GameObject>();
-		stack.Push(gameObject);
-		while (0 < stack.Count) {
-			GameObject go = stack.Pop();
-			go.layer = layer;
-			for (int i = 0; i < go.transform.childCount; i++) {
-				stack.Push(go.transform.GetChild(i).gameObject);
-			}
-		}
+		Utility.SetLayer(transform, layer);
 	}
 
-	protected override void LateUpdate() {
+	void Update() {
+		if (!UIManager.IsGameRunning) return;
+
 		Vector3 position = transform.position + new Vector3(0, 3f, 0);
 		DrawManager.DrawEntity(position, EntityType.UIBubble);
-		DrawManager.DrawEntity(position, ItemType);
+		DrawManager.DrawEntity(position, Item);
 	}
 }

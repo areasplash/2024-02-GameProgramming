@@ -131,11 +131,10 @@ public static class Utility {
 		int length = Physics.SphereCastNonAlloc(point, 0.5f, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) {
 			Collider collider = hits[i].collider;
-			if (collider.isTrigger) {
-				if (ignore && IsIncluded(ignore, collider.transform)) continue;
-				int layer = collider.gameObject.layer;
-				if (result < layer) result = layer;
-			}
+			if (!collider.isTrigger) continue;
+			if (ignore && IsIncluded(ignore, collider.transform)) continue;
+			int layer = collider.gameObject.layer;
+			if (result < layer) result = layer;
 		}
 		return result;
 	}
@@ -145,45 +144,57 @@ public static class Utility {
 		int length = Physics.SphereCastNonAlloc(point, 0.5f, Vector3.up, hits, 0.0f);
 		for (int i = 0; i < length; i++) {
 			Collider collider = hits[i].collider;
-			if (collider.isTrigger) {
-				if (ignore && IsIncluded(ignore, collider.transform)) continue;
-				int layer = collider.gameObject.layer;
-				result |= 1 << layer;
-			}
+			if (!collider.isTrigger) continue;
+			if (ignore && IsIncluded(ignore, collider.transform)) continue;
+			int layer = collider.gameObject.layer;
+			result |= 1 << layer;
 		}
 		return result;
 	}
+
+	public static void SetLayer(Transform transform, int layer) {
+		for (int i = 0; i < transform.childCount; i++) SetLayer(transform.GetChild(i), layer);
+		transform.gameObject.layer = layer;
+	}
+
+
 	
 	public static bool GetMatched(Vector3 point, float range, Predicate<Entity> match,
 	ref Entity result) {
 		result = null;
-		float distance = float.MaxValue;
+		float closest = float.MaxValue;
 		int length = Physics.SphereCastNonAlloc(point, range, Vector3.up, hits, 0.0f);
-		for (int i = 0; i < length; i++) if (!hits[i].collider.isTrigger) {
-			if (hits[i].distance < distance) {
-				if (TryGetComponentInParent(hits[i].collider.transform, out Entity entity)) {
-					if (match(entity)) {
-						distance = hits[i].distance;
-						result = entity;
-					}
-				}
+		for (int i = 0; i < length; i++) {
+			Collider collider = hits[i].collider;
+			if (collider.isTrigger) continue;
+			float distance = Vector3.Distance(point, collider.transform.position);
+			if (closest < distance) continue;
+			if (TryGetComponentInParent(collider.transform, out Entity entity) && match(entity)) {
+				closest = distance;
+				result = entity;
 			}
 		}
-		return distance < float.MaxValue;
+		return closest < float.MaxValue;
 	}
 
 	public static int GetAllMatched(Vector3 point, float range, Predicate<Entity> match,
 	ref List<Entity> result) {
 		int count = 0;
 		int length = Physics.SphereCastNonAlloc(point, range, Vector3.up, hits, 0.0f);
-		for (int i = 0; i < length; i++) if (!hits[i].collider.isTrigger) {
-			if (TryGetComponentInParent(hits[i].collider.transform, out Entity entity)) {
-				if (match(entity)) {
-					result.Add(entity);
-					count++;
-				}
+		for (int i = 0; i < length; i++) {
+			Collider collider = hits[i].collider;
+			if (collider.isTrigger) continue;
+			if (TryGetComponentInParent(collider.transform, out Entity entity) && match(entity)) {
+				result.Add(entity);
+				count++;
 			}
 		}
 		return count;
+	}
+
+
+
+	public static bool Flag(float offset, float frequency) {
+		return Mathf.Floor(offset * frequency) != Mathf.Floor((offset - Time.deltaTime) * frequency); 
 	}
 }
