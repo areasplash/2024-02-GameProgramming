@@ -12,24 +12,28 @@ using System.Collections.Generic;
 public class GameManager : MonoSingleton<GameManager> {
 
 	public static Dictionary<EntityType, List<EntityType>> Recipe { get; } = new() {
-		{ EntityType.FoodPancake,    new() { EntityType.ItemFlour, EntityType.ItemButter, }},
-		{ EntityType.FoodCheeseCake, new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemBlueberry, }},
-		{ EntityType.FoodSpaghetti,  new() { EntityType.ItemFlour, EntityType.ItemTomato, }},
-		{ EntityType.FoodSoup,       new() { EntityType.ItemPotato, }},
-		{ EntityType.FoodSandwich,   new() { EntityType.ItemFlour, EntityType.ItemCabbage, EntityType.ItemTomato, }},
-		{ EntityType.FoodSalad,      new() { EntityType.ItemCabbage, EntityType.ItemTomato, }},
-		{ EntityType.FoodSteak,      new() { EntityType.ItemMeat, }},
-	};
-	public static Dictionary<EntityType, int> Price { get; } = new() {
-		{ EntityType.FoodPancake,    100 },
-		{ EntityType.FoodCheeseCake, 180 },
-		{ EntityType.FoodSpaghetti,  120 },
-		{ EntityType.FoodSoup,        80 },
-		{ EntityType.FoodSandwich,   120 },
-		{ EntityType.FoodSalad,       80 },
-		{ EntityType.FoodSteak,      240 },
-		{ EntityType.FoodWine,        80 },
-		{ EntityType.FoodBeer,        40 },
+		{
+			EntityType.FoodPancake,
+			new() { EntityType.ItemFlour, EntityType.ItemButter }
+		}, {
+			EntityType.FoodCheeseCake,
+			new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemBlueberry }
+		}, {
+			EntityType.FoodSpaghetti,
+			new() { EntityType.ItemFlour, EntityType.ItemCheese, EntityType.ItemTomato }
+		}, {
+			EntityType.FoodSoup,
+			new() { EntityType.ItemFlour, EntityType.ItemPotato, EntityType.ItemButter }
+		}, {
+			EntityType.FoodSandwich,
+			new() { EntityType.ItemFlour, EntityType.ItemCabbage, EntityType.ItemTomato }
+		}, {
+			EntityType.FoodSalad,
+			new() { EntityType.ItemCabbage, EntityType.ItemTomato }
+		}, {
+			EntityType.FoodSteak,
+			new() { EntityType.ItemMeat }
+		},
 	};
 
 
@@ -43,9 +47,9 @@ public class GameManager : MonoSingleton<GameManager> {
 
 	[SerializeField] GameObject m_ClientPrefab;
 	[SerializeField] Transform m_ClientSpawnPoint;
-	[SerializeField, Range(0f, 20f)] float m_SpawnPeriod = 5f;
+	[SerializeField, Range(5f, 30f)] float m_SpawnPeriod = 25f;
 	[SerializeField] float m_RepBias = 0f;
-	[SerializeField, Range(0f, MaxReputation)] float m_Reputation = 1f;
+	[SerializeField, Range(0f, MaxReputation)] float m_Reputation = 3f;
 	//[SerializeField, Range(0.02f, 0.15f)] float m_MultiSpawnProb = 0.03f;
 
 	[SerializeField] int m_Day       =  1;
@@ -58,12 +62,6 @@ public class GameManager : MonoSingleton<GameManager> {
 
 	[SerializeField] int m_Money = 0;
 
-	[SerializeField] GameObject m_PrefabMoney;
-	[SerializeField] GameObject m_PrefabTable;
-	[SerializeField] GameObject m_PrefabChair;
-	[SerializeField] GameObject m_PrefabChest;
-	[SerializeField] GameObject m_PrefabPot;
-
 
 
 	static GameObject ClientPrefab {
@@ -74,6 +72,11 @@ public class GameManager : MonoSingleton<GameManager> {
 	public static Vector3 ClientSpawnPoint =>
 		Instance && Instance.m_ClientSpawnPoint ?
 		Instance.m_ClientSpawnPoint.position : default;
+
+	public static float SpawnPeriod {
+		get           =>  Instance? Instance.m_SpawnPeriod : default;
+        private set { if (Instance) Instance.m_SpawnPeriod = value; }
+	}
 
 
 	public static float RepBias {
@@ -133,27 +136,6 @@ public class GameManager : MonoSingleton<GameManager> {
 	}
 	*/
 
-	static GameObject PrefabMoney {
-		get   =>  Instance ? Instance.m_PrefabMoney : default;
-		set { if (Instance)  Instance.m_PrefabMoney = value; }
-	}
-	static GameObject PrefabTable {
-		get   =>  Instance ? Instance.m_PrefabTable : default;
-		set { if (Instance)  Instance.m_PrefabTable = value; }
-	}
-	static GameObject PrefabChair {
-		get   =>  Instance ? Instance.m_PrefabChair : default;
-		set { if (Instance)  Instance.m_PrefabChair = value; }
-	}
-	static GameObject PrefabChest {
-		get   =>  Instance ? Instance.m_PrefabChest : default;
-		set { if (Instance)  Instance.m_PrefabChest = value; }
-	}
-	static GameObject PrefabPot {
-		get   =>  Instance ? Instance.m_PrefabPot : default;
-		set { if (Instance)  Instance.m_PrefabPot = value; }
-	}
-
 
 
 	#if UNITY_EDITOR
@@ -162,15 +144,16 @@ public class GameManager : MonoSingleton<GameManager> {
 				Begin("GameManager");
 
 				LabelField("Client", EditorStyles.boldLabel);
-				ClientPrefab = ObjectField("Client Prefab", ClientPrefab);
+				ClientPrefab = ObjectField("m_ClientPrefab", ClientPrefab);
 				PropertyField("m_ClientSpawnPoint");
 				PropertyField("m_SpawnPeriod");
 				Space();
 
 				LabelField("Factor", EditorStyles.boldLabel);
-				RepBias        = FloatField("Rep Bias",       RepBias);
-				Reputation     = FloatField("Reputation",     Reputation);
-				MultiSpawnProb = FloatField("MultiSpawnProb", MultiSpawnProb);
+				PropertyField("m_RepBias");
+				FloatField("Reputation", Reputation);
+				//PropertyField(m_MultiSpawnProb);
+				FloatField("MultiSpawnProb", MultiSpawnProb);
 				Space();
 
 				LabelField("InGameTime", EditorStyles.boldLabel);
@@ -184,14 +167,6 @@ public class GameManager : MonoSingleton<GameManager> {
 
 				LabelField("Money", EditorStyles.boldLabel);
 				Money = IntField("Money", Money);
-				Space();
-
-				LabelField("Prefab", EditorStyles.boldLabel);
-				PrefabMoney = ObjectField("Prefab Money", PrefabMoney);
-				PrefabTable = ObjectField("Prefab Table", PrefabTable);
-				PrefabChair = ObjectField("Prefab Chair", PrefabChair);
-				PrefabChest = ObjectField("Prefab Chest", PrefabChest);
-				PrefabPot   = ObjectField("Prefab Pot",   PrefabPot  );
 				Space();
 
 				End();
@@ -214,8 +189,8 @@ public class GameManager : MonoSingleton<GameManager> {
 		RepBias += delta;
 
 		Reputation = MaxReputation / (1f + Mathf.Exp(-0.4f * (RepBias-4.34f))); //sigmoid function
-		//SpawnPeriod = Mathf.Lerp(20f, 3f, Mathf.Log(1f + Mathf.InverseLerp(0f, 10f, Reputation) * 99f) / Mathf.Log(100f)); // 최소 3초 ~ 최대 20초
-		MultiSpawnProb = Mathf.Lerp(0.02f, 0.15f, (Mathf.Exp(Mathf.InverseLerp(0f, 20f, Reputation) * 1.2f) - 1) / (Mathf.Exp(1.2f) - 1));
+		MultiSpawnProb = Mathf.Lerp(0.02f, 0.15f, (Mathf.Exp(Mathf.InverseLerp(0f, 20f, Reputation) * 1.2f) - 1) / (Mathf.Exp(1.2f) - 1)); // 다중 스폰 확률 업데이트
+		SpawnPeriod = Mathf.Lerp(30f, 5f, (Reputation + 1f) / 20f); // 스폰 주기 업데이트
 	}
 
 	public void UpdateGameTime() {
@@ -233,43 +208,19 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 
-	static HashSet<EntityType> hashset = new HashSet<EntityType>();
-
 	public static EntityType GetFoodFromRecipe(List<EntityType> items) {
 		foreach (var recipe in Recipe) {
-			hashset.Clear();
-			foreach (var item in items) hashset.Add(item);
-			if (hashset.SetEquals(recipe.Value)) return recipe.Key;
+			if (items.Count != recipe.Value.Count) continue;
+			bool match = true;
+			for (int i = 0; i < items.Count; i++) {
+				if (items[i] != recipe.Value[i]) {
+					match = false;
+					break;
+				}
+			}
+			if (match) return recipe.Key;
 		}
 		return EntityType.None;
-	}
-
-
-
-	public static Money SpawnMoney(Vector3 position) {
-		GameObject prefab = Instantiate(PrefabMoney, position, Quaternion.identity);
-		prefab.TryGetComponent(out Money money);
-		return money;
-	}
-	public static Table SpawnTable(Vector3 position) {
-		GameObject prefab = Instantiate(PrefabTable, position, Quaternion.identity);
-		prefab.TryGetComponent(out Table table);
-		return table;
-	}
-	public static Chair SpawnChair(Vector3 position) {
-		GameObject prefab = Instantiate(PrefabChair, position, Quaternion.identity);
-		prefab.TryGetComponent(out Chair chair);
-		return chair;
-	}
-	public static Chest SpawnChest(Vector3 position) {
-		GameObject prefab = Instantiate(PrefabChest, position, Quaternion.identity);
-		prefab.TryGetComponent(out Chest chest);
-		return chest;
-	}
-	public static Pot SpawnPot(Vector3 position) {
-		GameObject prefab = Instantiate(PrefabPot, position, Quaternion.identity);
-		prefab.TryGetComponent(out Pot pot);
-		return pot;
 	}
 
 
@@ -281,25 +232,23 @@ public class GameManager : MonoSingleton<GameManager> {
 	float spawnTimer = 0f;
 
 	void Start() {
-		NavMeshManager.Bake();
 		m_Minute = 0;
 		m_Hour = m_OpenHour;
 		timer = minuteToRealTime;
 		TimeHandle += UpdateGameTime;
 	}
 	void Update() {
-		if (!UIManager.IsGameRunning) return;
-		
 		spawnTimer -= Time.deltaTime;
 		
 		if (m_Hour < m_CloseHour) {
 			if (m_ClientSpawnPoint && spawnTimer <= 0f) {
 				float prob = UnityEngine.Random.value;
-				spawnTimer = m_SpawnPeriod;
+				spawnTimer = SpawnPeriod + UnityEngine.Random.Range(-2.5f, 2.5f);
+				print(spawnTimer);
 				if(prob <= MultiSpawnProb) {
 
-					for(int i = 0; i <= UnityEngine.Random.Range(2, 6); i++) {
-						Vector3 randPosition = new Vector3(
+					for(int i = 0; i <= UnityEngine.Random.Range(2, 6); i++) { // 스폰 인원 2~5명
+						Vector3 randPosition = new Vector3( // 인원별 스폰 위치 분산
 							UnityEngine.Random.Range(-0.4f, 0.4f),
 							0,
 							UnityEngine.Random.Range(0f, 0.8f)
