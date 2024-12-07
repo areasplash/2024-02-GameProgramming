@@ -297,9 +297,10 @@ public class Client : Entity {
 					chair.Interact(this);
 					transform.position = positionTemp;
 					AttributeType &= ~AttributeType.Pinned;
-					position = (chair as Chair).table.transform.position + Vector3.up * 1.5f;
+					Vector3 table = (chair as Chair).table.transform.position;
+					position = Vector3.Lerp(position + Vector3.up, table + Vector3.up, 0.5f);
 					float r = Random.value * 360f * Mathf.Deg2Rad;
-					float d = Random.value;
+					float d = Random.value * 0.5f;
 					position += new Vector3(Mathf.Cos(r) * d, 0, Mathf.Sin(r) * d);
 				}
 				if (0 < pay) GameManager.SpawnMoney(position).Value = pay;
@@ -350,13 +351,13 @@ public class Client : Entity {
 			if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
 
 			float radius = NavMeshManager.GetHitboxData(HitboxType).radius;
-			if (Vector3.Distance(transform.position, positionTemp) < Speed * 0.5f * Time.deltaTime) {
-				Hitbox.radius = Mathf.Max(0.05f, Hitbox.radius - 0.02f * Time.deltaTime);
+			if (Vector3.Distance(transform.position, positionTemp) < 0.001f) {
+				Hitbox.radius = Mathf.Max(0.06f, Hitbox.radius - 0.2f * Time.deltaTime);
 				Ground.center = new Vector3(0, -(Hitbox.height / 2 - Hitbox.radius) - 0.08f, 0);
 				Ground.radius = Hitbox.radius - 0.04f;
 			}
 			else if (Hitbox.radius < radius) {
-				Hitbox.radius = Mathf.Min(radius, Hitbox.radius + 0.02f * Time.deltaTime);
+				Hitbox.radius = radius;
 				Ground.center = new Vector3(0, -(Hitbox.height / 2 - Hitbox.radius) - 0.08f, 0);
 				Ground.radius = Hitbox.radius - 0.04f;
 			}

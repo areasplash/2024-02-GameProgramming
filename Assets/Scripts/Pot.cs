@@ -208,7 +208,7 @@ public class Pot : Entity {
 		switch (state) {
 			case State.Waiting:
 				for (int i = 0; i < Holdings.Count; i++) {
-					float distance = Holdings.Count / Mathf.Sqrt(Holdings.Count) - 1;
+					float distance = (Holdings.Count / Mathf.Sqrt(Holdings.Count) - 1) * 0.4f;
 					float angle = 2 * Mathf.PI * i / Holdings.Count;
 					float x = Mathf.Cos(angle) * distance;
 					float z = Mathf.Sin(angle) * distance;
@@ -218,7 +218,7 @@ public class Pot : Entity {
 
 			case State.Cooking:
 				for (int i = 0; i < Holdings.Count; i++) {
-					float distance = Holdings.Count / Mathf.Sqrt(Holdings.Count) - 1;
+					float distance = (Holdings.Count / Mathf.Sqrt(Holdings.Count) - 1) * 0.4f;
 					float angle = 2 * Mathf.PI * i / Holdings.Count;
 					float x = Mathf.Cos(angle) * distance;
 					float z = Mathf.Sin(angle) * distance;

@@ -45,7 +45,7 @@ public class GameManager : MonoSingleton<GameManager> {
 	[SerializeField] Transform m_ClientSpawnPoint;
 	[SerializeField, Range(0f, 20f)] float m_SpawnPeriod = 5f;
 	[SerializeField] float m_RepBias = 0f;
-	[SerializeField, Range(0f, MaxReputation)] float m_Reputation = 3f;
+	[SerializeField, Range(0f, MaxReputation)] float m_Reputation = 1f;
 	//[SerializeField, Range(0.02f, 0.15f)] float m_MultiSpawnProb = 0.03f;
 
 	[SerializeField] int m_Day       =  1;
@@ -162,16 +162,15 @@ public class GameManager : MonoSingleton<GameManager> {
 				Begin("GameManager");
 
 				LabelField("Client", EditorStyles.boldLabel);
-				ClientPrefab = ObjectField("m_ClientPrefab", ClientPrefab);
+				ClientPrefab = ObjectField("Client Prefab", ClientPrefab);
 				PropertyField("m_ClientSpawnPoint");
 				PropertyField("m_SpawnPeriod");
 				Space();
 
 				LabelField("Factor", EditorStyles.boldLabel);
-				PropertyField("m_RepBias");
-				FloatField("Reputation", Reputation);
-				//PropertyField(m_MultiSpawnProb);
-				FloatField("MultiSpawnProb", MultiSpawnProb);
+				RepBias        = FloatField("Rep Bias",       RepBias);
+				Reputation     = FloatField("Reputation",     Reputation);
+				MultiSpawnProb = FloatField("MultiSpawnProb", MultiSpawnProb);
 				Space();
 
 				LabelField("InGameTime", EditorStyles.boldLabel);
