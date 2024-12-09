@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6269516478181930163}
   - component: {fileID: 6269516478181930172}
   m_Layer: 3
-  m_Name: Client
+  m_Name: Customer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67,6 +67,7 @@ MonoBehaviour:
   m_MenuWaitingTime: 30
   m_EatingTime: 10
   m_EatAgainProb: 0.1
+  m_PayWaitingTime: 10
   state: 0
   order: 0
 --- !u!54 &6269516478181930173

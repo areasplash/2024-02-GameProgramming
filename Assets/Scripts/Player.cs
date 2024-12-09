@@ -93,7 +93,9 @@ public class Player : Entity {
 			input.Normalize();
 			
 			if (InputManager.GetKeyDown(KeyAction.LeftClick)) {
-				if (CameraManager.TryRaycast(InputManager.PointPosition, out Vector3 hit)) {
+				if (CameraManager.TryRaycast(InputManager.PointPosition, out Entity entity)
+					&& entity == interactable) interactable.Interact(this);
+				else if (CameraManager.TryRaycast(InputManager.PointPosition, out Vector3 hit)) {
 					FindPath(hit, ref queue);
 				}
 			}
@@ -125,7 +127,7 @@ public class Player : Entity {
 			else {
 				Vector3 delta = queue.Peek() - transform.position;
 				Velocity = new Vector3(delta.x, 0, delta.z).normalized * Speed;
-				if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.02f) queue.Dequeue();
+				if (new Vector3(delta.x, 0, delta.z).sqrMagnitude < 0.04f) queue.Dequeue();
 			}
 			if (Velocity != Vector3.zero) transform.rotation = Quaternion.LookRotation(Velocity);
 		}

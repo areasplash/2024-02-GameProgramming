@@ -56,7 +56,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 12251147997667328
-    m_Key: Client
+    m_Key: Customer
     m_Metadata:
       m_Items: []
   - m_Id: 12236552176263168
@@ -221,6 +221,26 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 13478057972981760
     m_Key: Money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13962629626060800
+    m_Key: Daily Report
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13962770084913152
+    m_Key: Customer Count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13963380167401472
+    m_Key: Reputation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13963457871077376
+    m_Key: Debt Deadline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 13963756346138624
+    m_Key: Money Needed
     m_Metadata:
       m_Items: []
   m_Metadata:
