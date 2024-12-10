@@ -3,18 +3,27 @@ using UnityEngine.UI;
 
 
 
-public class GameRecipeUI : MonoBehaviour {
+public class GameRecipeUI : MonoSingleton<GameRecipeUI> {
     
 	[SerializeField] Image recipeBackground;
 	[SerializeField] Image recipeImage;
 
-	
 
-	public bool IsShowing {
-		get => recipeBackground? recipeBackground.enabled : default;
+
+	static Image RecipeBackground {
+		get   =>  Instance? Instance.recipeBackground : default;
+		set { if (Instance) Instance.recipeBackground = value; }
+	}
+	static Image RecipeImage {
+		get   =>  Instance? Instance.recipeImage : default;
+		set { if (Instance) Instance.recipeImage = value; }
+	}
+
+	public static bool IsShowing {
+		get => RecipeImage? RecipeImage.enabled : default;
 		set {
-			if (recipeBackground) recipeBackground.enabled = value;
-			if (recipeImage     ) recipeImage     .enabled = value;
+			if (RecipeBackground) RecipeBackground.enabled = value;
+			if (RecipeImage     ) RecipeImage     .enabled = value;
 		}
 	}
 

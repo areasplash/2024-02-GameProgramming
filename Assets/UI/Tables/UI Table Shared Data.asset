@@ -243,6 +243,58 @@ MonoBehaviour:
     m_Key: Money Needed
     m_Metadata:
       m_Items: []
+  - m_Id: 14673225908609024
+    m_Key: Isekai Tavern
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14687949639507968
+    m_Key: Begin Service 0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14688007999053824
+    m_Key: Begin Service 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14688029243203584
+    m_Key: Begin Service 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14688965978087424
+    m_Key: Close Service 0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14689041915961344
+    m_Key: Close Service 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14689963605876736
+    m_Key: Close Service 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690069969231872
+    m_Key: Clear Ending 0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690696489197568
+    m_Key: Clear Ending 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690722103812096
+    m_Key: Clear Ending 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690756207697920
+    m_Key: Fail Ending 0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690798188486656
+    m_Key: Fail Ending 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690909241073664
+    m_Key: Fail Ending 2
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

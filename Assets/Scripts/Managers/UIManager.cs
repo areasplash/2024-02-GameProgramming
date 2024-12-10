@@ -7,9 +7,11 @@ using UnityEngine.Localization.Settings;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Events;
+
 
 #if UNITY_EDITOR
-	using UnityEditor;
+using UnityEditor;
 #endif
 
 
@@ -523,13 +525,12 @@ public class UIManager : MonoSingleton<UIManager> {
 				if (selectable is SettingsSlider  settingsSlider ) settingsSlider .OnSubmit();
 			}
 		}
-		if (InputManager.GetKeyDown(KeyAction.Cancel)) Back();
-	}
-
-	void LateUpdate() {
 		IsGameRunning = HighestCanvas == CanvasType.Game;
 		PeekScreenResolution();
+		UpdateDialogue();
 		UpdateFade();
+
+		if (InputManager.GetKeyDown(KeyAction.Cancel)) Back();
 	}
 
 
@@ -539,9 +540,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ------------------------------------------------------------------------------------------------
 
 	public static void OpenMainMenu() {
-		// Fade Out
 		Open(CanvasType.MainMenu);
-		// Fade In
 	}
 
 
@@ -551,9 +550,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ------------------------------------------------------------------------------------------------
 
 	public static void OpenGame() {
-		// Fade Out
 		Open(CanvasType.Game);
-		// Fade In
 	}
 
 
@@ -562,8 +559,51 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Dialogue Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public static void OpenDialogue() {
+	static CustomText dialogueText;
+	static Queue<string> dialogueQueue = new Queue<string>();
+	static string dialogueString = "";
+	static float  dialogueOffset = 0f;
+	
+	public static UnityEvent OnDialogueEnd { get; private set; } = new UnityEvent();
+
+	public static void UpdateDialogueText(CustomText text) => dialogueText = text;
+
+	public static void EnqueueDialogue(string text) => dialogueQueue.Enqueue(text);
+
+	public static void OpenDialogue(string text = "") {
+		if (!text.Equals("")) EnqueueDialogue(text);
 		Open(CanvasType.Dialogue);
+		Next();
+	}
+
+	public static void Next() {
+		if (dialogueText.Text.Length < dialogueString.Length) {
+			dialogueText.Text = dialogueString;
+			dialogueOffset = 0f;
+		}
+		else if (dialogueQueue.TryDequeue(out string text)) {
+			dialogueText.SetLocalizeText("UI Table", text);
+			dialogueString = dialogueText.GetLocalizeText();
+			dialogueOffset = 0f;
+			dialogueText.Text = "";
+		}
+		else {
+			OnDialogueEnd?.Invoke();
+			OnDialogueEnd?.RemoveAllListeners();
+			Back();
+		}
+	}
+
+	static void UpdateDialogue() {
+		if (HighestCanvas != CanvasType.Dialogue) return;
+		if (InputManager.GetKeyDown(KeyAction.LeftClick)) Next();
+		if (InputManager.GetKeyDown(KeyAction.Interact )) Next();
+
+		if (dialogueText.Text.Length < dialogueString.Length) {
+			dialogueOffset += Time.deltaTime * 10f;
+			int l = Mathf.Min(dialogueText.Text.Length + (int)dialogueOffset, dialogueString.Length);
+			dialogueText.Text = dialogueString[..l];
+		}
 	}
 
 

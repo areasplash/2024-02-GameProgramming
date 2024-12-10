@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 using System.Collections.Generic;
 
@@ -439,17 +440,55 @@ public class GameManager : MonoSingleton<GameManager> {
 		NavMeshManager.Bake();
 	}
 
+	bool beginServiceMessage = true;
+	bool closeServiceMessage = true;
+	bool endingMessage       = true;
+
 	int   moneyDelta      = 0;
 	float reputationDelta = 0f;
 	int   customerCount   = 0;
+	float timer           = 3f;
 
 	void Update() {
 		if (!UIManager.IsGameRunning) return;
 		
+		if (beginServiceMessage) {
+			beginServiceMessage = false;
+			UIManager.EnqueueDialogue("Begin Service 0");
+			UIManager.EnqueueDialogue("Begin Service 1");
+			UIManager.EnqueueDialogue("Begin Service 2");
+			UIManager.OpenDialogue();
+			UIManager.OnDialogueEnd.AddListener(() => GameRecipeUI.IsShowing = true);
+		}
+		if (closeServiceMessage && Hour == CloseHour) {
+			closeServiceMessage = false;
+			UIManager.EnqueueDialogue("Close Service 0");
+			UIManager.EnqueueDialogue("Close Service 1");
+			UIManager.EnqueueDialogue("Close Service 2");
+			UIManager.OpenDialogue();
+		}
+		if (endingMessage && Day == EndDay && Hour == CloseHour) {
+			endingMessage = false;
+			if (MoneyAllocation <= Money) {
+				Money -= MoneyAllocation;
+				UIManager.EnqueueDialogue("Clear Ending 0");
+				UIManager.EnqueueDialogue("Clear Ending 1");
+				UIManager.EnqueueDialogue("Clear Ending 2");
+			}
+			else {
+				UIManager.EnqueueDialogue("Fail Ending 0");
+				UIManager.EnqueueDialogue("Fail Ending 1");
+				UIManager.EnqueueDialogue("Fail Ending 2");
+				UIManager.OnDialogueEnd.AddListener(() => UIManager.Quit());
+			}
+			UIManager.OpenDialogue();
+		}
+
 		if (Hour < CloseHour) {
 			Hour += Time.deltaTime / 3600f * TimeMultiplier;
 			if (Hour < CloseHour - 0.5f) {
-				if (Random.value * SpawnPeriod <= Time.deltaTime) {
+				timer -= Time.deltaTime;
+				if (Random.value * SpawnPeriod <= Time.deltaTime || timer <= 0f) {
 					int count = 1;
 					if (Random.value <= 0.1f) count = Random.Range(2, 5);
 					for (int i = 0; i < count; i++) {
@@ -458,6 +497,7 @@ public class GameManager : MonoSingleton<GameManager> {
 						Vector3 delta = new Vector3(Mathf.Cos(radian), 0f, Mathf.Sin(radian)) * radius;
 						SpawnCustomer(CustomerSpawnPoint + delta);
 						customerCount++;
+						timer = SpawnPeriod;
 					}
 				}
 			}
