@@ -10,7 +10,7 @@ using System.Collections.Generic;
 	Player,
 	Staff,
 	
-	Client,
+	Customer,
 		Adventurer,
 		Knight,
 		Necromancer,
@@ -60,6 +60,7 @@ using System.Collections.Generic;
 		UILoading,
 		UIEating,
 		UIDrinking,
+		UIPaying,
 		UIBad,
 		UIBarBorder,
 		UIBarFill,

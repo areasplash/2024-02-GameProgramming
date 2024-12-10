@@ -68,7 +68,7 @@ public class Chair : Entity {
 	// ================================================================================================
 
 	public override InteractionType Interactable(Entity entity) {
-		if (entity is Client) {
+		if (entity is Customer) {
 			if      (table && !Occupant) return InteractionType.Interact;
 			else if (Occupant == entity) return InteractionType.Cancel;
 		}
@@ -76,7 +76,7 @@ public class Chair : Entity {
 	}
 
 	public override void Interact(Entity entity) {
-		if (entity is Client) {
+		if (entity is Customer) {
 			if      (table && !Occupant) Occupant = entity;
 			else if (Occupant == entity) Occupant = null;
 		}

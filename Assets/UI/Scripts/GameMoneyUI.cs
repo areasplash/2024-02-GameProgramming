@@ -31,7 +31,7 @@ public class GameMoneyUI : MonoBehaviour {
 		money = GameManager.Money;
 
 		if (fill) {
-			float ratio = Mathf.Clamp01(money / GameManager.MoneyThreshold);
+			float ratio = Mathf.Clamp01((float)money / GameManager.MoneyAllocation);
 			fill.localScale = new Vector3(ratio, 1, 1);
 		}
 

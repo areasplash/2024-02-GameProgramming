@@ -1,5 +1,7 @@
 using UnityEngine;
 
+using System.Collections.Generic;
+
 #if UNITY_EDITOR
 	using UnityEditor;
 #endif
@@ -73,6 +75,14 @@ public class Money : Entity {
 	// ================================================================================================
 	// Methods
 	// ================================================================================================
+
+	static List<Money> list = new List<Money>();
+	public static List<Money> List => list;
+
+	void OnEnable () => list.Add   (this);
+	void OnDisable() => list.Remove(this);
+
+
 
 	public override InteractionType Interactable(Entity entity) {
 		if (entity is Player || entity is Staff) {

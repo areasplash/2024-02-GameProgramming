@@ -67,44 +67,30 @@ public class Pot : Entity {
 	// Methods
 	// ================================================================================================
 
-	bool IsItem(EntityType type) => type switch {
-		EntityType.Item          => true,
-		EntityType.ItemPlatter   => true,
-		EntityType.ItemFlour     => true,
-		EntityType.ItemButter    => true,
-		EntityType.ItemCheese    => true,
-		EntityType.ItemBlueberry => true,
-		EntityType.ItemTomato    => true,
-		EntityType.ItemPotato    => true,
-		EntityType.ItemCabbage   => true,
-		EntityType.ItemMeat      => true,
-		_ => false,
-	};
-
-
-
 	public override InteractionType Interactable(Entity entity) {
 		switch (state) {
 			case State.Waiting:
 				if (entity is Player) {
 					Player player = entity as Player;
 					int index = player.Holdings.FindIndex((EntityType type)
-						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+						=> GameManager.Item.Contains(type) && Holdings.IndexOf(type) == -1);
 					if (index != -1) return InteractionType.Add;
 					else if (0 < Holdings.Count) return InteractionType.Cook;
 				}
 				if (entity is Staff) {
 					Staff staff = entity as Staff;
 					int index = staff.Holdings.FindIndex((EntityType type)
-						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+						=> GameManager.Item.Contains(type) && Holdings.IndexOf(type) == -1);
 					if (index != -1) return InteractionType.Add;
 					else if (0 < Holdings.Count) return InteractionType.Cook;
 				}
 				break;
+
 			case State.Cooking:
 				if (entity is Player) return InteractionType.Cancel;
 				if (entity is Staff ) return InteractionType.Cancel;
 				break;
+
 			case State.Success:
 				if (entity is Player) return InteractionType.TakeOut;
 				if (entity is Staff ) return InteractionType.TakeOut;
@@ -119,7 +105,7 @@ public class Pot : Entity {
 				if (entity is Player) {
 					Player player = entity as Player;
 					int index = player.Holdings.FindIndex((EntityType type)
-						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+						=> GameManager.Item.Contains(type) && Holdings.IndexOf(type) == -1);
 					if (index != -1) {
 						Holdings.Add(player.Holdings[index]);
 						player.Holdings.RemoveAt(index);
@@ -132,7 +118,7 @@ public class Pot : Entity {
 				else if (entity is Staff) {
 					Staff staff = entity as Staff;
 					int index = staff.Holdings.FindIndex((EntityType type)
-						=> IsItem(type) && Holdings.IndexOf(type) == -1);
+						=> GameManager.Item.Contains(type) && Holdings.IndexOf(type) == -1);
 					if (index != -1) {
 						Holdings.Add(staff.Holdings[index]);
 						staff.Holdings.RemoveAt(index);
@@ -143,6 +129,7 @@ public class Pot : Entity {
 					}
 				}
 				break;
+
 			case State.Cooking:
 				if (entity is Player) {
 					Holdings.Clear();
@@ -155,6 +142,7 @@ public class Pot : Entity {
 					Offset = 0f;
 				}
 				break;
+				
 			case State.Success:
 				if (entity is Player) {
 					(entity as Player).Holdings.Add(Holdings[0]);
@@ -225,14 +213,21 @@ public class Pot : Entity {
 					DrawManager.DrawEntity(transform.position + new Vector3(x, 3f, z), Holdings[i]);
 				}
 				Vector3 position = transform.position + new Vector3(0, 4f, 0);
-				DrawManager.DrawEntity(position, EntityType.UIBarFill, Mathf.Clamp01(Offset / CookingTime));
+				float clamp = Mathf.Clamp01(Offset / CookingTime);
+				DrawManager.DrawEntity(position, EntityType.UIBarFill, clamp);
 				DrawManager.DrawEntity(position, EntityType.UIBarBorder);
 				if (CookingTime < Offset) {
 					EntityType result = GameManager.GetFoodFromRecipe(Holdings);
 					Holdings.Clear();
-					Holdings.Add(result);
-					state = (result != EntityType.None) ? State.Success : State.Failure;
-					Offset = 0f;
+					if (GameManager.Recipe.ContainsKey(result)) {
+						Holdings.Add(result);
+						state = State.Success;
+						Offset = 0f;
+					}
+					else {
+						state = State.Failure;
+						Offset = 0f;
+					}
 				}
 				break;
 

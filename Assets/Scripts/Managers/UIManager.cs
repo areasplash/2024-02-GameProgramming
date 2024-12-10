@@ -506,13 +506,12 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ================================================================================================
 
 	void Start() {
+		FadeIn();
 		LoadSettings();
 		OpenMainMenu();
 	}
 
 	void Update() {
-		IsGameRunning = HighestCanvas == CanvasType.Game;
-
 		if (InputManager.GetKeyDown(KeyAction.Move)) {
 			if (!Selected) Selected = FS;
 		}
@@ -529,6 +528,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	}
 
 	void LateUpdate() {
+		IsGameRunning = HighestCanvas == CanvasType.Game;
 		PeekScreenResolution();
 		UpdateFade();
 	}
@@ -906,7 +906,7 @@ public class UIManager : MonoSingleton<UIManager> {
 	static void UpdateFade() {
 		if (fadeState != 0) {
 			Color color = fadeImage.color;
-			color.a = Mathf.MoveTowards(color.a, fadeState == 1 ? 1.0f : 0.0f, Time.fixedDeltaTime);
+			color.a = Mathf.MoveTowards(color.a, fadeState == 1 ? 1.0f : 0.0f, Time.deltaTime * 2f);
 			fadeImage.color = color;
 			if (color.a == 0.0f) {
 				ActiveCanvas &= ~CanvasType.Fade;

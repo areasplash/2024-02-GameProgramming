@@ -16,7 +16,7 @@ SpriteAtlasAsset:
       compressionQuality: 50
       maxTextureSize: 2048
       textureCompression: 0
-      filterMode: 1
+      filterMode: 0
       generateMipMaps: 0
       readable: 0
       crunchedCompression: 0
@@ -24,7 +24,7 @@ SpriteAtlasAsset:
     platformSettings:
     - serializedVersion: 3
       m_BuildTarget: DefaultTexturePlatform
-      m_MaxTextureSize: 2048
+      m_MaxTextureSize: 8192
       m_ResizeAlgorithm: 0
       m_TextureFormat: -1
       m_TextureCompression: 0
@@ -83,6 +83,13 @@ SpriteAtlasAsset:
     - {fileID: 21300000, guid: b2dedbccdb60a6a49818f4d0a9d2e1c1, type: 3}
     - {fileID: 21300000, guid: 0c9c9b82a9d0ef946aac44badd034ad0, type: 3}
     - {fileID: 21300000, guid: 69b66f289afd3d04c91585f67fb617d2, type: 3}
+    - {fileID: 21300000, guid: 85b0bc1bcefe64f4ca56c4b39db76ecb, type: 3}
+    - {fileID: 21300000, guid: 7743d0aa9aa275149bcadf891dc467df, type: 3}
+    - {fileID: 21300000, guid: 1835abb13cfafd645afeec576a2a5a94, type: 3}
+    - {fileID: 21300000, guid: 6da9f7847eae71849896c71023d5aded, type: 3}
+    - {fileID: 21300000, guid: 4fb5e6b9bfdc47742885e908f8a074f2, type: 3}
+    - {fileID: 21300000, guid: be426d1c220a4d94b8d69863548532fe, type: 3}
+    - {fileID: 21300000, guid: 0e3d34dfd16c1524c8bdb6c6b2efc05c, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}

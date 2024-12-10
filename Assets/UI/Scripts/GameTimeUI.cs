@@ -24,18 +24,17 @@ public class GameTimeUI : MonoBehaviour {
 
 
 
-	int hh = 0;
-	int mm = 0;
+	float hour;
 
 	void LateUpdate() {
-		if (hh == GameManager.Hour && mm == GameManager.Minute) return;
-		hh = GameManager.Hour;
-		mm = GameManager.Minute;
+		if (hour == GameManager.Hour) return;
+		hour = GameManager.Hour;
 
+		int hh = Mathf.FloorToInt(hour);
+		int mm = Mathf.FloorToInt((hour - hh) * 4) * 15;
 		if (fill) {
-			float ratio = hh - GameManager.OpenHour + mm / 60f;
-			ratio = Mathf.Clamp01(ratio / (GameManager.CloseHour - GameManager.OpenHour));
-			fill.localScale = new Vector3(ratio, 1, 1);
+			float x = (hour - GameManager.OpenHour) / (GameManager.CloseHour - GameManager.OpenHour);
+			fill.localScale = new Vector3(x, 1, 1);
 		}
 
 		if (anchor) {

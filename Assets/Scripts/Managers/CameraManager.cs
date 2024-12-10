@@ -298,6 +298,26 @@ public class CameraManager : MonoSingleton<CameraManager> {
 		return false;
 	}
 
+	public static bool TryRaycast(Vector3 position, out Entity entity) {
+		if (MainCamera) {
+			float multiplier = (float)RenderTextureSize.x / Screen.width;
+			Vector3 viewport = MainCameraDirect.ScreenToViewportPoint(position * multiplier);
+			Ray ray = MainCameraDirect.ViewportPointToRay(viewport);
+
+			QueryTriggerInteraction query = QueryTriggerInteraction.Ignore;
+			int num = Physics.RaycastNonAlloc(ray, hits, 1000, -5, query);
+			for (int i = 0; i < num; i++) {
+				Transform transform = hits[i].collider.transform;
+				if (Utility.TryGetComponentInParent(transform, out Entity e)) {
+					entity = e;
+					return true;
+				}
+			}
+		}
+		entity = default;
+		return false;
+	}
+
 	public static Vector3 GetPixelated(Vector3 position) {
 		if (Instance) {
 			float pixelPerUnit = UIManager.PixelPerUnit;
