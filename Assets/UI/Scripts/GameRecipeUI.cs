@@ -20,5 +20,8 @@ public class GameRecipeUI : MonoBehaviour {
 
 
 
-	public void SwitchRecipe() => IsShowing = !IsShowing;
+	public void SwitchRecipe() {
+		GameManager.SFXSource.PlayOneShot(GameManager.TurnPageSFX);
+		IsShowing = !IsShowing;
+	}
 }

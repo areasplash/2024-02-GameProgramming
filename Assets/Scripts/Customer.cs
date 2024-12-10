@@ -153,12 +153,14 @@ public class Customer : Entity {
 			case State.PayWaiting:
 				if (entity is Player) {
 					GameManager.Money += pay;
+					GameManager.SFXSource.PlayOneShot(GameManager.MoneySFX);
 					pay = 0;
 					state = State.BeginExiting;
 					Offset = 0f;
 				}
 				if (entity is Staff) {
 					GameManager.Money += pay;
+					GameManager.SFXSource.PlayOneShot(GameManager.MoneySFX);
 					pay = 0;
 					state = State.BeginExiting;
 					Offset = 0f;
@@ -273,6 +275,7 @@ public class Customer : Entity {
 					order = list[Random.Range(0, list.Count)];
 					state = State.MenuWaiting;
 					Offset = 0f;
+					GameManager.SFXSource.PlayOneShot(GameManager.DialogSFX);
 				}
 				break;
 
@@ -296,6 +299,7 @@ public class Customer : Entity {
 					if (Random.value < EatAgainProb) {
 						state = State.MenuChoosing;
 						Offset = 0f;
+						GameManager.SFXSource.PlayOneShot(GameManager.DialogSFX);
 					}
 					else {
 						reputationWeight += 0.5f;

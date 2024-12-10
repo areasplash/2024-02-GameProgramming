@@ -108,6 +108,10 @@ public class GameManager : MonoSingleton<GameManager> {
 	[SerializeField] AudioClip   m_LobbyBGM;
 	[SerializeField] AudioClip   m_OpenBGM;
 	[SerializeField] AudioClip   m_ClosedBGM;
+	[SerializeField] AudioClip   m_InstallSFX;
+	[SerializeField] AudioClip   m_DialogSFX;
+	[SerializeField] AudioClip   m_MoneySFX;
+	[SerializeField] AudioClip   m_TurnPageSFX;
 
 
 
@@ -280,6 +284,26 @@ public class GameManager : MonoSingleton<GameManager> {
 		set { if (Instance)  Instance.m_ClosedBGM = value; }
 	}
 
+	public static AudioClip InstallSFX {
+		get   =>  Instance ? Instance.m_InstallSFX : default;
+		set { if (Instance)  Instance.m_InstallSFX = value; }
+	}
+
+	public static AudioClip DialogSFX {
+		get   =>  Instance ? Instance.m_DialogSFX : default;
+		set { if (Instance)  Instance.m_DialogSFX = value; }
+	}
+
+	public static AudioClip MoneySFX {
+		get   =>  Instance ? Instance.m_MoneySFX : default;
+		set { if (Instance)  Instance.m_MoneySFX = value; }
+	}
+
+	public static AudioClip TurnPageSFX {
+		get   =>  Instance ? Instance.m_TurnPageSFX : default;
+		set { if (Instance)  Instance.m_TurnPageSFX = value; }
+	}
+
 	public static bool TableAvailable     => TableCount     < 10;
 	public static bool ChairAvailable     => ChairCount     < 20;
 	public static bool PotAvailable       => PotCount       <  5;
@@ -348,12 +372,22 @@ public class GameManager : MonoSingleton<GameManager> {
 				StaffCount     = IntField("Staff Count",     StaffCount    );
 				Space();
 
-				LabelField("Audio", EditorStyles.boldLabel);
+				LabelField("AudioSource", EditorStyles.boldLabel);
 				/*BGMSource        = */ObjectField("BGM",    BGMSource	);
 				/*SFXSource        = */ObjectField("SFX",    SFXSource	);
-				LobbyBGM           = ObjectField("LobbyBGM",  LobbyBGM);
+				Space();
+
+				LabelField("BGM", EditorStyles.boldLabel);
+				LobbyBGM           = ObjectField("LobbyBGM", LobbyBGM   );
 				OpenBGM            = ObjectField("OpenBGM",  OpenBGM	);
 				ClosedBGM          = ObjectField("ClosedBGM",ClosedBGM	);
+				Space();
+
+				LabelField("SFX", EditorStyles.boldLabel);
+				InstallSFX         = ObjectField("InstallSFX", InstallSFX );
+				DialogSFX          = ObjectField("DialogSFX",  DialogSFX  );
+				MoneySFX           = ObjectField("MoneySFX",   MoneySFX   );
+				TurnPageSFX        = ObjectField("TurnPageSFX",TurnPageSFX);
 
 				End();
 			}
@@ -489,11 +523,7 @@ public class GameManager : MonoSingleton<GameManager> {
         	BGMSource.volume = 1f;
 		}
 	}
-	public void ChangeBGM(AudioClip clip)
-    {
-        StartCoroutine(FadeInOutBGM(clip));
-    }
-
+	public void ChangeBGM(AudioClip clip) => StartCoroutine(FadeInOutBGM(clip));
 
 	// ================================================================================================
 	// Lifecycle

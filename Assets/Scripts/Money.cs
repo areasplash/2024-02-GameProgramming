@@ -93,6 +93,7 @@ public class Money : Entity {
 
 	public override void Interact(Entity entity) {
 		if (entity is Player || entity is Staff) {
+			GameManager.SFXSource.PlayOneShot(GameManager.MoneySFX);
 			GameManager.Money += Value;
 			Destroy(gameObject);
 		}
