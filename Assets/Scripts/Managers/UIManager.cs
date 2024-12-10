@@ -541,6 +541,7 @@ public class UIManager : MonoSingleton<UIManager> {
 
 	public static void OpenMainMenu() {
 		// Fade Out
+		if (GameManager.Instance != null) GameManager.Instance.ChangeBGM(GameManager.LobbyBGM);
 		Open(CanvasType.MainMenu);
 		// Fade In
 	}

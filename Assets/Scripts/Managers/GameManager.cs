@@ -1,9 +1,11 @@
 using UnityEngine;
 
 using System.Collections.Generic;
+using System.Collections;
+
 
 #if UNITY_EDITOR
-	using UnityEditor;
+using UnityEditor;
 #endif
 
 
@@ -100,6 +102,13 @@ public class GameManager : MonoSingleton<GameManager> {
 	[SerializeField] int m_PotCount       = 0;
 	[SerializeField] int m_ExpansionCount = 0;
 	[SerializeField] int m_StaffCount     = 0;
+
+	[SerializeField] AudioSource m_BGMSource;
+	[SerializeField] AudioSource m_SFXSource;
+	[SerializeField] AudioClip   m_LobbyBGM;
+	[SerializeField] AudioClip   m_OpenBGM;
+	[SerializeField] AudioClip   m_ClosedBGM;
+
 
 
 
@@ -247,6 +256,30 @@ public class GameManager : MonoSingleton<GameManager> {
 		set { if (Instance)  Instance.m_StaffCount = value; }
 	}
 
+	public static AudioSource BGMSource {
+		get   =>  Instance ? Instance.m_BGMSource : default;
+		set { if (Instance)  Instance.m_BGMSource = value; }
+	}
+
+	public static AudioSource SFXSource {
+		get   =>  Instance ? Instance.m_SFXSource : default;
+		set { if (Instance)  Instance.m_SFXSource = value; }
+	}
+	public static AudioClip LobbyBGM {
+		get   =>  Instance ? Instance.m_LobbyBGM : default;
+		set { if (Instance)  Instance.m_LobbyBGM = value; }
+	}
+
+	public static AudioClip OpenBGM {
+		get   =>  Instance ? Instance.m_OpenBGM : default;
+		set { if (Instance)  Instance.m_OpenBGM = value; }
+	}
+
+	public static AudioClip ClosedBGM {
+		get   =>  Instance ? Instance.m_ClosedBGM : default;
+		set { if (Instance)  Instance.m_ClosedBGM = value; }
+	}
+
 	public static bool TableAvailable     => TableCount     < 10;
 	public static bool ChairAvailable     => ChairCount     < 20;
 	public static bool PotAvailable       => PotCount       <  5;
@@ -314,6 +347,13 @@ public class GameManager : MonoSingleton<GameManager> {
 				ExpansionCount = IntField("Expansion Count", ExpansionCount);
 				StaffCount     = IntField("Staff Count",     StaffCount    );
 				Space();
+
+				LabelField("Audio", EditorStyles.boldLabel);
+				/*BGMSource        = */ObjectField("BGM",    BGMSource	);
+				/*SFXSource        = */ObjectField("SFX",    SFXSource	);
+				LobbyBGM           = ObjectField("LobbyBGM",  LobbyBGM);
+				OpenBGM            = ObjectField("OpenBGM",  OpenBGM	);
+				ClosedBGM          = ObjectField("ClosedBGM",ClosedBGM	);
 
 				End();
 			}
@@ -429,6 +469,30 @@ public class GameManager : MonoSingleton<GameManager> {
 		}
 	}
 
+	public static IEnumerator FadeInOutBGM(AudioClip clip) {
+		if (BGMSource.clip != clip) {
+			float startVolume = BGMSource.volume;
+			for (float t = 0; t < 0.5f; t += Time.deltaTime) {
+				BGMSource.volume = Mathf.Lerp(startVolume, 0, t / 0.5f);
+				yield return null;
+			}
+			BGMSource.volume = 0;
+			BGMSource.Stop();
+
+			BGMSource.clip = clip;
+			BGMSource.Play();
+
+			for (float t = 0; t < 1f; t += Time.deltaTime) {
+            	BGMSource.volume = Mathf.Lerp(0, startVolume, t / 0.5f);
+            	yield return null;
+        	}
+        	BGMSource.volume = 1f;
+		}
+	}
+	public void ChangeBGM(AudioClip clip)
+    {
+        StartCoroutine(FadeInOutBGM(clip));
+    }
 
 
 	// ================================================================================================
@@ -437,6 +501,12 @@ public class GameManager : MonoSingleton<GameManager> {
 
 	void Start() {
 		NavMeshManager.Bake();
+		AudioSource[] sources = GetComponents<AudioSource>();
+
+		if (sources.Length >= 2) {
+			BGMSource = sources[0];
+			SFXSource = sources[1];
+		}
 	}
 
 	int   moneyDelta      = 0;
@@ -447,6 +517,7 @@ public class GameManager : MonoSingleton<GameManager> {
 		if (!UIManager.IsGameRunning) return;
 		
 		if (Hour < CloseHour) {
+			ChangeBGM(OpenBGM);
 			Hour += Time.deltaTime / 3600f * TimeMultiplier;
 			if (Hour < CloseHour - 0.5f) {
 				if (Random.value * SpawnPeriod <= Time.deltaTime) {
@@ -462,6 +533,7 @@ public class GameManager : MonoSingleton<GameManager> {
 				}
 			}
 			if (Hour == CloseHour) {
+				ChangeBGM(ClosedBGM);
 				moneyDelta = Money - moneyDelta;
 				reputationDelta = Reputation - reputationDelta;
 				string a = customerCount.ToString();
