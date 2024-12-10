@@ -113,6 +113,7 @@ public class Pot : Entity {
 					else if (0 < Holdings.Count) {
 						state = State.Cooking;
 						Offset = 0f;
+						GameManager.SFXSource.PlayOneShot(GameManager.CookingSFX);
 					}
 				}
 				else if (entity is Staff) {
@@ -126,6 +127,7 @@ public class Pot : Entity {
 					else if (0 < Holdings.Count) {
 						state = State.Cooking;
 						Offset = 0f;
+						GameManager.SFXSource.PlayOneShot(GameManager.CookingSFX);
 					}
 				}
 				break;

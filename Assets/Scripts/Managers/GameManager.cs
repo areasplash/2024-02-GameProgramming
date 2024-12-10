@@ -112,6 +112,7 @@ public class GameManager : MonoSingleton<GameManager> {
 	[SerializeField] AudioClip   m_DialogSFX;
 	[SerializeField] AudioClip   m_MoneySFX;
 	[SerializeField] AudioClip   m_TurnPageSFX;
+	[SerializeField] AudioClip   m_CookingSFX;
 
 
 
@@ -304,6 +305,11 @@ public class GameManager : MonoSingleton<GameManager> {
 		set { if (Instance)  Instance.m_TurnPageSFX = value; }
 	}
 
+	public static AudioClip CookingSFX {
+		get   =>  Instance ? Instance.m_CookingSFX : default;
+		set { if (Instance)  Instance.m_CookingSFX = value; }
+	}
+
 	public static bool TableAvailable     => TableCount     < 10;
 	public static bool ChairAvailable     => ChairCount     < 20;
 	public static bool PotAvailable       => PotCount       <  5;
@@ -388,6 +394,7 @@ public class GameManager : MonoSingleton<GameManager> {
 				DialogSFX          = ObjectField("DialogSFX",  DialogSFX  );
 				MoneySFX           = ObjectField("MoneySFX",   MoneySFX   );
 				TurnPageSFX        = ObjectField("TurnPageSFX",TurnPageSFX);
+				CookingSFX         = ObjectField("CookingSFX", CookingSFX );
 
 				End();
 			}
