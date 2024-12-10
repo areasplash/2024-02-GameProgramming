@@ -525,12 +525,14 @@ public class UIManager : MonoSingleton<UIManager> {
 				if (selectable is SettingsSlider  settingsSlider ) settingsSlider .OnSubmit();
 			}
 		}
-		IsGameRunning = HighestCanvas == CanvasType.Game;
-		PeekScreenResolution();
 		UpdateDialogue();
 		UpdateFade();
-
 		if (InputManager.GetKeyDown(KeyAction.Cancel)) Back();
+	}
+
+	void LateUpdate() {
+		IsGameRunning = HighestCanvas == CanvasType.Game;
+		PeekScreenResolution();
 	}
 
 
@@ -550,7 +552,15 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ------------------------------------------------------------------------------------------------
 
 	public static void OpenGame() {
+		Instance.StartCoroutine(OpenGameCoroutine());
+	}
+	
+	static IEnumerator OpenGameCoroutine() {
+		FadeOut();
+		yield return new WaitForSeconds(1f);
 		Open(CanvasType.Game);
+		yield return new WaitForSeconds(1f);
+		FadeIn();
 	}
 
 
@@ -579,7 +589,6 @@ public class UIManager : MonoSingleton<UIManager> {
 	public static void Next() {
 		if (dialogueText.Text.Length < dialogueString.Length) {
 			dialogueText.Text = dialogueString;
-			dialogueOffset = 0f;
 		}
 		else if (dialogueQueue.TryDequeue(out string text)) {
 			dialogueText.SetLocalizeText("UI Table", text);
@@ -598,10 +607,10 @@ public class UIManager : MonoSingleton<UIManager> {
 		if (HighestCanvas != CanvasType.Dialogue) return;
 		if (InputManager.GetKeyDown(KeyAction.LeftClick)) Next();
 		if (InputManager.GetKeyDown(KeyAction.Interact )) Next();
-
+		
 		if (dialogueText.Text.Length < dialogueString.Length) {
-			dialogueOffset += Time.deltaTime * 10f;
-			int l = Mathf.Min(dialogueText.Text.Length + (int)dialogueOffset, dialogueString.Length);
+			dialogueOffset += Time.deltaTime * 20f;
+			int l = Mathf.Min((int)dialogueOffset, dialogueString.Length);
 			dialogueText.Text = dialogueString[..l];
 		}
 	}
@@ -677,6 +686,28 @@ public class UIManager : MonoSingleton<UIManager> {
 	public static void SetFullScreen(bool value) {
 		fullScreen = value ? 2 : 1;
 		Screen.fullScreen = value;
+
+		if (screenResolutionStepper) {
+			int screenIndex = Array.FindIndex(ResolutionPresets, preset =>
+				preset.x == Screen.width &&
+				preset.y == Screen.height);
+			int screenIndexFloor = Array.FindLastIndex(ResolutionPresets, preset =>
+				preset.x <= Screen.width &&
+				preset.y <= Screen.height);
+			int screenIndexMax = Array.FindLastIndex(ResolutionPresets, preset =>
+				preset.x < Screen.currentResolution.width &&
+				preset.y < Screen.currentResolution.height);
+
+			string text       = $"{Screen.width} x {Screen.height}";
+			bool interactable = !value;
+			bool enablePrev   = !value && screenIndex != 0 && screenIndexFloor != -1;
+			bool enableNext   = !value && screenIndexFloor < screenIndexMax;
+
+			screenResolutionStepper.Text         = text;
+			screenResolutionStepper.interactable = interactable;
+			screenResolutionStepper.EnablePrev   = enablePrev;
+			screenResolutionStepper.EnableNext   = enableNext;
+		}
 	}
 
 

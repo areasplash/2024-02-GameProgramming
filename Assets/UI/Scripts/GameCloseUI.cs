@@ -69,12 +69,19 @@ public class GameCloseUI : MonoBehaviour {
 	}
 
 	void SwitchUI(bool value) {
+		next     .gameObject.SetActive(value);
+
 		table    .gameObject.SetActive(value);
 		chair    .gameObject.SetActive(value);
 		pot      .gameObject.SetActive(value);
 		expansion.gameObject.SetActive(value);
 		staff    .gameObject.SetActive(value);
-		next     .gameObject.SetActive(value);
+
+		tableMax	.gameObject.SetActive(value);
+		chairMax	.gameObject.SetActive(value);
+		potMax		.gameObject.SetActive(value);
+		expansionMax.gameObject.SetActive(value);
+		staffMax	.gameObject.SetActive(value);
 		
 		anchorTable    .gameObject.SetActive(value);
 		anchorChair    .gameObject.SetActive(value);
@@ -137,11 +144,11 @@ public class GameCloseUI : MonoBehaviour {
 
 		if (money != GameManager.Money) {
 			money  = GameManager.Money;
-			UpdateText(table,     anchorTable,     GameManager.TableCost,     tableMax,     GameManager.TableAvailable);
-			UpdateText(chair,     anchorChair,     GameManager.ChairCost,     chairMax,     GameManager.ChairAvailable);
-			UpdateText(pot,       anchorPot,       GameManager.PotCost,       potMax,       GameManager.PotAvailable);
-			UpdateText(expansion, anchorExpansion, GameManager.ExpansionCost, expansionMax, GameManager.ExpansionAvailable);
-			UpdateText(staff,     anchorStaff,     GameManager.StaffCost,     staffMax,     GameManager.StaffAvailable);
+			UpdateText(table,     anchorTable,     tableMax,     GameManager.TableAvailable);
+			UpdateText(chair,     anchorChair,     chairMax,     GameManager.ChairAvailable);
+			UpdateText(pot,       anchorPot,       potMax,       GameManager.PotAvailable);
+			UpdateText(expansion, anchorExpansion, expansionMax, GameManager.ExpansionAvailable);
+			UpdateText(staff,     anchorStaff,     staffMax,     GameManager.StaffAvailable);
 		}
 	}
 
@@ -190,14 +197,23 @@ public class GameCloseUI : MonoBehaviour {
 		}
 	}
 
-	void UpdateText(Image image, RectTransform anchor, int cost, Image maxImage, bool available) {
-		float alpha = available ? (cost <= GameManager.Money ? 1.0f : 0.25f) : 0f;
-		if (image) image.color = new Color(1.0f, 1.0f, 1.0f, Mathf.Max(0.25f, alpha));
+	void UpdateText(Image image, RectTransform anchor, Image maxImage, int available) {
+		if (image) image.color = new Color(1.0f, 1.0f, 1.0f, available switch {
+			1 => 1.00f,
+			_ => 0.25f,
+		});
 		for (int i = 0; i < anchor.childCount; i++) {
 			if (anchor.GetChild(i).TryGetComponent(out Image e))
-				e.color = new Color(1.0f, 1.0f, 1.0f, alpha);
+				e.color = new Color(1.0f, 1.0f, 1.0f, available switch {
+					2 => 0.00f,
+					1 => 1.00f,
+					_ => 0.25f,
+				});
 		}
-		if (maxImage) maxImage.color = new Color(1.0f, 1.0f, 1.0f, available ? 0f : 0.25f);
+		if (maxImage) maxImage.color = new Color(1.0f, 1.0f, 1.0f, available switch {
+			2 => 0.25f,
+			_ => 0.00f,
+		});
 	}
 
 	public void OnTableClick    () { if (IsTableActive    ) GameManager.OnTableClick    (); }

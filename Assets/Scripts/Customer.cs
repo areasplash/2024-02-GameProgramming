@@ -298,7 +298,7 @@ public class Customer : Entity {
 						Offset = 0f;
 					}
 					else {
-						reputationWeight += 0.5f;
+						reputationWeight += 0.25f;
 						state = State.PayWaiting;
 						Offset = 0f;
 					}

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 using System.Collections.Generic;
 
@@ -101,6 +100,12 @@ public class GameManager : MonoSingleton<GameManager> {
 	[SerializeField] int m_PotCount       = 0;
 	[SerializeField] int m_ExpansionCount = 0;
 	[SerializeField] int m_StaffCount     = 0;
+
+	[SerializeField] List<GameObject> m_TableList = new List<GameObject>();
+	[SerializeField] List<GameObject> m_ChairList = new List<GameObject>();
+	[SerializeField] List<GameObject> m_PotList   = new List<GameObject>();
+	[SerializeField] List<GameObject> m_ExpansionDList = new List<GameObject>();
+	[SerializeField] List<GameObject> m_ExpansionEList = new List<GameObject>();
 
 
 
@@ -248,11 +253,50 @@ public class GameManager : MonoSingleton<GameManager> {
 		set { if (Instance)  Instance.m_StaffCount = value; }
 	}
 
-	public static bool TableAvailable     => TableCount     < 10;
-	public static bool ChairAvailable     => ChairCount     < 20;
-	public static bool PotAvailable       => PotCount       <  5;
-	public static bool ExpansionAvailable => ExpansionCount <  3;
-	public static bool StaffAvailable     => true;
+	public static List<GameObject> TableList => Instance ? Instance.m_TableList : default;
+	public static List<GameObject> ChairList => Instance ? Instance.m_ChairList : default;
+	public static List<GameObject> PotList   => Instance ? Instance.m_PotList   : default;
+	public static List<GameObject> ExpansionDList => Instance ? Instance.m_ExpansionDList : default;
+	public static List<GameObject> ExpansionEList => Instance ? Instance.m_ExpansionEList : default;
+
+	public static int TableAvailable {
+		get {
+			bool max = TableCount == TableList.Count;
+			bool match = TableCost <= Money;
+			match &= ExpansionCount == 0 ? TableCount < 3 : TableCount < 7;
+			return max ? 2 : (match ? 1 : 0);
+		}
+	}
+	public static int ChairAvailable {
+		get {
+			bool max = ChairCount == ChairList.Count;
+			bool match = ChairCost <= Money;
+			match &= ExpansionCount == 0 ? ChairCount < 3 : ChairCount < 7;
+			match &= ChairCount < TableCount;
+			return max ? 2 : (match ? 1 : 0);
+		}
+	}
+	public static int PotAvailable {
+		get {
+			bool max = PotCount == PotList.Count;
+			bool match = PotCost <= Money;
+			return max ? 2 : (match ? 1 : 0);
+		}
+	}
+	public static int ExpansionAvailable {
+		get {
+			bool max = ExpansionCount == ExpansionDList.Count;
+			bool match = ExpansionCost <= Money;
+			return max ? 2 : (match ? 1 : 0);
+		}
+	}
+	public static int StaffAvailable {
+		get {
+			bool max = false;
+			bool match = StaffCost <= Money;
+			return max ? 2 : (match ? 1 : 0);
+		}
+	}
 
 
 
@@ -314,6 +358,14 @@ public class GameManager : MonoSingleton<GameManager> {
 				PotCount       = IntField("Pot Count",       PotCount      );
 				ExpansionCount = IntField("Expansion Count", ExpansionCount);
 				StaffCount     = IntField("Staff Count",     StaffCount    );
+				Space();
+
+				LabelField("List", EditorStyles.boldLabel);
+				PropertyField("m_TableList");
+				PropertyField("m_ChairList");
+				PropertyField("m_PotList");
+				PropertyField("m_ExpansionDList");
+				PropertyField("m_ExpansionEList");
 				Space();
 
 				End();
@@ -379,46 +431,34 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 	public static void OnTableClick() {
-		if (TableAvailable) {
-			TableCount++;
-			Money -= TableCost;
-			// enable table
-			NavMeshManager.Bake();
-		}
+		TableList[TableCount++].SetActive(true);
+		Money -= TableCost;
+		NavMeshManager.Bake();
 	}
 	public static void OnChairClick() {
-		if (ChairAvailable) {
-			ChairCount++;
-			Money -= ChairCost;
-			// enable chair
-			NavMeshManager.Bake();
-		}
+		ChairList[ChairCount++].SetActive(true);
+		Money -= ChairCost;
+		NavMeshManager.Bake();
 	}
 	public static void OnPotClick() {
-		if (PotAvailable) {
-			PotCount++;
-			Money -= PotCost;
-			// enable pot
-			NavMeshManager.Bake();
-		}
+		PotList[PotCount++].SetActive(true);
+		Money -= PotCost;
+		NavMeshManager.Bake();
 	}
 	public static void OnExpansionClick() {
-		if (ExpansionAvailable) {
-			ExpansionCount++;
-			Money -= ExpansionCost;
-			// enable expansion
-			NavMeshManager.Bake();
-		}
+		ExpansionDList[ExpansionCount].SetActive(false);
+		ExpansionEList[ExpansionCount].SetActive(true );
+		ExpansionCount++;
+		Money -= ExpansionCost;
+		NavMeshManager.Bake();
 	}
 	public static void OnStaffClick() {
-		if (StaffAvailable) {
-			StaffCount++;
-			Money -= StaffCost;
-			float radian = Random.value * Mathf.PI * 2f;
-			float radius = Random.value * 1f + 0.5f;
-			Vector3 delta = new Vector3(Mathf.Cos(radian), 0f, Mathf.Sin(radian)) * radius;
-			SpawnStaff(new Vector3(0, 0.75f, 0) + delta);
-		}
+		StaffCount++;
+		Money -= StaffCost;
+		float radian = Random.value * Mathf.PI * 2f;
+		float radius = Random.value * 1f + 0.5f;
+		Vector3 delta = new Vector3(Mathf.Cos(radian), 0f, Mathf.Sin(radian)) * radius;
+		SpawnStaff(new Vector3(0, 0.75f, 0) + delta);
 	}
 	public static void OnNextClick() {
 		Hour = OpenHour;
@@ -457,6 +497,7 @@ public class GameManager : MonoSingleton<GameManager> {
 			UIManager.EnqueueDialogue("Begin Service 0");
 			UIManager.EnqueueDialogue("Begin Service 1");
 			UIManager.EnqueueDialogue("Begin Service 2");
+			UIManager.EnqueueDialogue("Begin Service 3");
 			UIManager.OpenDialogue();
 			UIManager.OnDialogueEnd.AddListener(() => GameRecipeUI.IsShowing = true);
 		}
@@ -464,7 +505,6 @@ public class GameManager : MonoSingleton<GameManager> {
 			closeServiceMessage = false;
 			UIManager.EnqueueDialogue("Close Service 0");
 			UIManager.EnqueueDialogue("Close Service 1");
-			UIManager.EnqueueDialogue("Close Service 2");
 			UIManager.OpenDialogue();
 		}
 		if (endingMessage && Day == EndDay && Hour == CloseHour) {

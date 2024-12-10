@@ -19,12 +19,20 @@ MonoBehaviour:
   m_TargetTexture: {fileID: 2800000, guid: cc7916c8f8142d6429edb4a04a96ae70, type: 3}
   m_AtlasMap:
     m_Keys:
+    - Wood
+    - WoodEntrance
     - WoodTile
     - WoodWall
     m_Values:
     - size: {x: 128, y: 128}
-      tiling: {x: 0.5, y: 1}
+      tiling: {x: 0.5, y: 0.5}
       offset: {x: 0, y: 0}
     - size: {x: 128, y: 128}
-      tiling: {x: 0.5, y: 1}
+      tiling: {x: 0.5, y: 0.5}
       offset: {x: 0.5, y: 0}
+    - size: {x: 128, y: 128}
+      tiling: {x: 0.5, y: 0.5}
+      offset: {x: 0, y: 0.5}
+    - size: {x: 128, y: 128}
+      tiling: {x: 0.5, y: 0.5}
+      offset: {x: 0.5, y: 0.5}

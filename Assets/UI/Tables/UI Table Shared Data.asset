@@ -267,10 +267,6 @@ MonoBehaviour:
     m_Key: Close Service 1
     m_Metadata:
       m_Items: []
-  - m_Id: 14689963605876736
-    m_Key: Close Service 2
-    m_Metadata:
-      m_Items: []
   - m_Id: 14690069969231872
     m_Key: Clear Ending 0
     m_Metadata:
@@ -293,6 +289,10 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 14690909241073664
     m_Key: Fail Ending 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14741775444729856
+    m_Key: Begin Service 3
     m_Metadata:
       m_Items: []
   m_Metadata:

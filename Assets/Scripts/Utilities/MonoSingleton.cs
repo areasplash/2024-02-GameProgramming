@@ -19,7 +19,7 @@ public class MonoSingleton<T> : MonoBehaviour where T : Object {
 	// ================================================================================================
 
 	protected virtual void Awake() {
-		if (Instance == this) {
+		if (Instance.Equals(this)) {
 			if (!transform.parent) DontDestroyOnLoad(gameObject);
 		}
 		else Destroy(gameObject);
