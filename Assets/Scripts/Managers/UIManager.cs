@@ -7,9 +7,11 @@ using UnityEngine.Localization.Settings;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Events;
+
 
 #if UNITY_EDITOR
-	using UnityEditor;
+using UnityEditor;
 #endif
 
 
@@ -524,13 +526,14 @@ public class UIManager : MonoSingleton<UIManager> {
 				if (selectable is SettingsSlider  settingsSlider ) settingsSlider .OnSubmit();
 			}
 		}
+		UpdateDialogue();
+		UpdateFade();
 		if (InputManager.GetKeyDown(KeyAction.Cancel)) Back();
 	}
 
 	void LateUpdate() {
 		IsGameRunning = HighestCanvas == CanvasType.Game;
 		PeekScreenResolution();
-		UpdateFade();
 	}
 
 
@@ -540,10 +543,8 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ------------------------------------------------------------------------------------------------
 
 	public static void OpenMainMenu() {
-		// Fade Out
 		if (GameManager.Instance != null) GameManager.Instance.ChangeBGM(GameManager.LobbyBGM);
 		Open(CanvasType.MainMenu);
-		// Fade In
 	}
 
 
@@ -553,9 +554,15 @@ public class UIManager : MonoSingleton<UIManager> {
 	// ------------------------------------------------------------------------------------------------
 
 	public static void OpenGame() {
-		// Fade Out
+		Instance.StartCoroutine(OpenGameCoroutine());
+	}
+	
+	static IEnumerator OpenGameCoroutine() {
+		FadeOut();
+		yield return new WaitForSeconds(1f);
 		Open(CanvasType.Game);
-		// Fade In
+		yield return new WaitForSeconds(1f);
+		FadeIn();
 	}
 
 
@@ -564,8 +571,50 @@ public class UIManager : MonoSingleton<UIManager> {
 	// Dialogue Canvas
 	// ------------------------------------------------------------------------------------------------
 
-	public static void OpenDialogue() {
+	static CustomText dialogueText;
+	static Queue<string> dialogueQueue = new Queue<string>();
+	static string dialogueString = "";
+	static float  dialogueOffset = 0f;
+	
+	public static UnityEvent OnDialogueEnd { get; private set; } = new UnityEvent();
+
+	public static void UpdateDialogueText(CustomText text) => dialogueText = text;
+
+	public static void EnqueueDialogue(string text) => dialogueQueue.Enqueue(text);
+
+	public static void OpenDialogue(string text = "") {
+		if (!text.Equals("")) EnqueueDialogue(text);
 		Open(CanvasType.Dialogue);
+		Next();
+	}
+
+	public static void Next() {
+		if (dialogueText.Text.Length < dialogueString.Length) {
+			dialogueText.Text = dialogueString;
+		}
+		else if (dialogueQueue.TryDequeue(out string text)) {
+			dialogueText.SetLocalizeText("UI Table", text);
+			dialogueString = dialogueText.GetLocalizeText();
+			dialogueOffset = 0f;
+			dialogueText.Text = "";
+		}
+		else {
+			OnDialogueEnd?.Invoke();
+			OnDialogueEnd?.RemoveAllListeners();
+			Back();
+		}
+	}
+
+	static void UpdateDialogue() {
+		if (HighestCanvas != CanvasType.Dialogue) return;
+		if (InputManager.GetKeyDown(KeyAction.LeftClick)) Next();
+		if (InputManager.GetKeyDown(KeyAction.Interact )) Next();
+		
+		if (dialogueText.Text.Length < dialogueString.Length) {
+			dialogueOffset += Time.deltaTime * 20f;
+			int l = Mathf.Min((int)dialogueOffset, dialogueString.Length);
+			dialogueText.Text = dialogueString[..l];
+		}
 	}
 
 
@@ -639,6 +688,28 @@ public class UIManager : MonoSingleton<UIManager> {
 	public static void SetFullScreen(bool value) {
 		fullScreen = value ? 2 : 1;
 		Screen.fullScreen = value;
+
+		if (screenResolutionStepper) {
+			int screenIndex = Array.FindIndex(ResolutionPresets, preset =>
+				preset.x == Screen.width &&
+				preset.y == Screen.height);
+			int screenIndexFloor = Array.FindLastIndex(ResolutionPresets, preset =>
+				preset.x <= Screen.width &&
+				preset.y <= Screen.height);
+			int screenIndexMax = Array.FindLastIndex(ResolutionPresets, preset =>
+				preset.x < Screen.currentResolution.width &&
+				preset.y < Screen.currentResolution.height);
+
+			string text       = $"{Screen.width} x {Screen.height}";
+			bool interactable = !value;
+			bool enablePrev   = !value && screenIndex != 0 && screenIndexFloor != -1;
+			bool enableNext   = !value && screenIndexFloor < screenIndexMax;
+
+			screenResolutionStepper.Text         = text;
+			screenResolutionStepper.interactable = interactable;
+			screenResolutionStepper.EnablePrev   = enablePrev;
+			screenResolutionStepper.EnableNext   = enableNext;
+		}
 	}
 
 

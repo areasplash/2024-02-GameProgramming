@@ -302,7 +302,7 @@ public class Customer : Entity {
 						GameManager.SFXSource.PlayOneShot(GameManager.DialogSFX);
 					}
 					else {
-						reputationWeight += 0.5f;
+						reputationWeight += 0.25f;
 						state = State.PayWaiting;
 						Offset = 0f;
 					}

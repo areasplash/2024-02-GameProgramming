@@ -159,7 +159,11 @@ public class SettingsButton : Selectable, IPointerClickHandler {
 		}
 	}
 
-	
+
+
+	public string GetLocalizeText() {
+		return LocalizeStringEvent ? LocalizeStringEvent.StringReference.GetLocalizedString() : "";
+	}
 
 	public void SetLocalizeText(string table, string tableEntry) {
 		if (LocalizeStringEvent) LocalizeStringEvent.StringReference.SetReference(table, tableEntry);

@@ -253,6 +253,84 @@ MonoBehaviour:
     m_Localized: Money Needed
     m_Metadata:
       m_Items: []
+  - m_Id: 14673225908609024
+    m_Localized: Isekai Tavern
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14687949639507968
+    m_Localized: "Due to your previous business failure, you\u2019ve ended up in
+      debt... But now, you have the chance to run an inn along a bustling trade route
+      between big cities!\nYou must earn 10,000 gold within 30 days.\nEarn money
+      by serving food to your guests."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14688007999053824
+    m_Localized: 'When guests arrive, serve them food!
+
+      You can take ingredients
+      from the "Chest" and cook meals using the "Pot".
+
+      Once guests finish
+      their meals, you''ll receive payment.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14688029243203584
+    m_Localized: "Hold the right mouse button and move the mouse to adjust your view.\nLeft-click
+      to move to a desired location, or use WASD or \u2191\u2190\u2193\u2192 to navigate.\nInteract
+      with others by left-clicking or pressing Z."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14688965978087424
+    m_Localized: Today's business hours are over!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14689041915961344
+    m_Localized: 'After business hours, you can purchase furniture or expand your
+      inn by left-clicking.
+
+      Once you''re done shopping, press the NEXT button
+      to start the next day.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690069969231872
+    m_Localized: The day of debt settlement has arrived.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690696489197568
+    m_Localized: 'You have earned enough money!
+
+      Congratulations!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690722103812096
+    m_Localized: 'You are now free to run your inn as you wish.
+
+      Thank you
+      for playing!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690756207697920
+    m_Localized: The day of debt settlement has arrived.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690798188486656
+    m_Localized: You did not earn enough money...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14690909241073664
+    m_Localized: 'Unable to repay your debt, you can no longer run the inn.
+
+      *Game
+      Over*'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 14741775444729856
+    m_Localized: 'Click the recipe icon on the left side of the screen to show or
+      hide recipes.
+
+      It''s time to start business! Pay off all your debt!'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
