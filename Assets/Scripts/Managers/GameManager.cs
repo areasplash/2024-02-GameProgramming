@@ -1,6 +1,8 @@
 using UnityEngine;
 
 using System.Collections.Generic;
+using System.Collections;
+
 
 
 
@@ -510,21 +512,25 @@ public class GameManager : MonoSingleton<GameManager> {
 
 
 	public static void OnTableClick() {
+		SFXSource.PlayOneShot(InstallSFX);
 		TableList[TableCount++].SetActive(true);
 		Money -= TableCost;
 		NavMeshManager.Bake();
 	}
 	public static void OnChairClick() {
+		SFXSource.PlayOneShot(InstallSFX);
 		ChairList[ChairCount++].SetActive(true);
 		Money -= ChairCost;
 		NavMeshManager.Bake();
 	}
 	public static void OnPotClick() {
+		SFXSource.PlayOneShot(InstallSFX);
 		PotList[PotCount++].SetActive(true);
 		Money -= PotCost;
 		NavMeshManager.Bake();
 	}
 	public static void OnExpansionClick() {
+		SFXSource.PlayOneShot(InstallSFX);
 		ExpansionDList[ExpansionCount].SetActive(false);
 		ExpansionEList[ExpansionCount].SetActive(true );
 		ExpansionCount++;
@@ -532,6 +538,7 @@ public class GameManager : MonoSingleton<GameManager> {
 		NavMeshManager.Bake();
 	}
 	public static void OnStaffClick() {
+		SFXSource.PlayOneShot(InstallSFX);
 		StaffCount++;
 		Money -= StaffCost;
 		float radian = Random.value * Mathf.PI * 2f;
